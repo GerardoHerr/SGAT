@@ -1,0 +1,11 @@
+# Ignorar entorno virtual de Python
+env/
+
+# Ignorar node_modules de Angular
+node_modules/
+
+# Otros archivos comunes a ignorar
+.DS_Store
+*.pyc
+__pycache__/
+dist/
