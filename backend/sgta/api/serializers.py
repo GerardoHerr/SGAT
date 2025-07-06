@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from sgta.models import Tarea
+from sgta.models import Usuario
 
-class TareaSerializer(serializers.ModelSerializer):
+class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tarea
+        model = Usuario
         fields = '__all__'

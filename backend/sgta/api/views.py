@@ -1,7 +1,7 @@
 from rest_framework import viewsets
-from sgta.models import Tarea
-from sgta.api.serializers import TareaSerializer
+from sgta.models import Usuario
+from sgta.api.serializers import UsuarioSerializer
 
-class TareaViewSet(viewsets.ModelViewSet):
-    queryset = Tarea.objects.all()
-    serializer_class = TareaSerializer
+class UsuarioViewSet(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
