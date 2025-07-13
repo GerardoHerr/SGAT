@@ -18,8 +18,8 @@ import Sidebar from './Sidebar.vue'
 
 // Estado global (esto vendría de un store como Pinia)
 const currentUser = ref({
-  name: 'María González',
-  role: 'Docente',
+  name: 'Carlos Mendoza',
+  role: 'Estudiante', // Cambiar entre: 'Administrador', 'Docente', 'Estudiante'
   avatar: null
 })
 
