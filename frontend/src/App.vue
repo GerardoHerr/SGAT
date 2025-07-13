@@ -1,9 +1,23 @@
+<!-- filepath: c:\Users\Usuario iTC\Desktop\Procesos_Project\SGAT\frontend\src\App.vue -->
 <script setup>
 import { RouterView } from 'vue-router'
 import AppLayout from './components/AppLayout.vue'
 </script>
 
 <template>
+  <!-- AGREGAR NAVEGACIÓN -->
+  <header>
+    <div class="wrapper">
+      <nav>
+        <RouterLink to="/">Inicio</RouterLink>
+        <RouterLink to="/registrarUsuario">Registrar Usuario</RouterLink>
+        <RouterLink to="/registrar-asignatura">Registrar Asignatura</RouterLink>
+        <RouterLink to="/about">About</RouterLink>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MANTENER EL RouterView de tu compañero -->
   <RouterView/>
   <AppLayout>
     <RouterView />
@@ -43,6 +57,7 @@ body {
 }
 
 /* Utilidades */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -93,6 +108,14 @@ body {
 @media (max-width: 768px) {
   .container {
     padding: 0 0.5rem;
+  }
+  
+  nav {
+    text-align: left;
+    margin-left: -1rem;
+    font-size: 1rem;
+    padding: 1rem 0;
+    margin-top: 1rem;
   }
 }
 </style>
