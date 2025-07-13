@@ -4,13 +4,11 @@ import AppLayout from './components/AppLayout.vue'
 </script>
 
 <template>
-<<<<<<< HEAD
+  <RouterView/>
   <AppLayout>
     <RouterView />
   </AppLayout>
-=======
   <RouterView/>
->>>>>>> main
 </template>
 
 <style>
