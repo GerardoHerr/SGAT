@@ -36,7 +36,24 @@
 </template>
 
 <script>
-
+export default {
+  name: 'LoginView',
+  data() {
+    return {
+      username: '',
+      password: ''
+    };
+  },
+  methods: {
+    handleLogin() {
+      if (this.username === 'admin' && this.password === '1234') {
+        alert('¡Bienvenido, admin!');
+      } else {
+        alert('Usuario o contraseña incorrectos');
+      }
+    }
+  }
+};
 
 </script>
 
