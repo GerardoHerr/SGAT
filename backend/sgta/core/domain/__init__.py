@@ -12,4 +12,5 @@ __all__ = [
     # GestionTarea
     'Asignacion',
     'Grupo',
+    'PeriodoLectivo',
 ]

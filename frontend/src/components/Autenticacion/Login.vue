@@ -4,7 +4,11 @@
     <div class="right">
       <div class="login-box">
         <h2>Iniciar Sesión</h2>
-
+        <img 
+          src="/src/assets/login-img.png" 
+          alt="SGAT Logo" 
+          class="login-image"
+        >
 
         <form @submit.prevent="handleLogin">
           <div class="input-group">
@@ -58,26 +62,32 @@ export default {
 </script>
 
 <style scoped>
+/* Reset específico para el login */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-body, html {
-  height: 100%;
-  font-family: 'Segoe UI', sans-serif;
-}
+
+/* Container del login - pantalla completa */
 .container {
   display: flex;
   height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  font-family: 'Segoe UI', sans-serif;
+  z-index: 1000;
 }
 
 /* Mitad izquierda: imagen de fondo */
 .left {
   flex: 1;
-  background-image: url('fondo-formulario.jpg');
+  background-image: url('/src/assets/fondo-formulario.jpg');
   background-size: cover;
   background-position: center;
+  min-height: 100vh;
 }
 
 /* Mitad derecha: login con recuadro */
@@ -87,90 +97,128 @@ body, html {
   justify-content: center;
   align-items: center;
   background-color: #f2f2f2;
+  min-height: 100vh;
+  padding: 2rem;
 }
 
 .login-box {
   background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   text-align: center;
 }
 
 .login-box h2 {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   color: #333;
+  font-size: 1.8rem;
+  font-weight: 600;
 }
 
 .login-image {
   width: 100%;
-  max-width: 200px;
-  margin: 15px auto;
+  max-width: 180px;
+  height: auto;
+  margin: 20px auto 30px auto;
   display: block;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 /* Grupos de entrada */
 .input-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   text-align: left;
 }
 
 .input-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   color: #444;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 /* Íconos dentro del input */
 .input-icon {
   position: relative;
 }
+
 .input-icon i {
   position: absolute;
   top: 50%;
-  left: 10px;
+  left: 15px;
   transform: translateY(-50%);
   color: #888;
+  font-size: 16px;
+  z-index: 1;
 }
+
 .input-icon input {
   width: 100%;
-  padding: 10px;
-  padding-left: 35px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 15px 20px 15px 45px;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  background-color: #fafbfc;
+}
+
+.input-icon input:focus {
+  outline: none;
+  border-color: #002147;
+  background-color: white;
+}
+
+.input-icon input::placeholder {
+  color: #a0a0a0;
 }
 
 /* Botón */
 button {
   width: 100%;
-  padding: 10px;
-  background-color: #002147; /* azul marino */
+  padding: 15px;
+  background-color: #002147;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: white;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
+  margin-top: 10px;
 }
+
 button:hover {
   background-color: #00152e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 33, 71, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 /* Texto de registro */
 .register-text {
-  margin-top: 15px;
+  margin-top: 25px;
   font-size: 14px;
-  color: #333;
+  color: #666;
+  line-height: 1.6;
 }
+
 .register-text a {
-  color: #0a0a0a;
+  color: #002147;
   text-decoration: none;
-  font-weight: bold; /* Negrita */
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.register-text a:hover {
+  color: #00152e;
+  text-decoration: underline;
 }
 
 /* Responsive */
@@ -178,13 +226,54 @@ button:hover {
   .container {
     flex-direction: column;
   }
+  
   .left, .right {
     flex: none;
     width: 100%;
-    height: 50vh;
+    min-height: 50vh;
   }
+  
   .left {
     order: -1;
+  }
+  
+  .right {
+    padding: 1rem;
+  }
+  
+  .login-box {
+    padding: 30px 25px;
+    max-width: 100%;
+  }
+  
+  .login-box h2 {
+    font-size: 1.5rem;
+  }
+  
+  .login-image {
+    max-width: 150px;
+    margin: 15px auto 25px auto;
+  }
+  
+  .input-icon input {
+    padding: 12px 15px 12px 40px;
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 12px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .right {
+    padding: 0.5rem;
+  }
+  
+  .login-box {
+    padding: 25px 20px;
+    border-radius: 12px;
   }
 }
 

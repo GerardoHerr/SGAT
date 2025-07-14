@@ -110,16 +110,22 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
 .form-card {
   background-color: #ffffff;
-  padding: 3rem;
+  padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.15);
-  width: 80%;
-  height: 90%;
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -127,36 +133,43 @@ export default {
 
 .form-title {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #1f2937;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 input,
 select {
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 8px;
   outline: none;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: #2563eb;
 }
 
 button {
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
   background-color: #2563eb;
   color: white;
   font-weight: bold;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-top: 0.5rem;
 }
 
 button:hover {
@@ -164,17 +177,17 @@ button:hover {
 }
 
 .mensaje {
-  margin-top: 2rem;
+  margin-top: 1rem;
   text-align: center;
   color: green;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .error-msg {
   color: red;
-  font-size: 0.9rem;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
   display: block;
 }
 

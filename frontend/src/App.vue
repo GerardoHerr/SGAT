@@ -1,28 +1,33 @@
 <!-- filepath: c:\Users\Usuario iTC\Desktop\Procesos_Project\SGAT\frontend\src\App.vue -->
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
+import { computed } from 'vue'
 import AppLayout from './components/AppLayout.vue'
+
+const route = useRoute()
+const isLoginPage = computed(() => route.name === 'login')
+const isRegisterPage = computed(() => route.name === 'registrarUsuario')
+const isAuthPage = computed(() => isLoginPage.value || isRegisterPage.value)
 </script>
 
 <template>
-  <!-- AGREGAR NAVEGACIÓN -->
-  <header>
+  <!-- Solo mostrar navegación si no es la página de login -->
+  <header v-if="!isLoginPage">
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Inicio</RouterLink>
         <RouterLink to="/registrarUsuario">Registrar Usuario</RouterLink>
         <RouterLink to="/registrar-asignatura">Registrar Asignatura</RouterLink>
         <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/login">Login</RouterLink>
       </nav>
     </div>
   </header>
 
-  <!-- MANTENER EL RouterView de tu compañero -->
-  <RouterView/>
-  <AppLayout>
+  <RouterView v-if="isLoginPage" />
+  <AppLayout v-else>
     <RouterView />
   </AppLayout>
-  <RouterView/>
 </template>
 
 <style>

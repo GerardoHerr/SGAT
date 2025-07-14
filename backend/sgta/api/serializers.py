@@ -10,3 +10,8 @@ class AsignaturaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asignatura
         fields = '__all__'
+
+class PeriodoLectivoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PeriodoLectivo
+        fields = '__all__'
