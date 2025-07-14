@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from sgta.models import Usuario
-from sgta.api.serializers import UsuarioSerializer
+from ..core.domain.Autenticacion.usuario import Usuario
+from .serializers import UsuarioSerializer
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from sgta.models import Usuario
+from ..core.domain.Autenticacion.usuario import Usuario
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
