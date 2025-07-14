@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
 router.register(r'periodos', PeriodoLectivoViewSet)  # Assuming you have a PeriodoLectivoViewSet
+router.register(r'asignatura', TokenObtainPairView)
 
 urlpatterns = [
     path('', include(router.urls)),

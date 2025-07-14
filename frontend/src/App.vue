@@ -109,7 +109,7 @@ body {
   .container {
     padding: 0 0.5rem;
   }
-  
+
   nav {
     text-align: left;
     margin-left: -1rem;

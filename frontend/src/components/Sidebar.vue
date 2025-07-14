@@ -27,185 +27,216 @@
       <ul class="nav-list">
         <!-- Dashboard - Para todos los roles -->
         <li class="nav-item">
-          <RouterLink to="/" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+          <RouterLink to="/" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Dashboard">
             <span class="nav-icon">📊</span>
             <span v-show="!isCollapsed" class="nav-text">Dashboard</span>
           </RouterLink>
         </li>
 
-        <!-- ADMINISTRADOR -->
+        <!-- ADMINISTRADOR - Módulo Morado 🟣 -->
         <template v-if="isAdmin">
           <li class="nav-item">
-            <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Administración</span>
+            <div class="nav-section admin-section">
+              <span v-show="!isCollapsed" class="section-title">🟣 Administración</span>
             </div>
             <ul class="nav-submenu">
+              <!-- Prioridad Alta -->
               <li>
-                <RouterLink to="/usuarios" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">👤</span>
-                  <span v-show="!isCollapsed" class="nav-text">Gestión Usuarios</span>
+                <RouterLink to="/admin/usuarios" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Usuarios">
+                  <span class="nav-icon">👥</span>
+                  <span v-show="!isCollapsed" class="nav-text">Registrar Usuarios</span>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/periodos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+                <RouterLink to="/admin/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Reportes de Actividad">
+                  <span class="nav-icon">📈</span>
+                  <span v-show="!isCollapsed" class="nav-text">Reportes de Actividad</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/admin/roles" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Gestión de Roles">
+                  <span class="nav-icon">🎭</span>
+                  <span v-show="!isCollapsed" class="nav-text">Gestión de Roles</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/admin/asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Asignaturas">
+                  <span class="nav-icon">📖</span>
+                  <span v-show="!isCollapsed" class="nav-text">Registrar Asignaturas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/admin/periodos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Periodos Lectivos">
                   <span class="nav-icon">📅</span>
                   <span v-show="!isCollapsed" class="nav-text">Periodos Lectivos</span>
                 </RouterLink>
               </li>
-              <li>
-                <RouterLink to="/asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">📖</span>
-                  <span v-show="!isCollapsed" class="nav-text">Asignaturas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/configuracion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">⚙️</span>
-                  <span v-show="!isCollapsed" class="nav-text">Configuración</span>
-                </RouterLink>
-              </li>
             </ul>
           </li>
         </template>
 
-        <!-- DOCENTE -->
+        <!-- DOCENTE - Módulo Celeste 🔵 -->
         <template v-if="isDocente">
           <li class="nav-item">
-            <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Gestión de Tareas</span>
+            <div class="nav-section docente-section">
+              <span v-show="!isCollapsed" class="section-title">🔵 Gestión de Tareas</span>
             </div>
             <ul class="nav-submenu">
+              <!-- Prioridad Alta -->
               <li>
-                <RouterLink to="/mis-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+                <RouterLink to="/docente/asignar-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Asignación de Tareas">
                   <span class="nav-icon">📝</span>
-                  <span v-show="!isCollapsed" class="nav-text">Mis Tareas</span>
+                  <span v-show="!isCollapsed" class="nav-text">Asignación de Tareas</span>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/asignar-tarea" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">➕</span>
-                  <span v-show="!isCollapsed" class="nav-text">Asignar Tarea</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/calificar" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+                <RouterLink to="/docente/calificar" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calificación de Tareas">
                   <span class="nav-icon">✅</span>
-                  <span v-show="!isCollapsed" class="nav-text">Calificar</span>
+                  <span v-show="!isCollapsed" class="nav-text">Calificación de Tareas</span>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/retroalimentacion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+                <RouterLink to="/docente/retroalimentacion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Retroalimentación">
                   <span class="nav-icon">💬</span>
                   <span v-show="!isCollapsed" class="nav-text">Retroalimentación</span>
                 </RouterLink>
               </li>
+              <li>
+                <RouterLink to="/docente/grupos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Creación de Grupos">
+                  <span class="nav-icon">👥</span>
+                  <span v-show="!isCollapsed" class="nav-text">Creación de Grupos</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Generación de Reportes">
+                  <span class="nav-icon">📊</span>
+                  <span v-show="!isCollapsed" class="nav-text">Generación de Reportes</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/entregas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Visualizar Entregas">
+                  <span class="nav-icon">📂</span>
+                  <span v-show="!isCollapsed" class="nav-text">Visualizar Entregas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/entrega-unica" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Entrega Única">
+                  <span class="nav-icon">📄</span>
+                  <span v-show="!isCollapsed" class="nav-text">Entrega Única</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/registrar-estudiantes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Estudiantes">
+                  <span class="nav-icon">🎓</span>
+                  <span v-show="!isCollapsed" class="nav-text">Registrar Estudiantes</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/notificaciones-revision" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Notificación de Revisión">
+                  <span class="nav-icon">🔔</span>
+                  <span v-show="!isCollapsed" class="nav-text">Notificación de Revisión</span>
+                </RouterLink>
+              </li>
             </ul>
           </li>
           
           <li class="nav-item">
             <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Gestión Académica</span>
+              <span v-show="!isCollapsed" class="section-title">Configuraciones</span>
             </div>
             <ul class="nav-submenu">
+              <!-- Prioridad Media -->
               <li>
-                <RouterLink to="/mis-cursos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">📚</span>
-                  <span v-show="!isCollapsed" class="nav-text">Mis Cursos</span>
+                <RouterLink to="/docente/tareas-atrasadas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Permitir Tareas Atrasadas">
+                  <span class="nav-icon">⏰</span>
+                  <span v-show="!isCollapsed" class="nav-text">Permitir Tareas Atrasadas</span>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/grupos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">👥</span>
-                  <span v-show="!isCollapsed" class="nav-text">Gestión Grupos</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/estudiantes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">🎓</span>
-                  <span v-show="!isCollapsed" class="nav-text">Mis Estudiantes</span>
+                <RouterLink to="/docente/retroalimentacion-cambios" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Cambios en Retroalimentación">
+                  <span class="nav-icon">🔄</span>
+                  <span v-show="!isCollapsed" class="nav-text">Cambios en Retroalimentación</span>
                 </RouterLink>
               </li>
             </ul>
           </li>
         </template>
 
-        <!-- ESTUDIANTE -->
+        <!-- ESTUDIANTE - Módulo Verde 🟢 -->
         <template v-if="isEstudiante">
           <li class="nav-item">
-            <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Mis Actividades</span>
+            <div class="nav-section estudiante-section">
+              <span v-show="!isCollapsed" class="section-title">🟢 Mis Actividades</span>
             </div>
             <ul class="nav-submenu">
+              <!-- Prioridad Alta -->
               <li>
-                <RouterLink to="/tareas-asignadas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">�</span>
-                  <span v-show="!isCollapsed" class="nav-text">Tareas Asignadas</span>
+                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                  <span class="nav-icon">📅</span>
+                  <span v-show="!isCollapsed" class="nav-text">Calendario de Tareas</span>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/entregar-tarea" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">📤</span>
-                  <span v-show="!isCollapsed" class="nav-text">Entregar Tarea</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">�</span>
-                  <span v-show="!isCollapsed" class="nav-text">Calendario</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/historial" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">📜</span>
-                  <span v-show="!isCollapsed" class="nav-text">Historial</span>
-                </RouterLink>
-              </li>
-            </ul>
-          </li>
-          
-          <li class="nav-item">
-            <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Académico</span>
-            </div>
-            <ul class="nav-submenu">
-              <li>
-                <RouterLink to="/mis-asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-                  <span class="nav-icon">📚</span>
-                  <span v-show="!isCollapsed" class="nav-text">Mis Asignaturas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/solicitar-registro" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
+                <RouterLink to="/estudiante/solicitar-asignatura" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Solicitar Registro">
                   <span class="nav-icon">✍️</span>
                   <span v-show="!isCollapsed" class="nav-text">Solicitar Registro</span>
                 </RouterLink>
               </li>
+              <li>
+                <RouterLink to="/estudiante/editar-entrega" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Editar Entrega">
+                  <span class="nav-icon">✏️</span>
+                  <span v-show="!isCollapsed" class="nav-text">Editar Entrega</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/estudiante/notificaciones" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Notificaciones">
+                  <span class="nav-icon">🔔</span>
+                  <span v-show="!isCollapsed" class="nav-text">Notificaciones</span>
+                  <span v-show="!isCollapsed && notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/estudiante/historial" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Historial de Tareas">
+                  <span class="nav-icon">📜</span>
+                  <span v-show="!isCollapsed" class="nav-text">Historial de Tareas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/estudiante/entregar" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Entregar Tareas">
+                  <span class="nav-icon">📤</span>
+                  <span v-show="!isCollapsed" class="nav-text">Entregar Tareas</span>
+                </RouterLink>
+              </li>
             </ul>
           </li>
         </template>
 
-        <!-- Reportes - Para Docentes y Admins -->
-        <li class="nav-item" v-if="canViewReports">
-          <RouterLink to="/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-            <span class="nav-icon">📈</span>
-            <span v-show="!isCollapsed" class="nav-text">Reportes</span>
-          </RouterLink>
-        </li>
-
-        <!-- Notificaciones - Para todos -->
+        <!-- MÓDULO USUARIOS - Para todos los roles 🔴 -->
         <li class="nav-item">
-          <RouterLink to="/notificaciones" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }">
-            <span class="nav-icon">🔔</span>
-            <span v-show="!isCollapsed" class="nav-text">Notificaciones</span>
-            <span v-show="!isCollapsed && notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
-          </RouterLink>
+          <div class="nav-section usuarios-section">
+            <span v-show="!isCollapsed" class="section-title">🔴 Mi Perfil</span>
+          </div>
+          <ul class="nav-submenu">
+            <li>
+              <RouterLink to="/perfil" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Perfil Personal">
+                <span class="nav-icon">👤</span>
+                <span v-show="!isCollapsed" class="nav-text">Perfil Personal</span>
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink to="/configuracion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Configuración">
+                <span class="nav-icon">⚙️</span>
+                <span v-show="!isCollapsed" class="nav-text">Configuración</span>
+              </RouterLink>
+            </li>
+          </ul>
         </li>
       </ul>
     </nav>
 
     <!-- Footer del Sidebar -->
     <div class="sidebar-footer">
-      <button @click="logout" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }">
+      <button @click="logout" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }" title="Cerrar Sesión">
         <span class="nav-icon">🚪</span>
         <span v-show="!isCollapsed" class="nav-text">Cerrar Sesión</span>
       </button>
@@ -247,9 +278,6 @@ const userInitials = computed(() => {
 const isAdmin = computed(() => props.user.role === 'Administrador')
 const isDocente = computed(() => props.user.role === 'Docente')
 const isEstudiante = computed(() => props.user.role === 'Estudiante')
-const canManageTasks = computed(() => ['Docente', 'Administrador'].includes(props.user.role))
-const canManageAcademic = computed(() => ['Docente', 'Administrador'].includes(props.user.role))
-const canViewReports = computed(() => ['Docente', 'Administrador'].includes(props.user.role))
 
 // Métodos
 const toggleSidebar = () => {
@@ -406,16 +434,17 @@ const logout = () => {
   padding: 0.75rem 1rem;
   color: rgba(221, 208, 200, 0.8);
   text-decoration: none;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   border-radius: 0 25px 25px 0;
   margin: 2px 0;
 }
 
 .nav-link:hover {
-  background: rgba(221, 208, 200, 0.1);
+  background: rgba(221, 208, 200, 0.15);
   color: #DDD0C8;
-  transform: translateX(5px);
+  transform: translateX(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link.router-link-active {
@@ -433,7 +462,8 @@ const logout = () => {
   justify-content: center;
   gap: 0;
   border-radius: 8px;
-  margin: 2px 8px;
+  margin: 4px 8px;
+  padding: 0.75rem;
 }
 
 .nav-icon {
@@ -455,6 +485,53 @@ const logout = () => {
   border-radius: 10px;
   margin-left: auto;
   font-weight: bold;
+}
+
+/* Secciones por módulo */
+.admin-section .section-title {
+  color: #9b59b6; /* Morado para admin */
+}
+
+.docente-section .section-title {
+  color: #3498db; /* Celeste para docente */
+}
+
+.estudiante-section .section-title {
+  color: #27ae60; /* Verde para estudiante */
+}
+
+.usuarios-section .section-title {
+  color: #e74c3c; /* Rojo para usuarios */
+}
+
+/* Mejoras para el estado colapsado */
+.sidebar-collapsed .notification-badge {
+  display: none;
+}
+
+.sidebar-collapsed .nav-link:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #323232;
+  color: #DDD0C8;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  margin-left: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  opacity: 0;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }
 
 /* Footer del Sidebar */
@@ -511,6 +588,8 @@ const logout = () => {
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    width: 100vw;
+    max-width: 280px;
   }
   
   .sidebar.sidebar-open {
