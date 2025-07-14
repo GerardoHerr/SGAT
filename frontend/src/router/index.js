@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegistrarUsuario from '../components/Autenticacion/RegistrarUsuario.vue'
 import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignatura.vue'
+import Login from '../components/Autenticacion/Login.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -27,6 +28,11 @@ const router = createRouter({
       path: '/registrar-asignatura',
       name: 'RegistrarAsignatura',
       component: RegistrarAsignatura,
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: Login,
     },
   ],
 })
