@@ -6,8 +6,6 @@ import AppLayout from './components/AppLayout.vue'
 
 const route = useRoute()
 const isLoginPage = computed(() => route.name === 'login')
-const isRegisterPage = computed(() => route.name === 'registrarUsuario')
-const isAuthPage = computed(() => isLoginPage.value || isRegisterPage.value)
 </script>
 
 <template>
@@ -25,9 +23,9 @@ const isAuthPage = computed(() => isLoginPage.value || isRegisterPage.value)
   </header>
 
   <RouterView v-if="isLoginPage" />
-  <AppLayout v-else>
-    <RouterView />
-  </AppLayout>
+<AppLayout v-else>
+  <RouterView />
+</AppLayout>
 </template>
 
 <style>
