@@ -40,20 +40,38 @@
 </template>
 
 <script>
+import axios from 'axios';
+
+
 export default {
   name: 'LoginView',
   data() {
     return {
       username: '',
-      password: ''
+      password: '',
+      error: ''
     };
   },
   methods: {
-    handleLogin() {
-      if (this.username === 'admin' && this.password === '1234') {
-        alert('¡Bienvenido, admin!');
-      } else {
-        alert('Usuario o contraseña incorrectos');
+    async handleLogin() {
+      console.log('Username:', this.username);
+      console.log('Password:', this.password);
+      
+      try {
+        const response = await axios.post('http://localhost:8000/api/login/', {
+          nombre: this.username,
+          contrasenia: this.password
+        });
+
+        const {access} = response.data;
+
+        localStorage.setItem('access_token', access);
+
+        this.$router.push({ path: '/' });
+
+      } catch (error) {
+        this.error = 'Usuario o contraseña incorrectos';
+        console.error(error);
       }
     }
   }
