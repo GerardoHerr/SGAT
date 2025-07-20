@@ -15,3 +15,7 @@ class PeriodoLectivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = PeriodoLectivo
         fields = '__all__'
+
+class LoginSerializer(serializers.Serializer):
+    nombre = serializers.CharField()
+    contrasenia = serializers.CharField()

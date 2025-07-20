@@ -12,4 +12,3 @@ class Usuario(models.Model):
     email = models.EmailField(unique=False)
     contrasenia = models.CharField(max_length=200)
     rol = models.CharField(max_length=10, choices=ROL_CHOICES)
-
