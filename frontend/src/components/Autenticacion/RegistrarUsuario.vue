@@ -105,30 +105,27 @@ export default {
 <style scoped>
 .registro-container {
   width: 100vw;
-  height: 100vh;
-  background-color: #f0f2f5;
+  min-height: 100vw;
+  background: transparent;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding: 1rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0;
+  position: static;
+  overflow: visible;
 }
 
 .form-card {
-  background-color: #ffffff;
-  padding: 2rem;
+  background: #fff;
+  padding: 2.5rem;
   border-radius: 1rem;
-  box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   width: 100%;
-  max-width: 450px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  max-width: 700px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .form-title {
