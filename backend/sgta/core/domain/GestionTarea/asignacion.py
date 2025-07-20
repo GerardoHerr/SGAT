@@ -1,68 +1,80 @@
-from datetime import datetime, date
-from typing import List, Optional
+from django.db import models
+from datetime import date
+from ..Autenticacion.usuario import Usuario
 from .grupo import Grupo
 
-class Asignacion:
-    def __init__(self, id: int, titulo: str, descripcion: str, fecha_entrega: date,
-                 tipo_tarea: str, es_grupal: bool, docente_id: int):
-        # Campos básicos
-        self.id = id
-        self.titulo = titulo
-        self.descripcion = descripcion
-        self.fecha_entrega = fecha_entrega
-        self.tipo_tarea = tipo_tarea  # 'ACD', 'AA', 'APE'
-        self.es_grupal = es_grupal
-        self.docente_id = docente_id
-        
-        # Campos opcionales
-        self.rubrica = None
-        self.fecha_creacion = datetime.now()
-        self.estudiantes_asignados: List[int] = []
-        self.grupos_asignados: List[Grupo] = []
-        self.activa = True
+class Asignacion(models.Model):
+    TIPO_TAREA_CHOICES = [
+        ('ACD', 'Aprendizaje en Contacto con el Docente'),
+        ('AA', 'Aprendizaje Autónomo'),
+        ('APE', 'Aprendizaje Práctico Experimental'),
+    ]
+    
+    # Campos básicos
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    fecha_entrega = models.DateField()
+    tipo_tarea = models.CharField(max_length=3, choices=TIPO_TAREA_CHOICES)
+    es_grupal = models.BooleanField(default=False)
+    docente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='tareas_asignadas')
+    
+    # Campos opcionales
+    rubrica = models.TextField(blank=True, null=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    activa = models.BooleanField(default=True)
+    
+    # Relaciones
+    estudiantes_asignados = models.ManyToManyField(Usuario, related_name='tareas_recibidas', blank=True)
+    grupos_asignados = models.ManyToManyField(Grupo, related_name='tareas_grupales', blank=True)
+    
+    class Meta:
+        verbose_name = 'Asignación'
+        verbose_name_plural = 'Asignaciones'
+        ordering = ['-fecha_creacion']
     
     def establecer_rubrica(self, rubrica: str) -> bool:
         # Agrega rúbrica si es válida
         if rubrica and len(rubrica.strip()) > 0:
             self.rubrica = rubrica
+            self.save()
             return True
         return False
     
-    def asignar_a_estudiante(self, estudiante_id: int) -> bool:
+    def asignar_a_estudiante(self, estudiante: Usuario) -> bool:
         # Solo para tareas individuales
         if self.es_grupal:
             return False
         
-        if estudiante_id not in self.estudiantes_asignados:
-            self.estudiantes_asignados.append(estudiante_id)
+        if not self.estudiantes_asignados.filter(id=estudiante.id).exists():
+            self.estudiantes_asignados.add(estudiante)
             return True
         return False
     
-    def asignar_a_estudiantes(self, estudiantes_ids: List[int]) -> bool:
+    def asignar_a_estudiantes(self, estudiantes) -> bool:
         # Asigna múltiples estudiantes (individual)
         if self.es_grupal:
             return False
         
-        for estudiante_id in estudiantes_ids:
-            if estudiante_id not in self.estudiantes_asignados:
-                self.estudiantes_asignados.append(estudiante_id)
+        for estudiante in estudiantes:
+            if not self.estudiantes_asignados.filter(id=estudiante.id).exists():
+                self.estudiantes_asignados.add(estudiante)
         return True
     
-    def asignar_a_grupo(self, grupo: Grupo) -> bool:
+    def asignar_a_grupo(self, grupo) -> bool:
         # Solo para tareas grupales
         if not self.es_grupal:
             return False
         
-        if grupo not in self.grupos_asignados:
-            self.grupos_asignados.append(grupo)
+        if not self.grupos_asignados.filter(id=grupo.id).exists():
+            self.grupos_asignados.add(grupo)
             # Agregar estudiantes del grupo a lista general
-            for estudiante_id in grupo.obtener_estudiantes_ids():
-                if estudiante_id not in self.estudiantes_asignados:
-                    self.estudiantes_asignados.append(estudiante_id)
+            for estudiante in grupo.estudiantes.all():
+                if not self.estudiantes_asignados.filter(id=estudiante.id).exists():
+                    self.estudiantes_asignados.add(estudiante)
             return True
         return False
     
-    def asignar_a_grupos(self, grupos: List[Grupo]) -> bool:
+    def asignar_a_grupos(self, grupos) -> bool:
         # Asigna múltiples grupos
         if not self.es_grupal:
             return False
@@ -93,36 +105,38 @@ class Asignacion:
         # Verifica si ya venció
         return date.today() > self.fecha_entrega
     
-    def puede_ser_visualizada_por_estudiante(self, estudiante_id: int) -> bool:
+    def puede_ser_visualizada_por_estudiante(self, estudiante: Usuario) -> bool:
         # Verifica si estudiante puede ver la tarea
-        return self.activa and estudiante_id in self.estudiantes_asignados
+        return self.activa and self.estudiantes_asignados.filter(id=estudiante.id).exists()
     
-    def obtener_grupo_de_estudiante(self, estudiante_id: int) -> Optional[Grupo]:
+    def obtener_grupo_de_estudiante(self, estudiante: Usuario):
         # Obtiene grupo del estudiante (si es grupal)
         if not self.es_grupal:
             return None
         
-        for grupo in self.grupos_asignados:
-            if grupo.tiene_estudiante(estudiante_id):
+        for grupo in self.grupos_asignados.all():
+            if grupo.estudiantes.filter(id=estudiante.id).exists():
                 return grupo
         return None
     
     def cantidad_estudiantes_asignados(self) -> int:
         # Total de estudiantes asignados
-        return len(self.estudiantes_asignados)
+        return self.estudiantes_asignados.count()
     
     def cantidad_grupos(self) -> int:
         # Total de grupos (si es grupal)
-        return len(self.grupos_asignados) if self.es_grupal else 0
+        return self.grupos_asignados.count() if self.es_grupal else 0
     
     def desactivar(self) -> bool:
         # Desactiva la asignación
         self.activa = False
+        self.save()
         return True
     
     def activar(self) -> bool:
         # Activa la asignación
         self.activa = True
+        self.save()
         return True
     
     def validar_campos_obligatorios(self) -> bool:

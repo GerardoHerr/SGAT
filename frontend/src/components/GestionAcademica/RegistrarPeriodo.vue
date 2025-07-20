@@ -1,53 +1,51 @@
-<!-- filepath: c:\Users\Usuario iTC\Desktop\Procesos_Project\SGAT\frontend\src\components\RegistrarAsignatura.vue -->
 <template>
-  <div class="registrar-asignatura">
+  <div class="registrar-periodo">
     <div class="main-content">
       <div class="form-card">
-        <h2>Registro de Asignatura</h2>
+        <h2>Registro de Período Académico</h2>
         
-        <form @submit.prevent="registrarAsignatura">
+        <form @submit.prevent="registrarPeriodo">
           <div class="form-group">
+            <label for="fechaInicio">Fecha de Inicio</label>
             <input 
-              v-model="form.codigo" 
-              type="text" 
-              placeholder="Código de Asignatura"
+              id="fechaInicio"
+              v-model="form.fechaInicio" 
+              type="date" 
               required 
-              maxlength="10"
               :disabled="loading"
+              @change="generarNombre"
             >
           </div>
 
           <div class="form-group">
+            <label for="fechaFin">Fecha de Fin</label>
             <input 
+              id="fechaFin"
+              v-model="form.fechaFin" 
+              type="date" 
+              required 
+              :disabled="loading"
+              :min="form.fechaInicio"
+              @change="generarNombre"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="nombre">Nombre del Período</label>
+            <input 
+              id="nombre"
               v-model="form.nombre" 
               type="text" 
-              placeholder="Nombre de Asignatura"
-              required 
-              maxlength="200"
+              placeholder="Se generará automáticamente"
+              readonly
               :disabled="loading"
+              class="readonly-field"
             >
           </div>
 
-          <div class="form-group">
-            <textarea 
-              v-model="form.descripcion"
-              placeholder="Descripción de la asignatura"
-              rows="3"
-              :disabled="loading"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <select v-model="form.activa" :disabled="loading">
-              <option value="" disabled>Seleccione estado</option>
-              <option :value="true">Activa</option>
-              <option :value="false">Inactiva</option>
-            </select>
-          </div>
-
-          <button type="submit" class="register-btn" :disabled="loading">
+          <button type="submit" class="register-btn" :disabled="loading || !form.nombre">
             <span v-if="loading">Registrando...</span>
-            <span v-else">Registrar</span>
+            <span v-else>Registrar Período</span>
           </button>
         </form>
 
@@ -62,14 +60,13 @@
 
 <script>
 export default {
-  name: 'RegistrarAsignatura',
+  name: 'RegistrarPeriodo',
   data() {
     return {
       form: {
-        codigo: '',
-        nombre: '',
-        descripcion: '',
-        activa: true
+        fechaInicio: '',
+        fechaFin: '',
+        nombre: ''
       },
       loading: false,
       mensaje: '',
@@ -77,29 +74,61 @@ export default {
     }
   },
   methods: {
-    async registrarAsignatura() {
+    generarNombre() {
+      if (this.form.fechaInicio && this.form.fechaFin) {
+        const fechaInicio = new Date(this.form.fechaInicio);
+        const fechaFin = new Date(this.form.fechaFin);
+        
+        // Validar que la fecha de fin sea posterior a la de inicio
+        if (fechaFin <= fechaInicio) {
+          this.mensaje = 'La fecha de fin debe ser posterior a la fecha de inicio';
+          this.tipoMensaje = 'error';
+          this.form.nombre = '';
+          return;
+        } else {
+          this.mensaje = '';
+        }
+        
+        const meses = [
+          'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+        
+        const mesInicio = meses[fechaInicio.getMonth()];
+        const añoInicio = fechaInicio.getFullYear();
+        const mesFin = meses[fechaFin.getMonth()];
+        const añoFin = fechaFin.getFullYear();
+        
+        // Generar nombre en formato: Marzo2025-Agosto2025
+        this.form.nombre = `${mesInicio}${añoInicio}-${mesFin}${añoFin}`;
+      } else {
+        this.form.nombre = '';
+      }
+    },
+
+    async registrarPeriodo() {
       this.loading = true;
       this.mensaje = '';
 
       try {
-        const response = await fetch('http://localhost:8000/api/registrar-asignatura/', {
+        const response = await fetch('http://localhost:8000/api/periodos/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             admin_id: 1,
-            codigo: this.form.codigo,
             nombre: this.form.nombre,
-            descripcion: this.form.descripcion,
-            activa: this.form.activa
+            fecha_inicio: this.form.fechaInicio,
+            fecha_fin: this.form.fechaFin
           })
         });
 
         const result = await response.json();
 
         if (result.success) {
-          this.mensaje = result.message;
+          //this.mensaje = result.message;
+          this.mensaje = result.message || 'Periodo registrado con éxito';
           this.tipoMensaje = 'success';
           this.limpiarFormulario();
         } else {
@@ -110,16 +139,25 @@ export default {
         this.mensaje = 'Error de conexión con el servidor';
         this.tipoMensaje = 'error';
       }
+      /*
+      try {
+        const response = await axios.post('http://localhost:8000/api/periodos/', this.periodo)
+        this.mensaje = response.data.mensaje || 'Periodo registrado con éxito'
+        this.periodo = { fechaInicio: '', fechaFin: '', nombre: '' }
+        this.errors = {}
+      } catch (error) {
+        this.mensaje = 'Error al registrar el periodo'
+        console.error(error.response?.data || error)
+      }*/
 
       this.loading = false;
     },
 
     limpiarFormulario() {
       this.form = {
-        codigo: '',
-        nombre: '',
-        descripcion: '',
-        activa: true
+        fechaInicio: '',
+        fechaFin: '',
+        nombre: ''
       };
     }
   }
@@ -127,7 +165,7 @@ export default {
 </script>
 
 <style scoped>
-.registrar-asignatura {
+.registrar-periodo {
   width: 100vw;
   min-height: 100vw;
   background: transparent;
@@ -171,8 +209,15 @@ export default {
   margin-bottom: 2rem;
 }
 
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
 .form-group input,
-.form-group textarea,
 .form-group select {
   width: 100%;
   padding: 1.2rem;
@@ -184,16 +229,21 @@ export default {
 }
 
 .form-group input:focus,
-.form-group textarea:focus,
 .form-group select:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
+.readonly-field {
+  background-color: #f8f9fa !important;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.readonly-field:focus {
+  border-color: #e9ecef !important;
+  box-shadow: none !important;
 }
 
 .register-btn {
@@ -210,7 +260,7 @@ export default {
   margin-top: 1rem;
 }
 
-.register-btn:hover {
+.register-btn:hover:not(:disabled) {
   background: #2980b9;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
@@ -275,7 +325,6 @@ export default {
   }
   
   .form-group input,
-  .form-group textarea,
   .form-group select {
     padding: 1rem;
     font-size: 1rem;

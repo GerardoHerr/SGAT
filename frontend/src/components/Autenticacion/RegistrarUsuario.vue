@@ -105,58 +105,68 @@ export default {
 <style scoped>
 .registro-container {
   width: 100vw;
-  height: 100vh;
-  background-color: #f0f2f5;
+  min-height: 100vw;
+  background: transparent;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0;
+  position: static;
+  overflow: visible;
 }
 
 .form-card {
-  background-color: #ffffff;
-  padding: 3rem;
+  background: #fff;
+  padding: 2.5rem;
   border-radius: 1rem;
-  box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.15);
-  width: 80%;
-  height: 90%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .form-title {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #1f2937;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 input,
 select {
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 8px;
   outline: none;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: #2563eb;
 }
 
 button {
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
   background-color: #2563eb;
   color: white;
   font-weight: bold;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-top: 0.5rem;
 }
 
 button:hover {
@@ -164,17 +174,17 @@ button:hover {
 }
 
 .mensaje {
-  margin-top: 2rem;
+  margin-top: 1rem;
   text-align: center;
   color: green;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .error-msg {
   color: red;
-  font-size: 0.9rem;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
   display: block;
 }
 
