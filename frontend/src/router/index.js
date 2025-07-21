@@ -8,6 +8,7 @@ import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vu
 import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
 import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
 import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
+import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,6 +81,9 @@ const router = createRouter({
       path: '/docente/gestion-grupos',
       name: 'GestionGrupos',
       component: GestionGrupos,
+      path: '/cursos-estudiante',
+      name: 'CursosEstudiante',
+      component: CursosEstudiante,
     }
   ],
 })

@@ -121,7 +121,8 @@ export default {
           })
         });
 
-        const result = await response.json();
+    const result = await response.json();
+    console.log(result); // ✅ te ayudará a depurar
 
         if (response.ok) {
           this.mensaje = 'Asignatura registrada exitosamente';
@@ -148,8 +149,8 @@ export default {
         this.tipoMensaje = 'error';
       }
 
-      this.loading = false;
-    },
+  this.loading = false;
+  },
 
     limpiarFormulario() {
       this.form = {

@@ -2,10 +2,14 @@ from django.db import models
 from ..Autenticacion.usuario import Usuario
 
 class Asignatura(models.Model):
+    ESTADO_ASIGNATURA = [
+        ('activa', 'Activa'),
+        ('inactiva', 'Inactiva'),
+    ]
+    
     codigo = models.CharField(max_length=10, unique=True)
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
-    activa = models.BooleanField(default=True)  # estado
     
     registrada_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='asignaturas_registradas')
     docente_responsable = models.ForeignKey(
