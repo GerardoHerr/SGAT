@@ -4,6 +4,8 @@ import RegistrarUsuario from '../components/Autenticacion/RegistrarUsuario.vue'
 import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignatura.vue'
 import Login from '../components/Autenticacion/Login.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
+import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -39,6 +41,11 @@ const router = createRouter({
       path: '/registrar-periodo',
       name: 'RegistrarPeriodo',
       component: RegistrarPeriodo,
+    },
+    {
+      path: '/cursos-estudiante',
+      name: 'CursosEstudiante',
+      component: CursosEstudiante,
     }
   ],
 })

@@ -1,0 +1,67 @@
+Codigo carrito emergencia -> 
+#include "BluetoothSerial.h"
+BluetoothSerial SerialBT;
+
+// Pines de control (solo dirección)
+const int in1 = 32;
+const int in2 = 33;
+const int in3 = 27;
+const int in4 = 14;
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("RobotCar");
+
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+}
+
+void loop() {
+  if (SerialBT.available()) {
+    char cmd = SerialBT.read();
+    switch (cmd) {
+      case 'F': adelante(); break;
+      case 'B': atras(); break;
+      case 'L': izquierda(); break;
+      case 'R': derecha(); break;
+      case 'S': detener(); break;
+    }
+  }
+}
+
+void adelante() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void atras() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void izquierda() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void derecha() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
+
+void detener() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
