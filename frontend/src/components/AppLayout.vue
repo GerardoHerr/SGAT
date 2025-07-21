@@ -13,18 +13,37 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Sidebar from './Sidebar.vue'
+import { authService } from '@/services/authService.js'
 
-// Estado global (esto vendría de un store como Pinia)
-const currentUser = ref({
-  name: 'Carlos Mendoza',
-  role: 'Docente', // Cambiar entre: 'Administrador', 'Docente', 'Estudiante'
-  avatar: null
-})
-
+// Estado global del usuario autenticado
+const currentUser = ref(null)
 const notifications = ref(5)
 const sidebarCollapsed = ref(false)
+
+// Cargar usuario al montar el componente
+onMounted(() => {
+  const user = authService.getCurrentUser()
+  if (user) {
+    currentUser.value = {
+      name: `${user.nombre} ${user.apellido}`,
+      role: user.rol === 'ADM' ? 'Administrador' : 
+            user.rol === 'DOC' ? 'Docente' : 
+            user.rol === 'EST' ? 'Estudiante' : 'Docente',
+      email: user.email,
+      avatar: null
+    }
+  } else {
+    // Usuario por defecto si no hay autenticación
+    currentUser.value = {
+      name: 'Usuario Demo',
+      role: 'Docente',
+      email: 'demo@universidad.edu',
+      avatar: null
+    }
+  }
+})
 </script>
 
 <style scoped>

@@ -2,8 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegistrarUsuario from '../components/Autenticacion/RegistrarUsuario.vue'
 import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignatura.vue'
+import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
+import LoginSimple from '../components/Autenticacion/LoginSimple.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
+import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
+import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
+import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -15,15 +21,22 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/registrarUsuario',
       name: 'registrarUsuario',
       component: RegistrarUsuario,
+    },
+    {
+      path: '/admin/usuarios',
+      name: 'AdminUsuarios',
+      component: RegistrarUsuario,
+    },
+    {
+      path: '/admin/asignaturas',
+      name: 'AdminAsignaturas',
+      component: RegistrarAsignatura,
     },
     {
       path: '/registrar-asignatura',
@@ -35,10 +48,40 @@ const router = createRouter({
       name: 'login',
       component: Login,
     },
+    {
+      path: '/login-simple',
+      name: 'LoginSimple',
+      component: LoginSimple,
+    },
     { 
       path: '/registrar-periodo',
       name: 'RegistrarPeriodo',
       component: RegistrarPeriodo,
+    },
+    {
+      path: '/admin/periodos',
+      name: 'AdminPeriodos',
+      component: RegistrarPeriodo,
+    },
+    {
+      path: '/admin/asignar-docente',
+      name: 'AsignarDocente',
+      component: AsignarDocente,
+    },
+    {
+      path: '/docente/asignar-tareas',
+      name: 'AsignarTareas',
+      component: AsignarTarea,
+    },
+    {
+      path: '/docente/entregas',
+      name: 'ListarTareas',
+      component: ListarTareas,
+    },
+    {
+      path: '/docente/grupos',
+      name: 'GestionGrupos',
+      component: GestionGrupos,
     }
   ],
 })

@@ -47,7 +47,7 @@
 
           <button type="submit" class="register-btn" :disabled="loading">
             <span v-if="loading">Registrando...</span>
-            <span v-else">Registrar</span>
+            <span v-else>Registrar</span>
           </button>
         </form>
 
@@ -82,31 +82,41 @@ export default {
       this.mensaje = '';
 
       try {
-        const response = await fetch('http://localhost:8000/api/registrar-asignatura/', {
+        const response = await fetch('http://localhost:8000/api/asignaturas/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            admin_id: 1,
             codigo: this.form.codigo,
             nombre: this.form.nombre,
             descripcion: this.form.descripcion,
-            activa: this.form.activa
+            activa: this.form.activa,
+            registrada_por: 1
           })
         });
 
         const result = await response.json();
 
-        if (result.success) {
-          this.mensaje = result.message;
+        if (response.ok) {
+          this.mensaje = 'Asignatura registrada exitosamente';
           this.tipoMensaje = 'success';
           this.limpiarFormulario();
         } else {
-          this.mensaje = result.error;
+          // Manejar errores de validación de Django REST Framework
+          if (result.codigo && Array.isArray(result.codigo)) {
+            this.mensaje = `Error en código: ${result.codigo[0]}`;
+          } else if (result.nombre && Array.isArray(result.nombre)) {
+            this.mensaje = `Error en nombre: ${result.nombre[0]}`;
+          } else if (result.detail) {
+            this.mensaje = result.detail;
+          } else {
+            this.mensaje = 'Error al registrar la asignatura';
+          }
           this.tipoMensaje = 'error';
         }
       } catch (error) {
+        console.error('Error:', error);
         this.mensaje = 'Error de conexión con el servidor';
         this.tipoMensaje = 'error';
       }

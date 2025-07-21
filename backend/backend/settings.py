@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'SGTA',
+        'NAME': 'sgta',
         'USER': 'sgta',
         'PASSWORD': 'sgta',
         'HOST': 'localhost',
