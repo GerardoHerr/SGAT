@@ -7,7 +7,7 @@
         <h2 v-show="!isCollapsed" class="app-title">SGAT</h2>
       </div>
       <button @click="toggleSidebar" class="toggle-btn">
-        <span class="toggle-icon">{{ isCollapsed ? '→' : '←' }}</span>
+        <span class="toggle-icon">{{ isCollapsed ? '>' : '<' }}</span>
       </button>
     </div>
 

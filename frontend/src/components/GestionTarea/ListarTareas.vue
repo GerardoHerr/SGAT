@@ -242,7 +242,7 @@ export default {
         this.docenteEmail = currentUser.email
       } else {
         // Redirigir al login si no es docente
-        this.$router.push('/login-simple')
+        this.$router.push('/login')
       }
     },
 

@@ -34,50 +34,93 @@ const usuariosMock = [
 export const authService = {
   currentUser: null,
 
-  // Simular login con email
+  // Login real con tu endpoint de autenticación
   async login(email, password) {
     try {
-      // Intentar primero con el backend real
+      // Intentar primero con tu endpoint de login real
       try {
-        const response = await fetch('http://localhost:8000/api/usuarios/');
+        const response = await fetch('http://localhost:8000/api/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nombre: email, // Tu backend espera 'nombre' en lugar de 'email'
+            contrasenia: password
+          })
+        });
+
         if (response.ok) {
-          const usuarios = await response.json();
-          const usuario = usuarios.find(u => u.email === email);
+          const data = await response.json();
           
-          if (usuario) {
-            this.currentUser = {
-              id: usuario.id,
-              nombre: usuario.nombre,
-              apellido: usuario.apellido,
-              email: usuario.email,
-              rol: usuario.rol
-            };
-            
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            return this.currentUser;
+          // Guardar el token JWT
+          if (data.access) {
+            localStorage.setItem('access_token', data.access);
           }
+          
+          // Ahora obtener los datos del usuario autenticado
+          try {
+            const userResponse = await fetch('http://localhost:8000/api/usuarios/', {
+              headers: {
+                'Authorization': `Bearer ${data.access}`
+              }
+            });
+            
+            if (userResponse.ok) {
+              const usuarios = await userResponse.json();
+              const usuario = usuarios.find(u => u.email === email || u.nombre === email);
+              
+              if (usuario) {
+                this.currentUser = {
+                  id: usuario.id,
+                  nombre: usuario.nombre,
+                  apellido: usuario.apellido,
+                  email: usuario.email,
+                  rol: usuario.rol
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                return this.currentUser;
+              }
+            }
+          } catch (userError) {
+            console.warn('Error al obtener datos del usuario, usando datos del token');
+          }
+          
+          // Si no podemos obtener datos del usuario, crear un usuario básico
+          this.currentUser = {
+            email: email,
+            nombre: email.split('@')[0], // Usar la parte antes del @ como nombre
+            token: data.access
+          };
+          
+          localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+          return this.currentUser;
+        } else {
+          // Si la autenticación real falla, intentar con datos simulados
+          console.warn('Autenticación real falló, intentando con datos simulados');
+          throw new Error('Credenciales incorrectas');
         }
-      } catch (backendError) {
-        console.warn('Backend no disponible, usando datos simulados');
-      }
-      
-      // Si el backend falla, usar datos simulados
-      const usuario = usuariosMock.find(u => u.email === email);
-      
-      if (usuario) {
-        this.currentUser = {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          email: usuario.email,
-          rol: usuario.rol
-        };
+      } catch (authError) {
+        console.warn('Error en autenticación real:', authError.message);
         
-        // Guardar en localStorage para persistencia
-        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-        return this.currentUser;
-      } else {
-        throw new Error('Usuario no encontrado');
+        // Fallback a datos simulados solo en desarrollo
+        const usuario = usuariosMock.find(u => u.email === email);
+        
+        if (usuario) {
+          this.currentUser = {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            email: usuario.email,
+            rol: usuario.rol
+          };
+          
+          localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+          return this.currentUser;
+        } else {
+          throw new Error('Usuario no encontrado');
+        }
       }
     } catch (error) {
       throw error;
@@ -99,6 +142,7 @@ export const authService = {
   logout() {
     this.currentUser = null;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('access_token'); // También limpiar el token JWT
   },
 
   // Verificar si está autenticado

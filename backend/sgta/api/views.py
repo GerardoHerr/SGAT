@@ -84,7 +84,7 @@ class AsignaturaViewSet(viewsets.ModelViewSet):
         """Asignar un docente responsable a una asignatura"""
         try:
             asignatura_id = request.data.get('asignatura_id')
-            docente_id = request.data.get('docente_id')
+            docente_id = request.data.get('docente_id')  # Este sera el email del docente
             
             if not asignatura_id or not docente_id:
                 return Response(
@@ -93,7 +93,7 @@ class AsignaturaViewSet(viewsets.ModelViewSet):
                 )
             
             asignatura = Asignatura.objects.get(id=asignatura_id)
-            docente = Usuario.objects.get(id=docente_id, rol='DOC')
+            docente = Usuario.objects.get(email=docente_id, rol='DOC')  # Buscar por email
             
             asignatura.docente_responsable = docente
             asignatura.save()
@@ -115,10 +115,10 @@ class AsignaturaViewSet(viewsets.ModelViewSet):
         """Obtener lista de docentes disponibles para asignar"""
         docentes = Usuario.objects.filter(rol='DOC')
         return Response([{
-            'id': docente.id,
+            'id': docente.email,  # Usar email como ID ya que es la primary key
+            'email': docente.email,
             'nombre': docente.nombre,
-            'apellido': docente.apellido,
-            'email': docente.email
+            'apellido': docente.apellido
         } for docente in docentes], status=status.HTTP_200_OK)
 
 class PeriodoLectivoViewSet(viewsets.ModelViewSet):

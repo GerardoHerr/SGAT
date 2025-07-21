@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import AppLayout from './components/AppLayout.vue'
 
 const route = useRoute()
-const isLoginPage = computed(() => route.name === 'login-simple' || route.name === 'login')
+const isLoginPage = computed(() => route.name === 'login')
 </script>
 
 <template>

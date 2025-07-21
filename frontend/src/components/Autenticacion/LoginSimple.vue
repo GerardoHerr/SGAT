@@ -34,9 +34,15 @@
         {{ error }}
       </div>
       
+      <!-- Información de autenticación -->
+      <div class="auth-info">
+        <p><strong>Autenticación Real:</strong> Usa tus credenciales reales del sistema</p>
+        <p><em>Si falla la autenticación real, se usarán los usuarios de prueba como fallback</em></p>
+      </div>
+      
       <!-- Usuarios de prueba -->
       <div class="demo-users">
-        <h3>Usuarios de Prueba:</h3>
+        <h3>Usuarios de Prueba (Fallback):</h3>
         <div class="user-demo" @click="setDemoUser('admin@universidad.edu')">
           <strong>Administrador:</strong> admin@universidad.edu
         </div>
@@ -181,6 +187,25 @@ export default {
   border-radius: 0.5rem;
   margin-top: 1rem;
   text-align: center;
+}
+
+.auth-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 0.5rem;
+  border-left: 4px solid #3498db;
+}
+
+.auth-info p {
+  margin: 0.5rem 0;
+  color: #323232;
+  font-size: 0.9rem;
+}
+
+.auth-info em {
+  color: #666;
+  font-size: 0.8rem;
 }
 
 .demo-users {

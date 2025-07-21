@@ -4,7 +4,6 @@ import RegistrarUsuario from '../components/Autenticacion/RegistrarUsuario.vue'
 import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignatura.vue'
 import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
-import LoginSimple from '../components/Autenticacion/LoginSimple.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
 import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
 import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
@@ -50,8 +49,7 @@ const router = createRouter({
     },
     {
       path: '/login-simple',
-      name: 'LoginSimple',
-      component: LoginSimple,
+      redirect: '/login'
     },
     { 
       path: '/registrar-periodo',
@@ -79,7 +77,7 @@ const router = createRouter({
       component: ListarTareas,
     },
     {
-      path: '/docente/grupos',
+      path: '/docente/gestion-grupos',
       name: 'GestionGrupos',
       component: GestionGrupos,
     }

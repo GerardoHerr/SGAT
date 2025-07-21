@@ -148,17 +148,37 @@ export default {
       estudianteParaAgregar: {},
       loading: false,
       mensaje: '',
-      esError: false
+      esError: false,
+      docenteId: null,
+      docenteEmail: ''
     }
   },
   async mounted() {
+    this.obtenerUsuarioActual()
     await this.cargarAsignaturas()
   },
   methods: {
+    obtenerUsuarioActual() {
+      // Obtener usuario del authService
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'))
+      if (currentUser && currentUser.rol === 'DOC') {
+        this.docenteId = currentUser.id
+        this.docenteEmail = currentUser.email
+      } else {
+        // Redirigir al login si no es docente
+        this.$router.push('/login')
+      }
+    },
     async cargarAsignaturas() {
       try {
-        const response = await axios.get('http://localhost:8000/api/asignaturas/')
-        this.asignaturas = response.data
+        // Cargar solo las asignaturas del docente autenticado
+        const response = await fetch(`http://localhost:8000/api/asignaturas/mis_asignaturas/?email=${this.docenteEmail}`)
+        if (response.ok) {
+          this.asignaturas = await response.json()
+        } else {
+          console.error('Error al cargar asignaturas del docente')
+          this.mostrarMensaje('Error al cargar asignaturas', true)
+        }
       } catch (error) {
         console.error('Error al cargar asignaturas:', error)
         this.mostrarMensaje('Error al cargar asignaturas', true)
@@ -183,8 +203,8 @@ export default {
 
     async cargarEstudiantesDisponibles() {
       try {
-        // Obtener todos los estudiantes de la asignatura
-        const response = await axios.get(`http://localhost:8000/api/usuarios/?rol=EST`)
+        // Obtener estudiantes inscritos en la asignatura específica
+        const response = await axios.get(`http://localhost:8000/api/usuarios/?rol=EST&asignatura=${this.asignaturaSeleccionada}`)
         const todosEstudiantes = response.data
         
         // Filtrar estudiantes que no están en ningún grupo
