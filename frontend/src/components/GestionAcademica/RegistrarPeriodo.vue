@@ -167,31 +167,33 @@ export default {
 <style scoped>
 .registrar-periodo {
   width: 100vw;
-  height: 100vh;
-  background: #f5f5f5;
+  min-height: 100vw;
+  background: transparent;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   margin: 0;
   padding: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow: auto;
+  position: static;
+  overflow: visible;
 }
 
 .main-content {
-  width: 90%;
-  max-width: 600px;
-  margin: auto;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 2rem 0;
 }
 
 .form-card {
-  background: white;
-  padding: 4rem;
-  border-radius: 15px;
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 1rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 

@@ -27,7 +27,14 @@
             </div>
           </div>
 
-          <button type="submit">Iniciar Sesión</button>
+          <button type="submit" :disabled="loading">
+            <span v-if="loading">Iniciando sesión...</span>
+            <span v-else>Iniciar Sesión</span>
+          </button>
+
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
 
           <p class="register-text">
             ¿No tienes cuenta? <a href="#">Regístrate</a><br />
@@ -40,20 +47,46 @@
 </template>
 
 <script>
+import { authService } from '@/services/authService'
+
 export default {
   name: 'LoginView',
   data() {
     return {
       username: '',
-      password: ''
+      password: '',
+      error: '',
+      loading: false
     };
   },
   methods: {
-    handleLogin() {
-      if (this.username === 'admin' && this.password === '1234') {
-        alert('¡Bienvenido, admin!');
-      } else {
-        alert('Usuario o contraseña incorrectos');
+    async handleLogin() {
+      this.loading = true;
+      this.error = '';
+      
+      try {
+        console.log('Intentando login con:', this.username);
+        
+        const user = await authService.login(this.username, this.password);
+        
+        if (user) {
+          console.log('Login exitoso:', user);
+          // Redirigir según el rol del usuario
+          if (user.rol === 'ADM') {
+            this.$router.push('/admin/usuarios');
+          } else if (user.rol === 'DOC') {
+            this.$router.push('/docente/entregas');
+          } else if (user.rol === 'EST') {
+            this.$router.push('/');
+          } else {
+            this.$router.push('/');
+          }
+        }
+      } catch (error) {
+        this.error = 'Usuario o contraseña incorrectos';
+        console.error('Error en login:', error);
+      } finally {
+        this.loading = false;
       }
     }
   }
@@ -199,6 +232,23 @@ button:hover {
 
 button:active {
   transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Mensaje de error */
+.error-message {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  font-size: 14px;
+  text-align: center;
 }
 
 /* Texto de registro */
