@@ -47,7 +47,7 @@
 
           <button type="submit" class="register-btn" :disabled="loading">
             <span v-if="loading">Registrando...</span>
-            <span v-else">Registrar</span>
+            <span v-else>Registrar</span>
           </button>
         </form>
 
@@ -61,6 +61,8 @@
 </template>
 
 <script>
+import { authService } from '@/services/authService.js'
+
 export default {
   name: 'RegistrarAsignatura',
   data() {
@@ -73,40 +75,75 @@ export default {
       },
       loading: false,
       mensaje: '',
-      tipoMensaje: ''
+      tipoMensaje: '',
+      usuarioEmail: null
     }
   },
+  mounted() {
+    this.obtenerUsuarioActual();
+  },
   methods: {
+    obtenerUsuarioActual() {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser && currentUser.email) {
+        this.usuarioEmail = currentUser.email;
+      } else {
+        this.mensaje = 'Error: No se pudo obtener el usuario autenticado';
+        this.tipoMensaje = 'error';
+        this.$router.push('/login');
+      }
+    },
+
     async registrarAsignatura() {
       this.loading = true;
       this.mensaje = '';
 
+      // Verificar que tenemos el email del usuario
+      if (!this.usuarioEmail) {
+        this.mensaje = 'Error: Usuario no autenticado';
+        this.tipoMensaje = 'error';
+        this.loading = false;
+        return;
+      }
+
       try {
-        const response = await fetch('http://localhost:8000/api/registrar-asignatura/', {
+        const response = await fetch('http://localhost:8000/api/asignaturas/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            admin_id: 1,
             codigo: this.form.codigo,
             nombre: this.form.nombre,
             descripcion: this.form.descripcion,
-            activa: this.form.activa
+            activa: this.form.activa,
+            registrada_por: this.usuarioEmail
           })
         });
 
         const result = await response.json();
 
-        if (result.success) {
-          this.mensaje = result.message;
+        if (response.ok) {
+          this.mensaje = 'Asignatura registrada exitosamente';
           this.tipoMensaje = 'success';
           this.limpiarFormulario();
         } else {
-          this.mensaje = result.error;
+          // Manejar errores de validación de Django REST Framework
+          if (result.codigo && Array.isArray(result.codigo)) {
+            this.mensaje = `Error en código: ${result.codigo[0]}`;
+          } else if (result.nombre && Array.isArray(result.nombre)) {
+            this.mensaje = `Error en nombre: ${result.nombre[0]}`;
+          } else if (result.registrada_por && Array.isArray(result.registrada_por)) {
+            this.mensaje = `Error en usuario: ${result.registrada_por[0]}`;
+          } else if (result.detail) {
+            this.mensaje = result.detail;
+          } else {
+            this.mensaje = 'Error al registrar la asignatura';
+          }
           this.tipoMensaje = 'error';
         }
       } catch (error) {
+        console.error('Error:', error);
         this.mensaje = 'Error de conexión con el servidor';
         this.tipoMensaje = 'error';
       }

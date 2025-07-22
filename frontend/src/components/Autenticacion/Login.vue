@@ -12,10 +12,10 @@
 
         <form @submit.prevent="handleLogin">
           <div class="input-group">
-            <label for="username">Usuario</label>
+            <label for="email">Email</label>
             <div class="input-icon">
-              <i class="fa fa-user"></i>
-              <input type="text" v-model="username" id="username" placeholder="Ingresa tu usuario" required />
+              <i class="fa fa-envelope"></i>
+              <input type="email" v-model="email" id="email" placeholder="Ingresa tu email" required />
             </div>
           </div>
 
@@ -27,7 +27,14 @@
             </div>
           </div>
 
-          <button type="submit">Iniciar Sesión</button>
+          <button type="submit" :disabled="loading">
+            <span v-if="loading">Iniciando sesión...</span>
+            <span v-else>Iniciar Sesión</span>
+          </button>
+
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
 
           <p class="register-text">
             ¿No tienes cuenta? <a href="#">Regístrate</a><br />
@@ -40,38 +47,46 @@
 </template>
 
 <script>
-import axios from 'axios';
-
+import { authService } from '@/services/authService'
 
 export default {
   name: 'LoginView',
   data() {
     return {
-      username: '',
+      email: '',
       password: '',
-      error: ''
+      error: '',
+      loading: false
     };
   },
   methods: {
     async handleLogin() {
-      console.log('Username:', this.username);
-      console.log('Password:', this.password);
+      this.loading = true;
+      this.error = '';
       
       try {
-        const response = await axios.post('http://localhost:8000/api/login/', {
-          nombre: this.username,
-          contrasenia: this.password
-        });
-
-        const {access} = response.data;
-
-        localStorage.setItem('access_token', access);
-
-        this.$router.push({ path: '/' });
-
+        console.log('Intentando login con:', this.email);
+        
+        const user = await authService.login(this.email, this.password);
+        
+        if (user) {
+          console.log('Login exitoso:', user);
+          // Redirigir según el rol del usuario
+          if (user.rol === 'ADM') {
+            this.$router.push('/admin/usuarios');
+          } else if (user.rol === 'DOC') {
+            this.$router.push('/docente/entregas');
+          } else if (user.rol === 'EST') {
+            this.$router.push('/');
+          } else {
+            this.$router.push('/');
+          }
+        }
       } catch (error) {
         this.error = 'Usuario o contraseña incorrectos';
-        console.error(error);
+        console.error('Error en login:', error);
+      } finally {
+        this.loading = false;
       }
     }
   }
@@ -217,6 +232,23 @@ button:hover {
 
 button:active {
   transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Mensaje de error */
+.error-message {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  font-size: 14px;
+  text-align: center;
 }
 
 /* Texto de registro */
