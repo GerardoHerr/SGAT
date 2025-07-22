@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer
 from rest_framework.views import APIView
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import make_password
 from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
@@ -326,14 +326,15 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            nombre = serializer.validated_data['nombre']
+            email = serializer.validated_data['email']
             contrasenia = serializer.validated_data['contrasenia']
 
             try:
-                user = Usuario.objects.get(nombre=nombre)
-                if check_password(contrasenia, user.contrasenia):
+                user = Usuario.objects.get(email=email)
+                # Verificar contraseña (comparación directa ya que están en texto plano)
+                if contrasenia == user.contrasenia:
                     payload = {
-                        'id': user.id,
+                        'id': user.email,
                         'email': user.email,
                         'rol': user.rol,
                         'exp': datetime.utcnow() + timedelta(minutes=30),
@@ -341,7 +342,7 @@ class LoginView(APIView):
                     }
                     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
                     return Response({'access': token})
-                return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'error': 'Credenciales invalidas'}, status=status.HTTP_401_UNAUTHORIZED)
             except Usuario.DoesNotExist:
                 return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 

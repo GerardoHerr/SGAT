@@ -29,8 +29,8 @@ class PeriodoLectivoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
+    email = serializers.CharField()
+    contrasenia = serializers.CharField()
 
 class AsignacionSerializer(serializers.ModelSerializer):
     class Meta:

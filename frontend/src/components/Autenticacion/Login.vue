@@ -12,10 +12,10 @@
 
         <form @submit.prevent="handleLogin">
           <div class="input-group">
-            <label for="username">Usuario</label>
+            <label for="email">Email</label>
             <div class="input-icon">
-              <i class="fa fa-user"></i>
-              <input type="text" v-model="username" id="username" placeholder="Ingresa tu usuario" required />
+              <i class="fa fa-envelope"></i>
+              <input type="email" v-model="email" id="email" placeholder="Ingresa tu email" required />
             </div>
           </div>
 
@@ -53,7 +53,7 @@ export default {
   name: 'LoginView',
   data() {
     return {
-      username: '',
+      email: '',
       password: '',
       error: '',
       loading: false
@@ -65,9 +65,9 @@ export default {
       this.error = '';
       
       try {
-        console.log('Intentando login con:', this.username);
+        console.log('Intentando login con:', this.email);
         
-        const user = await authService.login(this.username, this.password);
+        const user = await authService.login(this.email, this.password);
         
         if (user) {
           console.log('Login exitoso:', user);
