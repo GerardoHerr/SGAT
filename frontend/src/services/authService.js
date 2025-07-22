@@ -45,7 +45,7 @@ export const authService = {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            nombre: email, // Tu backend espera 'nombre' en lugar de 'email'
+            email: email,
             contrasenia: password
           })
         });
