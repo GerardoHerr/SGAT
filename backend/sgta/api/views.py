@@ -9,6 +9,8 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 import random
 from django.db import transaction
 
@@ -32,6 +34,20 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             )
             
         return queryset
+    
+    @action(detail=False, methods=['get'], url_path='by-email')
+    def get_by_email(self, request):
+        """Obtener usuario por email - usado después del login"""
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Email requerido'}, status=400)
+        
+        try:
+            usuario = Usuario.objects.get(email=email)
+            serializer = self.get_serializer(usuario)
+            return Response(serializer.data)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=404)
     
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
