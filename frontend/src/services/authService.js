@@ -60,28 +60,21 @@ export const authService = {
           
           // Ahora obtener los datos del usuario autenticado
           try {
-            const userResponse = await fetch('http://localhost:8000/api/usuarios/', {
-              headers: {
-                'Authorization': `Bearer ${data.access}`
-              }
-            });
+            const userResponse = await fetch(`http://localhost:8000/api/usuarios/by-email/?email=${encodeURIComponent(email)}`);
             
             if (userResponse.ok) {
-              const usuarios = await userResponse.json();
-              const usuario = usuarios.find(u => u.email === email || u.nombre === email);
+              const usuario = await userResponse.json();
               
-              if (usuario) {
-                this.currentUser = {
-                  id: usuario.id,
-                  nombre: usuario.nombre,
-                  apellido: usuario.apellido,
-                  email: usuario.email,
-                  rol: usuario.rol
-                };
-                
-                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                return this.currentUser;
-              }
+              this.currentUser = {
+                id: usuario.email, // Usar email como ID
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                email: usuario.email,
+                rol: usuario.rol
+              };
+              
+              localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+              return this.currentUser;
             }
           } catch (userError) {
             console.warn('Error al obtener datos del usuario, usando datos del token');
