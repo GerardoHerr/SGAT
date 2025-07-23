@@ -2,9 +2,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegistrarUsuario from '../components/Autenticacion/RegistrarUsuario.vue'
 import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignatura.vue'
+import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
+<<<<<<< HEAD
 import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
+=======
+import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
+import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
+import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
+>>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,15 +24,22 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/registrarUsuario',
       name: 'registrarUsuario',
       component: RegistrarUsuario,
+    },
+    {
+      path: '/admin/usuarios',
+      name: 'AdminUsuarios',
+      component: RegistrarUsuario,
+    },
+    {
+      path: '/admin/asignaturas',
+      name: 'AdminAsignaturas',
+      component: RegistrarAsignatura,
     },
     {
       path: '/registrar-asignatura',
@@ -37,15 +51,45 @@ const router = createRouter({
       name: 'login',
       component: Login,
     },
+    {
+      path: '/login-simple',
+      redirect: '/login'
+    },
     { 
       path: '/registrar-periodo',
       name: 'RegistrarPeriodo',
       component: RegistrarPeriodo,
     },
     {
+<<<<<<< HEAD
       path: '/cursos-estudiante',
       name: 'CursosEstudiante',
       component: CursosEstudiante,
+=======
+      path: '/admin/periodos',
+      name: 'AdminPeriodos',
+      component: RegistrarPeriodo,
+    },
+    {
+      path: '/admin/asignar-docente',
+      name: 'AsignarDocente',
+      component: AsignarDocente,
+    },
+    {
+      path: '/docente/asignar-tareas',
+      name: 'AsignarTareas',
+      component: AsignarTarea,
+    },
+    {
+      path: '/docente/entregas',
+      name: 'ListarTareas',
+      component: ListarTareas,
+    },
+    {
+      path: '/docente/gestion-grupos',
+      name: 'GestionGrupos',
+      component: GestionGrupos,
+>>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
     }
   ],
 })
