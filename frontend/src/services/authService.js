@@ -48,7 +48,10 @@ export const authService = {
             email: email,
             contrasenia: password
           })
+          
+          
         });
+        console.log('Response from login:', response);
 
         if (response.ok) {
           const data = await response.json();

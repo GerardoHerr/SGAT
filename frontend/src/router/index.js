@@ -5,13 +5,11 @@ import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignat
 import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
-<<<<<<< HEAD
 import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
-=======
 import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
 import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
 import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
->>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
+import SolicitarRegistro from '../components/GestionAcademica/SolicitarRegistro.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,11 +59,16 @@ const router = createRouter({
       component: RegistrarPeriodo,
     },
     {
-<<<<<<< HEAD
-      path: '/cursos-estudiante',
+      path: '/estudiante/cursos-estudiante',
       name: 'CursosEstudiante',
       component: CursosEstudiante,
-=======
+    },
+    {
+      path: '/estudiante/solicitar-asignatura',
+      name: 'SolicitarAsignatura',
+      component: SolicitarRegistro,
+    },
+    {
       path: '/admin/periodos',
       name: 'AdminPeriodos',
       component: RegistrarPeriodo,
@@ -89,7 +92,6 @@ const router = createRouter({
       path: '/docente/gestion-grupos',
       name: 'GestionGrupos',
       component: GestionGrupos,
->>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
     }
   ],
 })

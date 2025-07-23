@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo
+from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura
 
 class UsuarioSerializer(serializers.ModelSerializer):
     contrasenia = serializers.CharField(write_only=True)  # Solo para escritura, no se devuelve en las respuestas
@@ -70,4 +70,9 @@ class AsignarTareaSerializer(serializers.Serializer):
 class InscripcionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inscripcion
+        fields = '__all__'
+
+class SolicitudAsignaturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SolicitudAsignatura
         fields = '__all__'

@@ -1,18 +1,20 @@
 from rest_framework import viewsets
-from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo
+from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
 from datetime import datetime, timedelta
 import jwt
+from rest_framework.viewsets import ViewSet
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 import random
 from django.db import transaction
+from rest_framework.authentication import BasicAuthentication
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
@@ -363,3 +365,37 @@ class LoginView(APIView):
                 return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SolicitarAsignaturaViewSet(ViewSet):
+    authentication_classes = []  # No usar autenticación automática
+    def create(self, request):
+        print("Dentro de create")
+        try:
+            token = request.headers.get('Authorization', None)
+            if not token:
+                return Response({'error': 'Token no proporcionado'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            token = token.split(" ")[1]
+            print("Token recibido:", token)
+            decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            print('Decoded token:', decoded)  # Debugging line
+            email = decoded['email']
+            print('Decoded email:', email)  # Debugging line
+            estudiante = Usuario.objects.get(email=email)
+        except Exception as e:
+            print("Error decodificando token:", e)
+            return Response({'error': 'Token inválido'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        asignatura_id = request.data.get('asignatura_id')
+        try:
+            asignatura = Asignatura.objects.get(id=asignatura_id)
+        except Asignatura.DoesNotExist:
+            return Response({'error': 'Asignatura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+        SolicitudAsignatura.objects.create(
+            estudiante=estudiante,
+            asignatura=asignatura,
+            estado='pendiente'
+        )
+
+        return Response({'message': 'Solicitud enviada con éxito'}, status=status.HTTP_201_CREATED)

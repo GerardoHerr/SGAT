@@ -83,26 +83,6 @@ export default {
     this.obtenerUsuarioActual();
   },
   methods: {
-<<<<<<< HEAD
-  async registrarAsignatura() {
-  this.loading = true;
-  this.mensaje = '';
-
-  try {
-    const response = await fetch('http://localhost:8000/api/asignaturas/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        admin_id: 1,
-        codigo: this.form.codigo,
-        nombre: this.form.nombre,
-        descripcion: this.form.descripcion,
-        activa: this.form.activa
-      })
-    });
-=======
     obtenerUsuarioActual() {
       const currentUser = authService.getCurrentUser();
       if (currentUser && currentUser.email) {
@@ -140,25 +120,10 @@ export default {
             registrada_por: this.usuarioEmail
           })
         });
->>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
 
     const result = await response.json();
     console.log(result); // ✅ te ayudará a depurar
 
-<<<<<<< HEAD
-    if (response.ok) {
-      this.mensaje = 'Asignatura registrada correctamente';
-      this.tipoMensaje = 'success';
-      this.limpiarFormulario();
-    } else {
-      this.mensaje = result.error || 'Error al registrar la asignatura';
-      this.tipoMensaje = 'error';
-    }
-  } catch (error) {
-    this.mensaje = 'Error de conexión con el servidor';
-    this.tipoMensaje = 'error';
-  }
-=======
         if (response.ok) {
           this.mensaje = 'Asignatura registrada exitosamente';
           this.tipoMensaje = 'success';
@@ -183,7 +148,6 @@ export default {
         this.mensaje = 'Error de conexión con el servidor';
         this.tipoMensaje = 'error';
       }
->>>>>>> 25de0330fa6fe791658c1748b4a3034c71660d0e
 
   this.loading = false;
   },
