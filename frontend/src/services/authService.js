@@ -1,35 +1,3 @@
-// Datos de usuarios simulados para desarrollo
-const usuariosMock = [
-  {
-    id: 1,
-    email: 'admin@universidad.edu',
-    nombre: 'Admin',
-    apellido: 'Sistema',
-    rol: 'ADM'
-  },
-  {
-    id: 2,
-    email: 'maria.garcia@universidad.edu',
-    nombre: 'María',
-    apellido: 'García',
-    rol: 'DOC'
-  },
-  {
-    id: 3,
-    email: 'juan.rodriguez@universidad.edu',
-    nombre: 'Juan',
-    apellido: 'Rodríguez',
-    rol: 'DOC'
-  },
-  {
-    id: 4,
-    email: 'ana.lopez@universidad.edu',
-    nombre: 'Ana',
-    apellido: 'López',
-    rol: 'EST'
-  }
-];
-
 // Simulación de autenticación simple
 export const authService = {
   currentUser: null,

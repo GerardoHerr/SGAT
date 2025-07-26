@@ -14,6 +14,7 @@ router.register(r'cursos', CursoViewSet)
 router.register(r'inscripciones', InscripcionViewSet)
 router.register(r'asignaciones', AsignacionViewSet)
 router.register(r'grupos', GrupoViewSet)
+router.register(r'solicitudAsignatura', SolicitarAsignaturaViewSet)
 
 router.register(r'entregas', EntregaTareaViewSet, basename='entregatarea')
 

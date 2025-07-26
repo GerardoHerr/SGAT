@@ -1,5 +1,16 @@
 ﻿from rest_framework import viewsets
-from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura, Curso, EntregaTarea
+
+# Importar los modelos necesarios desde domain
+from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+from ..core.domain.GestionAcademica.entregarTarea import EntregaTarea
+from ..core.domain.GestionAcademica.asignatura import Asignatura
+from ..core.domain.GestionTarea.asignacion import Asignacion
+from ..core.domain.GestionAcademica.periodo_lectivo import PeriodoLectivo
+from ..core.domain.GestionAcademica.inscripcion import Inscripcion
+from ..core.domain.GestionTarea.grupo import Grupo
+from ..core.domain.GestionAcademica.curso import Curso
+from ..core.domain.Autenticacion.usuario import Usuario
+
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer, SolicitudAsignaturaSerializer, CursoSerializer, EntregaTareaSerializer
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
@@ -11,7 +22,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.authentication import JWTAuthentication
 import random
 from django.db import transaction
 from rest_framework.authentication import BasicAuthentication
@@ -286,7 +296,8 @@ class GrupoViewSet(viewsets.ModelViewSet):
             nombre_base = request.data.get('nombre_base') or serializer.validated_data.get('nombre_base')
             try:
                 asignatura = Asignatura.objects.get(id=asignatura_id)
-                from ..models import SolicitudAsignatura, Curso
+                from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+                from ..core.domain.GestionAcademica.curso import Curso
                 curso_objeto = Curso.objects.filter(asignatura=asignatura).first()
                 if not curso_objeto:
                     return Response({'error': 'No existe un curso para esta asignatura'}, status=status.HTTP_400_BAD_REQUEST)
