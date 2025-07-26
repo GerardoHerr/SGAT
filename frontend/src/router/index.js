@@ -5,18 +5,15 @@ import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignat
 import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
-<<<<<<< HEAD
-import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
-import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
-import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
-import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
-=======
 import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
 import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
 import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
 import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
 import SolicitarRegistro from '../components/GestionAcademica/SolicitarRegistro.vue'
->>>>>>> gerardo
+import AceptarSolicitud from '../components/GestionAcademica/AceptarSolicitud.vue'
+import CursosDocente from '../components/GestionAcademica/CursosDocente.vue'
+import MostrarTareas from '../components/GestionTarea/MostrarTareas.vue'
+import CalificarTarea from '../components/GestionTarea/CalificarTarea.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -99,6 +96,26 @@ const router = createRouter({
       path: '/docente/gestion-grupos',
       name: 'GestionGrupos',
       component: GestionGrupos,
+    },
+    {
+      path: '/docente/aceptar-solicitud',
+      name: 'AceptarSolicitud',
+      component: AceptarSolicitud,
+    },
+    {
+      path: '/docente/cursos',
+      name: 'CursosDocente',
+      component: CursosDocente,
+    }, 
+    {
+      path: '/docente/mostrar-tareas',
+      name: 'MostrarTareas',
+      component: MostrarTareas,
+    },
+    {
+      path: '/docente/calificar-tarea/:id',
+      name: 'CalificarTarea',
+      component: CalificarTarea,
     }
   ],
 })

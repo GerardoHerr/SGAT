@@ -4,59 +4,70 @@
       <div class="card">
         <h2>Gestión de Grupos</h2>
         
-        <!-- Selector de Asignatura -->
+        <!-- Selector de Curso -->
         <div class="form-group">
-          <label for="asignatura">Seleccionar Asignatura</label>
+          <label for="curso">Seleccionar Curso</label>
           <select
-            id="asignatura"
-            v-model="asignaturaSeleccionada"
+            id="curso"
+            v-model="cursoSeleccionado"
             class="form-select"
             @change="cargarGrupos"
           >
-            <option value="">Seleccionar asignatura</option>
+            <option value="">Seleccionar curso</option>
             <option
-              v-for="asignatura in asignaturas"
-              :key="asignatura.id"
-              :value="asignatura.id"
+              v-for="curso in cursos"
+              :key="curso.id"
+              :value="curso.id"
             >
-              {{ asignatura.nombre }}
+              {{ curso.asignatura_nombre }} - {{ curso.periodo }}
             </option>
           </select>
         </div>
 
-        <!-- Sección de Creación de Grupos Aleatorios -->
-        <div v-if="asignaturaSeleccionada" class="seccion-crear-grupos">
-          <h3>Crear Grupos Aleatorios</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="cantidad_grupos">Cantidad de Grupos</label>
-              <input
-                id="cantidad_grupos"
-                v-model.number="formGrupos.cantidad_grupos"
-                type="number"
-                min="1"
-                max="20"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group">
-              <label for="nombre_base">Nombre Base</label>
-              <input
-                id="nombre_base"
-                v-model="formGrupos.nombre_base"
-                type="text"
-                class="form-input"
-                placeholder="Grupo"
-              />
-            </div>
-          </div>
+        <!-- Botón para mostrar el formulario de creación de grupos aleatorios -->
+        <div v-if="cursoSeleccionado" class="seccion-crear-grupos">
           <button
-            @click="crearGruposAleatorios"
             class="btn-primary"
-            :disabled="loading"
+            style="margin-bottom: 15px; width: 100%; font-size: 18px;"
+            @click="mostrarFormGrupos = !mostrarFormGrupos"
           >
-            {{ loading ? 'Creando...' : 'Crear Grupos Aleatorios' }}
+            Crear grupos aleatorios
           </button>
+          <div v-if="mostrarFormGrupos" class="form-crear-grupos">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="min_estudiantes">Cantidad mínima de estudiantes por grupo</label>
+                <input
+                  id="min_estudiantes"
+                  v-model.number="formGrupos.min_estudiantes"
+                  type="number"
+                  min="2"
+                  max="100"
+                  class="form-input"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="nombre_base">Nombre Base</label>
+                <input
+                  id="nombre_base"
+                  v-model="formGrupos.nombre_base"
+                  type="text"
+                  class="form-input"
+                  placeholder="Grupo"
+                  required
+                />
+              </div>
+            </div>
+            <button
+              @click="crearGruposAleatorios"
+              class="btn-primary"
+              :disabled="loading || !formGrupos.min_estudiantes || formGrupos.min_estudiantes < 2"
+              style="width: 100%; font-size: 16px; margin-top: 10px;"
+            >
+              {{ loading ? 'Creando...' : 'Generar grupos aleatorios' }}
+            </button>
+          </div>
         </div>
 
         <!-- Lista de Grupos Existentes -->
@@ -137,12 +148,12 @@ export default {
   name: 'GestionGrupos',
   data() {
     return {
-      asignaturas: [],
-      asignaturaSeleccionada: '',
+      cursos: [],
+      cursoSeleccionado: '',
       grupos: [],
       estudiantesDisponibles: [],
       formGrupos: {
-        cantidad_grupos: 4,
+        min_estudiantes: 2,
         nombre_base: 'Grupo'
       },
       estudianteParaAgregar: {},
@@ -150,12 +161,13 @@ export default {
       mensaje: '',
       esError: false,
       docenteId: null,
-      docenteEmail: ''
+      docenteEmail: '',
+      mostrarFormGrupos: false
     }
   },
   async mounted() {
     this.obtenerUsuarioActual()
-    await this.cargarAsignaturas()
+    await this.cargarCursos()
   },
   methods: {
     obtenerUsuarioActual() {
@@ -169,32 +181,33 @@ export default {
         this.$router.push('/login')
       }
     },
-    async cargarAsignaturas() {
+    async cargarCursos() {
       try {
-        // Cargar solo las asignaturas del docente autenticado
-        const response = await fetch(`http://localhost:8000/api/asignaturas/mis_asignaturas/?email=${this.docenteEmail}`)
-        if (response.ok) {
-          this.asignaturas = await response.json()
-        } else {
-          console.error('Error al cargar asignaturas del docente')
-          this.mostrarMensaje('Error al cargar asignaturas', true)
-        }
+        // Cargar solo los cursos del docente autenticado
+        const response = await axios.get(`http://localhost:8000/api/cursos/?docente_email=${this.docenteEmail}`)
+        this.cursos = response.data
       } catch (error) {
-        console.error('Error al cargar asignaturas:', error)
-        this.mostrarMensaje('Error al cargar asignaturas', true)
+        console.error('Error al cargar cursos del docente:', error)
+        this.mostrarMensaje('Error al cargar cursos', true)
       }
     },
 
     async cargarGrupos() {
-      if (!this.asignaturaSeleccionada) {
+      if (!this.cursoSeleccionado) {
         this.grupos = []
         return
       }
-      
       try {
-        const response = await axios.get(`http://localhost:8000/api/grupos/?asignatura_id=${this.asignaturaSeleccionada}`)
+        // Buscar el curso seleccionado para obtener la asignatura asociada
+        const curso = this.cursos.find(c => c.id === this.cursoSeleccionado)
+        const asignaturaId = curso ? curso.asignatura : null
+        if (!asignaturaId) {
+          this.grupos = []
+          return
+        }
+        const response = await axios.get(`http://localhost:8000/api/grupos/?curso_id=${asignaturaId}`)
         this.grupos = response.data
-        await this.cargarEstudiantesDisponibles()
+        await this.cargarEstudiantesDisponibles(asignaturaId)
       } catch (error) {
         console.error('Error al cargar grupos:', error)
         this.mostrarMensaje('Error al cargar grupos', true)
@@ -202,45 +215,51 @@ export default {
     },
 
     async cargarEstudiantesDisponibles() {
-      try {
-        // Obtener estudiantes inscritos en la asignatura específica
-        const response = await axios.get(`http://localhost:8000/api/usuarios/?rol=EST&asignatura=${this.asignaturaSeleccionada}`)
-        const todosEstudiantes = response.data
-        
-        // Filtrar estudiantes que no están en ningún grupo
-        const estudiantesEnGrupos = new Set()
-        this.grupos.forEach(grupo => {
-          grupo.estudiantes.forEach(estudiante => {
-            estudiantesEnGrupos.add(estudiante.id)
-          })
-        })
-        
-        this.estudiantesDisponibles = todosEstudiantes.filter(
-          estudiante => !estudiantesEnGrupos.has(estudiante.id)
-        )
-      } catch (error) {
-        console.error('Error al cargar estudiantes disponibles:', error)
-      }
-    },
+  try {
+    // Obtener estudiantes inscritos en el curso seleccionado
+    if (!this.cursoSeleccionado) {
+      this.estudiantesDisponibles = []
+      return
+    }
+    const response = await axios.get(`http://localhost:8000/api/cursos/${this.cursoSeleccionado}/estudiantes/`)
+    const todosEstudiantes = response.data
+    // Filtrar estudiantes que no están en ningún grupo
+    console.log('Todos los estudiantes:', todosEstudiantes)
+    const estudiantesEnGrupos = new Set()
+    this.grupos.forEach(grupo => {
+      grupo.estudiantes.forEach(estudiante => {
+        estudiantesEnGrupos.add(estudiante.id)
+      })
+    })
+    this.estudiantesDisponibles = todosEstudiantes.filter(
+      estudiante => !estudiantesEnGrupos.has(estudiante.id)
+    )
+  } catch (error) {
+    console.error('Error al cargar estudiantes disponibles:', error)
+  }
+},
 
     async crearGruposAleatorios() {
-      if (!this.asignaturaSeleccionada || this.formGrupos.cantidad_grupos < 1) {
-        this.mostrarMensaje('Seleccione una asignatura y una cantidad válida de grupos', true)
+      if (!this.cursoSeleccionado || this.formGrupos.min_estudiantes < 2) {
+        this.mostrarMensaje('Seleccione un curso y una cantidad válida de estudiantes por grupo', true)
         return
       }
-      
       this.loading = true
-      
       try {
+        const curso = this.cursos.find(c => c.id === this.cursoSeleccionado)
+        const asignaturaId = curso ? curso.asignatura : null
+        if (!asignaturaId) {
+          this.mostrarMensaje('No se pudo determinar la asignatura del curso', true)
+          this.loading = false
+          return
+        }
         const response = await axios.post('http://localhost:8000/api/grupos/crear_grupos_aleatorios/', {
-          asignatura_id: this.asignaturaSeleccionada,
-          cantidad_grupos: this.formGrupos.cantidad_grupos,
+          asignatura_id: asignaturaId,
+          min_estudiantes: this.formGrupos.min_estudiantes,
           nombre_base: this.formGrupos.nombre_base
         })
-        
         this.mostrarMensaje(response.data.mensaje, false)
         await this.cargarGrupos()
-        
       } catch (error) {
         console.error('Error al crear grupos:', error)
         const mensaje = error.response?.data?.error || 'Error al crear grupos aleatorios'
