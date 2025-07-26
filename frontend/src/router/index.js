@@ -5,13 +5,15 @@ import RegistrarAsignatura from '../components/GestionAcademica/RegistrarAsignat
 import AsignarDocente from '../components/GestionAcademica/AsignarDocente.vue'
 import Login from '../components/Autenticacion/Login.vue'
 import RegistrarPeriodo from '../components/GestionAcademica/RegistrarPeriodo.vue'
+import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
 import AsignarTarea from '../components/GestionTarea/AsignarTarea.vue'
 import ListarTareas from '../components/GestionTarea/ListarTareas.vue'
 import GestionGrupos from '../components/GestionTarea/GestionGrupos.vue'
-import CursosEstudiante from '../components/GestionAcademica/CursosEstudiante.vue'
-import CalificarTarea from '@/components/Calificaciones/CalificarTarea.vue'
-import MisCalificaciones from '@/views/Calificaciones/MisCalificaciones.vue'
-import SolicitarRegistro from '@/components/GestionAcademica/SolicitarRegistro.vue'
+import SolicitarRegistro from '../components/GestionAcademica/SolicitarRegistro.vue'
+import AceptarSolicitud from '../components/GestionAcademica/AceptarSolicitud.vue'
+import CursosDocente from '../components/GestionAcademica/CursosDocente.vue'
+import MostrarTareas from '../components/GestionTarea/MostrarTareas.vue'
+import CalificarTarea from '../components/GestionTarea/CalificarTarea.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -90,19 +92,6 @@ const router = createRouter({
       path: '/docente/gestion-grupos',
       name: 'GestionGrupos',
       component: GestionGrupos,
-    },
-    // Rutas para calificaciones
-    {
-      path: '/docente/calificar-tarea/:tareaId',
-      name: 'CalificarTarea',
-      component: CalificarTarea,
-      meta: { requiresAuth: true, roles: ['DOC'] }
-    },
-    {
-      path: '/estudiante/mis-calificaciones',
-      name: 'MisCalificaciones',
-      component: MisCalificaciones,
-      meta: { requiresAuth: true, roles: ['EST'] }
     }
   ],
 })

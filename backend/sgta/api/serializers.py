@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from ..models import Usuario, EntregaTarea, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura, Curso
 
 # Importar modelos desde el dominio
 from ..core.domain.Autenticacion.usuario import Usuario
@@ -13,6 +14,11 @@ from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatu
 class UsuarioSerializer(serializers.ModelSerializer):
     contrasenia = serializers.CharField(write_only=True)  # Solo para escritura, no se devuelve en las respuestas
     
+    id = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return obj.email
+
     class Meta:
         model = Usuario
         fields = '__all__'
@@ -49,12 +55,17 @@ class AsignacionSerializer(serializers.ModelSerializer):
 class GrupoSerializer(serializers.ModelSerializer):
     estudiantes = UsuarioSerializer(many=True, read_only=True)
     cantidad_estudiantes = serializers.SerializerMethodField()
-    asignatura_nombre = serializers.CharField(source='asignatura.nombre', read_only=True)
-    
+    curso = serializers.PrimaryKeyRelatedField(read_only=True)
+    curso_nombre = serializers.CharField(source='curso.asignatura.nombre', read_only=True)
+
     class Meta:
         model = Grupo
-        fields = ['id', 'nombre', 'asignatura', 'asignatura_nombre', 'estudiantes', 'cantidad_estudiantes', 'descripcion', 'fecha_creacion', 'activo']
-    
+        fields = [
+            'id', 'nombre', 'curso', 'curso_nombre',
+            'estudiantes', 'cantidad_estudiantes',
+            'descripcion', 'fecha_creacion', 'activo'
+        ]
+
     def get_cantidad_estudiantes(self, obj):
         return obj.estudiantes.count()
 
@@ -66,7 +77,7 @@ class CrearGrupoAleatorioSerializer(serializers.Serializer):
 class AsignarTareaSerializer(serializers.Serializer):
     tarea_id = serializers.IntegerField()
     estudiantes_ids = serializers.ListField(
-        child=serializers.IntegerField(),
+        child=serializers.CharField(),  # emails como IDs
         required=False,
         allow_empty=True
     )
@@ -82,65 +93,45 @@ class InscripcionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SolicitudAsignaturaSerializer(serializers.ModelSerializer):
+    estudiante = serializers.SerializerMethodField()
+    asignatura = serializers.SerializerMethodField()
+
     class Meta:
         model = SolicitudAsignatura
-        fields = '__all__'
+        fields = ['id', 'estado', 'fecha_solicitud', 'estudiante', 'asignatura']
 
-class CalificacionSerializer(serializers.ModelSerializer):
+    def get_estudiante(self, obj):
+        return obj.estudiante.__str__()
+
+    def get_asignatura(self, obj):
+        return obj.asignatura.__str__()  # asegúrate de que el modelo Asignatura tenga un campo 'nombre'
+    
+class CursoSerializer(serializers.ModelSerializer):
+    asignatura_nombre = serializers.CharField(source='asignatura.nombre', read_only=True)
+    docente_nombre = serializers.SerializerMethodField()
+    cantidad_estudiantes = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Curso
+        fields = ['id', 'asignatura', 'asignatura_nombre', 'docente', 'docente_nombre', 'periodo', 'cantidad_estudiantes']
+        # Excluimos el campo 'estudiantes' para evitar cargar todos los estudiantes automáticamente
+    
+    def get_docente_nombre(self, obj):
+        if obj.docente:
+            return f"{obj.docente.nombre} {obj.docente.apellido}"
+        return "Sin asignar"
+    
+    def get_cantidad_estudiantes(self, obj):
+        return obj.estudiantes.count()
+
+# Serializer para EntregaTarea
+class EntregaTareaSerializer(serializers.ModelSerializer):
     estudiante_nombre = serializers.CharField(source='estudiante.nombre', read_only=True)
-    estudiante_apellido = serializers.CharField(source='estudiante.apellido', read_only=True)
+    estudiante_email = serializers.CharField(source='estudiante.email', read_only=True)
+    grupo_nombre = serializers.CharField(source='grupo.nombre', read_only=True, default=None)
     tarea_titulo = serializers.CharField(source='tarea.titulo', read_only=True)
-    tipo_tarea = serializers.CharField(source='tarea.tipo_tarea', read_only=True)
-    calificado_por_nombre = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Calificacion
-        fields = [
-            'id', 'tarea', 'tarea_titulo', 'tipo_tarea', 'estudiante', 
-            'estudiante_nombre', 'estudiante_apellido', 'calificacion', 
-            'retroalimentacion', 'fecha_calificacion', 'calificado_por',
-            'calificado_por_nombre'
-        ]
-        read_only_fields = ['fecha_calificacion', 'calificado_por']
-    
-    def get_calificado_por_nombre(self, obj):
-        if obj.calificado_por:
-            return f"{obj.calificado_por.nombre} {obj.calificado_por.apellido}"
-        return None
-    
-    def validate(self, data):
-        # Validar que el usuario que califica sea docente
-        user = self.context['request'].user
-        if not user or user.rol != 'DOC':
-            raise serializers.ValidationError("Solo los docentes pueden calificar tareas.")
-        
-        # Validar que la calificación esté dentro del rango permitido según el tipo de tarea
-        tarea = data.get('tarea') or self.instance and self.instance.tarea
-        calificacion = data.get('calificacion')
-        
-        if calificacion is not None and tarea:
-            if tarea.tipo_tarea == 'ACD' and (calificacion < 0 or calificacion > 1.0):
-                raise serializers.ValidationError("La calificación para ACD debe estar entre 0 y 1.0")
-            elif tarea.tipo_tarea == 'AA' and (calificacion < 0 or calificacion > 1.5):
-                raise serializers.ValidationError("La calificación para AA debe estar entre 0 y 1.5")
-            elif tarea.tipo_tarea == 'APE' and (calificacion < 0 or calificacion > 2.5):
-                raise serializers.ValidationError("La calificación para APE debe estar entre 0 y 2.5")
-        
-        return data
-    
-    def create(self, validated_data):
-        # Asignar automáticamente el usuario que está calificando
-        validated_data['calificado_por'] = self.context['request'].user
-        return super().create(validated_data)
 
-class CalificacionUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Calificacion
-        fields = ['calificacion', 'retroalimentacion']
-    
-    def update(self, instance, validated_data):
-        # Actualizar solo los campos permitidos
-        instance.calificacion = validated_data.get('calificacion', instance.calificacion)
-        instance.retroalimentacion = validated_data.get('retroalimentacion', instance.retroalimentacion)
-        instance.save()
-        return instance
+        model = EntregaTarea
+        fields = '__all__'
+        # Puedes personalizar los campos si lo deseas

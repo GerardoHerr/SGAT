@@ -1,3 +1,8 @@
+from rest_framework import viewsets
+from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura, Curso, EntregaTarea
+from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer, SolicitudAsignaturaSerializer, CursoSerializer, EntregaTareaSerializer
+from rest_framework.views import APIView
+from django.contrib.auth.hashers import make_password
 from datetime import datetime, timedelta
 import jwt
 import random
@@ -53,8 +58,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if asignatura_id and rol == 'EST':
             # Filtrar estudiantes inscritos en la asignatura específica
             queryset = queryset.filter(
-                inscripciones_estudiante__asignatura__id=asignatura_id,
-                inscripciones_estudiante__activa=True
+                SolicitudAsignatura__asignatura__id=asignatura_id,
+                SolicitudAsignatura__estado='aceptado'
+
+                #inscripciones_estudiante__asignatura__id=asignatura_id,
+                #inscripciones_estudiante__activa=True
             )
             
         return queryset
@@ -83,6 +91,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         return Response({'mensaje': 'Usuario registrado con éxito'}, status=status.HTTP_201_CREATED)
 
 class AsignaturaViewSet(viewsets.ModelViewSet):
+    
     queryset = Asignatura.objects.all()
     serializer_class = AsignaturaSerializer
 
@@ -198,6 +207,20 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         return queryset.filter(activa=True)
 
 class AsignacionViewSet(viewsets.ModelViewSet):
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        # Si viene 'docente' en el request, usarlo para creada_por
+        docente_email = data.get('docente')
+        if docente_email:
+            try:
+                docente = Usuario.objects.get(email=docente_email, rol='DOC')
+                data['creada_por'] = docente.pk
+            except Usuario.DoesNotExist:
+                return Response({'error': 'Docente no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     queryset = Asignacion.objects.all()
     serializer_class = AsignacionSerializer
     
@@ -205,46 +228,68 @@ class AsignacionViewSet(viewsets.ModelViewSet):
         queryset = Asignacion.objects.all()
         docente_id = self.request.query_params.get('docente_id')
         docente_email = self.request.query_params.get('docente_email')
-        asignatura_id = self.request.query_params.get('asignatura_id')
+        curso_id = self.request.query_params.get('curso')
         tipo_tarea = self.request.query_params.get('tipo_tarea')
-        
+        tarea_id = self.request.query_params.get('tarea_id')
+
         if docente_id:
-            queryset = queryset.filter(docente__id=docente_id)
+            queryset = queryset.filter(creada_por__id=docente_id)
         if docente_email:
             try:
                 docente = Usuario.objects.get(email=docente_email, rol='DOC')
-                queryset = queryset.filter(docente=docente)
+                queryset = queryset.filter(creada_por=docente)
             except Usuario.DoesNotExist:
                 queryset = Asignacion.objects.none()
-        if asignatura_id:
-            queryset = queryset.filter(asignatura__id=asignatura_id)
+        if curso_id:
+            queryset = queryset.filter(curso__id=curso_id)
         if tipo_tarea:
             queryset = queryset.filter(tipo_tarea=tipo_tarea)
-            
+
         return queryset.order_by('-fecha_creacion')
     
     @action(detail=True, methods=['post'])
     def asignar_estudiantes_grupos(self, request, pk=None):
+        import logging
+        logger = logging.getLogger(__name__)
         asignacion = self.get_object()
         serializer = AsignarTareaSerializer(data=request.data)
-        
         if serializer.is_valid():
             estudiantes_ids = serializer.validated_data.get('estudiantes_ids', [])
             grupos_ids = serializer.validated_data.get('grupos_ids', [])
-            
-            with transaction.atomic():
-                # Asignar estudiantes individuales
-                if estudiantes_ids:
-                    estudiantes = Usuario.objects.filter(id__in=estudiantes_ids, rol='EST')
-                    asignacion.estudiantes_asignados.add(*estudiantes)
-                
-                # Asignar grupos
-                if grupos_ids:
-                    grupos = Grupo.objects.filter(id__in=grupos_ids)
-                    asignacion.grupos_asignados.add(*grupos)
-            
-            return Response({'mensaje': 'Asignación realizada correctamente'}, status=status.HTTP_200_OK)
-        
+            logger.info(f"[DEPURACIÓN] estudiantes_ids recibidos: {estudiantes_ids}")
+            logger.info(f"[DEPURACIÓN] grupos_ids recibidos: {grupos_ids}")
+            try:
+                with transaction.atomic():
+                    estudiantes_creados = set()
+                    # Asignar estudiantes individuales
+                    if estudiantes_ids:
+                        estudiantes = Usuario.objects.filter(email__in=estudiantes_ids, rol='EST')
+                        logger.info(f"[DEPURACIÓN] estudiantes encontrados: {[e.email for e in estudiantes]}")
+                        if estudiantes.count() != len(estudiantes_ids):
+                            logger.warning(f"[DEPURACIÓN] Algunos estudiantes no existen en la BD: {set(estudiantes_ids) - set([e.email for e in estudiantes])}")
+                        for estudiante in estudiantes:
+                            EntregaTarea.objects.get_or_create(
+                                tarea=asignacion,
+                                estudiante=estudiante
+                            )
+                            estudiantes_creados.add(estudiante.email)
+                    # Asignar grupos
+                    if grupos_ids:
+                        grupos = Grupo.objects.filter(id__in=grupos_ids)
+                        for grupo in grupos:
+                            for estudiante in grupo.estudiantes.all():
+                                if estudiante.email not in estudiantes_creados:
+                                    EntregaTarea.objects.get_or_create(
+                                        tarea=asignacion,
+                                        estudiante=estudiante,
+                                        grupo=grupo
+                                    )
+                                    estudiantes_creados.add(estudiante.email)
+                return Response({'mensaje': 'Asignación realizada correctamente'}, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.error(f"[DEPURACIÓN] Error en asignar_estudiantes_grupos: {str(e)}", exc_info=True)
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"[DEPURACIÓN] Errores de validación: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GrupoViewSet(viewsets.ModelViewSet):
@@ -253,108 +298,94 @@ class GrupoViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = Grupo.objects.all()
-        asignatura_id = self.request.query_params.get('asignatura_id')
-        
-        if asignatura_id:
-            queryset = queryset.filter(asignatura__id=asignatura_id)
-            
+        curso_id = self.request.query_params.get('curso_id')
+        if curso_id:
+            queryset = queryset.filter(curso__id=curso_id)
         return queryset.order_by('nombre')
     
     @action(detail=False, methods=['post'])
     def crear_grupos_aleatorios(self, request):
+        # Permitir recibir min_estudiantes en vez de cantidad_grupos
         serializer = CrearGrupoAleatorioSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            asignatura_id = serializer.validated_data['asignatura_id']
-            cantidad_grupos = serializer.validated_data['cantidad_grupos']
-            nombre_base = serializer.validated_data['nombre_base']
-            
+        if serializer.is_valid() or ('asignatura_id' in request.data and 'min_estudiantes' in request.data and 'nombre_base' in request.data):
+            asignatura_id = request.data.get('asignatura_id') or serializer.validated_data.get('asignatura_id')
+            min_estudiantes = int(request.data.get('min_estudiantes', 2))
+            nombre_base = request.data.get('nombre_base') or serializer.validated_data.get('nombre_base')
             try:
                 asignatura = Asignatura.objects.get(id=asignatura_id)
-                
-                # Obtener estudiantes inscritos en la asignatura
-                estudiantes = Usuario.objects.filter(
-                    rol='EST',
-                    inscripciones_estudiante__asignatura=asignatura,
-                    inscripciones_estudiante__activa=True
-                )
-                
+                from ..models import SolicitudAsignatura, Curso
+                curso_objeto = Curso.objects.filter(asignatura=asignatura).first()
+                if not curso_objeto:
+                    return Response({'error': 'No existe un curso para esta asignatura'}, status=status.HTTP_400_BAD_REQUEST)
+                solicitudes = SolicitudAsignatura.objects.filter(asignatura=asignatura, estado='aceptado')
+                estudiantes = Usuario.objects.filter(email__in=solicitudes.values_list('estudiante__email', flat=True), rol='EST')
                 if estudiantes.count() == 0:
                     return Response(
                         {'error': 'No hay estudiantes inscritos en esta asignatura'}, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
-                # Mezclar estudiantes aleatoriamente
                 estudiantes_list = list(estudiantes)
                 random.shuffle(estudiantes_list)
-                
-                # Calcular estudiantes por grupo
                 total_estudiantes = len(estudiantes_list)
+                # Calcular cantidad de grupos según min_estudiantes
+                cantidad_grupos = max(1, (total_estudiantes + min_estudiantes - 1) // min_estudiantes)
+                if cantidad_grupos > total_estudiantes:
+                    cantidad_grupos = total_estudiantes
                 estudiantes_por_grupo = total_estudiantes // cantidad_grupos
                 estudiantes_sobrantes = total_estudiantes % cantidad_grupos
-                
                 grupos_creados = []
-                
                 with transaction.atomic():
                     inicio = 0
                     for i in range(cantidad_grupos):
-                        # Calcular el tamaño del grupo actual
                         tamaño_grupo = estudiantes_por_grupo
                         if i < estudiantes_sobrantes:
                             tamaño_grupo += 1
-                        
-                        # Crear el grupo
                         grupo = Grupo.objects.create(
                             nombre=f"{nombre_base} {i + 1}",
-                            asignatura=asignatura,
+                            curso=curso_objeto,
                             descripcion=f"Grupo creado automáticamente para {asignatura.nombre}"
                         )
-                        
-                        # Asignar estudiantes al grupo
                         estudiantes_grupo = estudiantes_list[inicio:inicio + tamaño_grupo]
                         grupo.estudiantes.add(*estudiantes_grupo)
-                        
                         grupos_creados.append(grupo)
                         inicio += tamaño_grupo
-                
-                # Serializar los grupos creados
                 grupos_serializer = GrupoSerializer(grupos_creados, many=True)
-                
                 return Response({
                     'mensaje': f'Se crearon {cantidad_grupos} grupos correctamente',
                     'grupos': grupos_serializer.data
                 }, status=status.HTTP_201_CREATED)
-                
             except Asignatura.DoesNotExist:
                 return Response(
                     {'error': 'La asignatura no existe'}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
-        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def agregar_estudiante(self, request, pk=None):
+        import logging
+        logger = logging.getLogger(__name__)
         grupo = self.get_object()
         estudiante_id = request.data.get('estudiante_id')
-        
         try:
-            estudiante = Usuario.objects.get(id=estudiante_id, rol='EST')
+            estudiante = Usuario.objects.get(email=estudiante_id, rol='EST')
+            logger.info(f"[DEPURACIÓN] Intentando agregar estudiante {estudiante.email} al grupo {grupo.nombre} (curso: {grupo.curso})")
             grupo.agregar_estudiante(estudiante)
+            logger.info(f"[DEPURACIÓN] Estudiante {estudiante.email} agregado correctamente al grupo {grupo.nombre}")
             return Response({'mensaje': 'Estudiante agregado al grupo'}, status=status.HTTP_200_OK)
         except Usuario.DoesNotExist:
+            logger.error(f"[DEPURACIÓN] Estudiante no encontrado: {estudiante_id}")
             return Response({'error': 'Estudiante no encontrado'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(f"[DEPURACIÓN] Error al agregar estudiante: {str(e)}", exc_info=True)
+            return Response({'error': f'[DEPURACIÓN] {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def remover_estudiante(self, request, pk=None):
         grupo = self.get_object()
         estudiante_id = request.data.get('estudiante_id')
-        
         try:
-            estudiante = Usuario.objects.get(id=estudiante_id, rol='EST')
+            estudiante = Usuario.objects.get(email=estudiante_id, rol='EST')
             grupo.remover_estudiante(estudiante)
             return Response({'mensaje': 'Estudiante removido del grupo'}, status=status.HTTP_200_OK)
         except Usuario.DoesNotExist:
@@ -442,12 +473,26 @@ class CustomTokenObtainPairView(APIView):
                 }, status=status.HTTP_200_OK)
                 
             except Usuario.DoesNotExist:
-                print("Usuario no encontrado")  # Depuración
-                return Response(
-                    {'error': 'Credenciales inválidas'},  # No revelar que el usuario no existe
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-                
+                return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SolicitarAsignaturaViewSet(ViewSet):
+    authentication_classes = []  # No usar autenticación automática
+    def create(self, request):
+        print("Dentro de create")
+        try:
+            token = request.headers.get('Authorization', None)
+            if not token:
+                return Response({'error': 'Token no proporcionado'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            token = token.split(" ")[1]
+            print("Token recibido:", token)
+            decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            print('Decoded token:', decoded)  # Debugging line
+            email = decoded['email']
+            print('Decoded email:', email)  # Debugging line
+            estudiante = Usuario.objects.get(email=email)
         except Exception as e:
             # Obtener información detallada del error
             import traceback
@@ -473,123 +518,16 @@ class CustomTokenObtainPairView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class LoginView(APIView):
-    def post(self, request):
-        # Crear una instancia de la vista de token JWT
-        view = CustomTokenObtainPairView.as_view()
-        # Llamar a la vista con el request original
-        return view(request._request if hasattr(request, '_request') else request)
+        asignatura_id = request.data.get('asignatura_id')
+        try:
+            asignatura = Asignatura.objects.get(id=asignatura_id)
+        except Asignatura.DoesNotExist:
+            return Response({'error': 'Asignatura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
-class CalificacionViewSet(viewsets.ModelViewSet):
-    """
-    API para gestionar calificaciones de tareas
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Calificacion.objects.all()
-        
-        # Filtrar por tarea si se proporciona el parámetro
-        tarea_id = self.request.query_params.get('tarea_id')
-        if tarea_id:
-            queryset = queryset.filter(tarea_id=tarea_id)
-        
-        # Filtrar por estudiante si se proporciona el parámetro
-        estudiante_id = self.request.query_params.get('estudiante_id')
-        if estudiante_id:
-            queryset = queryset.filter(estudiante_id=estudiante_id)
-        
-        # Si es un docente, solo puede ver las calificaciones de sus asignaturas
-        if user.rol == 'DOC':
-            queryset = queryset.filter(tarea__asignatura__docente_responsable=user)
-        # Si es un estudiante, solo puede ver sus propias calificaciones
-        elif user.rol == 'EST':
-            queryset = queryset.filter(estudiante=user)
-            
-        return queryset.select_related('tarea', 'estudiante', 'calificado_por')
-    
-    def get_serializer_class(self):
-        if self.action in ['update', 'partial_update']:
-            return CalificacionUpdateSerializer
-        return CalificacionSerializer
-    
-    def perform_create(self, serializer):
-        # Asignar automáticamente el usuario que está calificando
-        serializer.save(calificado_por=self.request.user)
-    
-    @action(detail=False, methods=['get'], url_path=r'por-tarea/(?P<tarea_id>\d+)')
-    def por_tarea(self, request, tarea_id=None):
-        """
-        Obtener todas las calificaciones de una tarea específica
-        """
-        # Verificar que la tarea existe
-        tarea = get_object_or_404(Asignacion, id=tarea_id)
-        
-        # Verificar permisos
-        if request.user.rol == 'DOC' and tarea.creada_por != request.user:
-            return Response(
-                {"error": "No tiene permiso para ver las calificaciones de esta tarea"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        calificaciones = self.get_queryset().filter(tarea=tarea)
-        serializer = self.get_serializer(calificaciones, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'], url_path=r'estudiantes-sin-calificar/(?P<tarea_id>\d+)')
-    def estudiantes_sin_calificar(self, request, tarea_id=None):
-        """
-        Obtener lista de estudiantes que no han sido calificados para una tarea
-        """
-        tarea = get_object_or_404(Asignacion, id=tarea_id)
-        
-        # Verificar permisos
-        if request.user.rol != 'DOC' or tarea.creada_por != request.user:
-            return Response(
-                {"error": "No tiene permiso para ver esta información"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Obtener estudiantes asignados a la tarea (individual o por grupo)
-        if tarea.es_grupal:
-            # Si es grupal, obtener estudiantes de los grupos asignados
-            estudiantes_ids = Usuario.objects.filter(
-                grupos_estudiante__in=tarea.grupos_asignados.all()
-            ).values_list('id', flat=True)
-        else:
-            # Si es individual, obtener estudiantes asignados directamente
-            estudiantes_ids = tarea.estudiantes_asignados.values_list('id', flat=True)
-        
-        # Filtrar estudiantes que ya tienen calificación para esta tarea
-        estudiantes_calificados = Calificacion.objects.filter(
-            tarea=tarea,
-            estudiante_id__in=estudiantes_ids
-        ).values_list('estudiante_id', flat=True)
-        
-        # Obtener estudiantes sin calificar
-        estudiantes_sin_calificar = Usuario.objects.filter(
-            id__in=estudiantes_ids
-        ).exclude(
-            id__in=estudiantes_calificados
+        SolicitudAsignatura.objects.create(
+            estudiante=estudiante,
+            asignatura=asignatura,
+            estado='pendiente'
         )
-        
-        # Serializar la información básica de los estudiantes
-        estudiantes_data = [
-            {
-                'id': est.id,
-                'nombre': est.nombre,
-                'apellido': est.apellido,
-                'email': est.email
-            }
-            for est in estudiantes_sin_calificar
-        ]
-        
-        return Response({
-            'tarea_id': tarea.id,
-            'tarea_titulo': tarea.titulo,
-            'estudiantes_sin_calificar': estudiantes_data,
-            'total_estudiantes': len(estudiantes_ids),
-            'estudiantes_calificados': len(estudiantes_calificados),
-            'estudiantes_sin_calificar_count': len(estudiantes_data)
-        })
+
+        return Response({'message': 'Solicitud enviada con éxito'}, status=status.HTTP_201_CREATED)

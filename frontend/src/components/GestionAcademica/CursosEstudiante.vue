@@ -1,40 +1,66 @@
 <template>
-  <div>
-    <h2 style="margin-bottom: 20px;">Cursos disponibles del estudiante</h2>
+  <div class="container mt-5">
+    <h2>Solicitudes de Asignatura</h2>
 
-    <!-- Botón principal -->
+    <!-- Botón para abrir el modal -->
     <button class="btn-principal" @click="mostrarFormulario = true">
-      ➕ Agregar nueva asignatura
+      Nueva Solicitud
     </button>
 
-    <!-- Modal -->
+    <!-- Modal personalizado -->
     <div v-if="mostrarFormulario" class="modal-overlay">
       <div class="modal-contenido animate-entrada">
-        <h3>📚 Asignaturas disponibles</h3>
-
-        <!-- Lista de asignaturas -->
+        <h3>Solicitar Asignatura</h3>
         <div v-if="asignaturas.length">
-          <div v-for="asignatura in asignaturas" :key="asignatura.id" class="asignatura-item">
-            <div>
-              <strong>{{ asignatura.nombre }}</strong>
-              <p style="margin: 5px 0;">{{ asignatura.descripcion || 'Sin descripción' }}</p>
-            </div>
-            <button @click="enviarSolicitud(asignatura.id)" class="btn-enviar">✅ Solicitar</button>
+          <div
+            class="asignatura-item"
+            v-for="asignatura in asignaturas"
+            :key="asignatura.id"
+          >
+            <span>{{ asignatura.nombre }}</span>
+            <button class="btn-enviar" @click="enviarSolicitud(asignatura.id)">
+              Solicitar
+            </button>
           </div>
         </div>
         <div v-else>
-          <p>No hay asignaturas disponibles.</p>
+          <p>No hay asignaturas disponibles para solicitar.</p>
         </div>
 
-        <!-- Cancelar -->
-        <div class="botones">
-          <button type="button" @click="cerrarModal" class="btn-cancelar">❌ Cerrar</button>
+        <div class="botones mt-3">
+          <button class="btn-cancelar" @click="cerrarModal">Cancelar</button>
         </div>
       </div>
     </div>
+
+    <!-- Lista de solicitudes ya realizadas -->
+    <div v-if="solicitudes.length" class="mt-4">
+      <h4>Solicitudes Realizadas</h4>
+      <ul class="list-group">
+        <li
+          v-for="solicitud in solicitudes"
+          :key="solicitud.id"
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          {{ solicitud.asignatura_nombre || solicitud.asignatura }}
+          <span
+            class="badge"
+            :class="{
+              'bg-success': solicitud.estado === 'aceptado',
+              'bg-warning text-dark': solicitud.estado === 'pendiente',
+              'bg-danger': solicitud.estado === 'rechazado'
+            }"
+          >
+            {{ solicitud.estado }}
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="mt-3">
+      <p>No tienes solicitudes registradas aún.</p>
+    </div>
   </div>
 </template>
-
 
 <script>
 import axios from 'axios';
@@ -43,26 +69,71 @@ export default {
   data() {
     return {
       mostrarFormulario: false,
-      asignaturas: []
+      asignaturas: [],
+      solicitudes: []
     };
   },
   methods: {
+    async cargarSolicitudes() {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await axios.get('http://localhost:8000/api/solicitudAsignatura/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        this.solicitudes = response.data;
+        console.log('Solicitudes cargadas:', this.solicitudes);
+      } catch (error) {
+        console.error('Error al cargar solicitudes:', error);
+      }
+    },
     async cargarAsignaturas() {
       try {
         const response = await axios.get('http://localhost:8000/api/asignaturas/');
-        this.asignaturas = response.data;
+           
+        // Obtener IDs de asignaturas que ya están aceptadas
+        const aceptadasIds = this.solicitudes
+          .filter(s => {
+            return s.estado === 'aceptado';
+          })
+          .map(s => {
+            // Buscar la asignatura que contenga el nombre en el string
+            const asignaturaEncontrada = response.data.find(asig => {
+              const coincide = s.asignatura.includes(asig.nombre);
+              return coincide;
+            });
+            
+            if (asignaturaEncontrada) {
+              return asignaturaEncontrada.id;
+            }
+            
+            console.log(`No se encontró asignatura para: ${s.asignatura}`);
+            return null;
+          })
+          .filter(id => id !== null); // Filtrar los nulls
+        
+        // Filtrar asignaturas que no están aceptadas
+        this.asignaturas = response.data.filter(a => {
+          const incluida = aceptadasIds.includes(a.id);
+          return !incluida;
+        });
       } catch (error) {
         console.error('Error al cargar asignaturas:', error);
       }
     },
+    async cargarDatosModal() {
+      // Primero cargar solicitudes, luego asignaturas para que el filtro funcione
+      await this.cargarSolicitudes();
+      await this.cargarAsignaturas();
+    },
     async enviarSolicitud(asignaturaId) {
       try {
-        console.log('Enviando solicitud para asignatura ID:', asignaturaId);
-        // Aquí puedes hacer la solicitud POST
-        // await axios.post('/api/solicitudes/', { asignatura: asignaturaId });
-
+        const token = localStorage.getItem('access_token');
+        await axios.post('http://localhost:8000/api/solicitudAsignatura/', { asignatura: asignaturaId }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         alert(`Solicitud enviada para asignatura ID: ${asignaturaId}`);
         this.cerrarModal();
+        await this.cargarSolicitudes(); // actualizar solicitudes
       } catch (error) {
         console.error('Error al enviar solicitud:', error);
         alert('Hubo un error al enviar la solicitud');
@@ -73,11 +144,14 @@ export default {
     }
   },
   watch: {
-    mostrarFormulario(val) {
+    async mostrarFormulario(val) {
       if (val) {
-        this.cargarAsignaturas();
+        await this.cargarDatosModal();
       }
     }
+  },
+  mounted() {
+    this.cargarSolicitudes();
   }
 };
 </script>
