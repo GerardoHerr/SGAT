@@ -17,8 +17,8 @@
         <span class="avatar-text">{{ userInitials }}</span>
       </div>
       <div class="user-details">
-        <h4>{{ userName }}</h4>
-        <span class="user-role">{{ userRole }}</span>
+        <h4>{{ userInfo.name }}</h4>
+        <span class="user-role">{{ userInfo.role }}</span>
       </div>
     </div>
 
@@ -201,6 +201,12 @@
                 </RouterLink>
               </li>
               <li>
+                <RouterLink to="/estudiante/mis-calificaciones" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Mis Calificaciones">
+                  <span class="nav-icon">📊</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis Calificaciones</span>
+                </RouterLink>
+              </li>
+              <li>
                 <RouterLink to="/estudiante/notificaciones" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Notificaciones">
                   <span class="nav-icon">🔔</span>
                   <span v-show="!isCollapsed" class="nav-text">Notificaciones</span>
@@ -248,63 +254,61 @@
 
     <!-- Footer del Sidebar -->
     <div class="sidebar-footer">
-      <RouterLink to="/login-simple" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }" title="Cerrar Sesión">
+      <a href="#" @click.prevent="logout" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }" title="Cerrar Sesión">
         <span class="nav-icon">🚪</span>
         <span v-show="!isCollapsed" class="nav-text">Cerrar Sesión</span>
-      </RouterLink>
+      </a>
     </div>
   </aside>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+// Usar el store de autenticación
+const authStore = useAuthStore()
+const router = useRouter()
 
 // Estado del sidebar
 const isCollapsed = ref(false)
 
-// Props (datos que vendrían del estado global/store)
-const props = defineProps({
-  user: {
-    type: Object,
-    default: () => null
-  },
-  notificationCount: {
-    type: Number,
-    default: 3
-  }
-})
+// Computar la información del usuario
+const userInfo = computed(() => ({
+  name: authStore.user ? `${authStore.user.nombre || ''} ${authStore.user.apellido || ''}`.trim() : 'Usuario',
+  role: authStore.user?.rol === 'ADM' ? 'Administrador' : 
+        authStore.user?.rol === 'DOC' ? 'Docente' : 
+        authStore.user?.rol === 'EST' ? 'Estudiante' : 'Usuario',
+  email: authStore.user?.email || 'usuario@ejemplo.com',
+  avatar: null
+}))
+
+// Computar los roles del usuario
+const isAdmin = computed(() => authStore.user?.rol === 'ADM')
+const isDocente = computed(() => authStore.user?.rol === 'DOC')
+const isEstudiante = computed(() => authStore.user?.rol === 'EST')
+
+// Función para cerrar sesión
+const logout = () => {
+  authStore.logout()
+  router.push('/login')
+}
 
 // Computed properties
-const userName = computed(() => {
-  if (!props.user) return 'Usuario Demo'
-  return props.user.name || 'Usuario Demo'
-})
-
-const userRole = computed(() => {
-  if (!props.user) return 'Docente'
-  return props.user.role || 'Docente'
-})
-
 const userInitials = computed(() => {
-  const name = userName.value
+  const name = userInfo.value.name
   const names = name.split(' ')
   return names.map(name => name[0]).join('').toUpperCase()
 })
-
-const isAdmin = computed(() => userRole.value === 'Administrador')
-const isDocente = computed(() => userRole.value === 'Docente')
-const isEstudiante = computed(() => userRole.value === 'Estudiante')
 
 // Métodos
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
-const logout = () => {
-  // Aquí iría la lógica de logout
-  console.log('Cerrando sesión...')
-}
+// Contador de notificaciones (ejemplo)
+const notificationCount = ref(3)
 </script>
 
 <style scoped>

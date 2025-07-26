@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout">
     <!-- Sidebar -->
-    <Sidebar :user="currentUser" :notificationCount="notifications" />
+    <Sidebar />
     
     <!-- Contenido Principal -->
     <main class="main-content" :class="{ 'main-content-collapsed': sidebarCollapsed }">
@@ -13,35 +13,48 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import Sidebar from './Sidebar.vue'
-import { authService } from '@/services/authService.js'
 
-// Estado global del usuario autenticado
-const currentUser = ref(null)
-const notifications = ref(5)
+// Usar el store de autenticación
+const authStore = useAuthStore()
+const router = useRouter()
+
+// Estado del layout
 const sidebarCollapsed = ref(false)
 
-// Cargar usuario al montar el componente
+// Verificar autenticación al cargar el componente
 onMounted(() => {
-  const user = authService.getCurrentUser()
-  if (user) {
-    currentUser.value = {
-      name: `${user.nombre} ${user.apellido}`,
-      role: user.rol === 'ADM' ? 'Administrador' : 
-            user.rol === 'DOC' ? 'Docente' : 
-            user.rol === 'EST' ? 'Estudiante' : 'Docente',
-      email: user.email,
-      avatar: null
-    }
-  } else {
-    // Usuario por defecto si no hay autenticación
-    currentUser.value = {
-      name: 'Usuario Demo',
-      role: 'Docente',
-      email: 'demo@universidad.edu',
-      avatar: null
-    }
+  // Si no hay token, redirigir al login
+  if (!authStore.token) {
+    router.push('/login')
+    return
+  }
+  
+  // Si está autenticado pero no tiene datos de usuario, intentar cargarlos
+  if (!authStore.user) {
+    authStore.fetchUserData().catch((error) => {
+      console.error('Error al cargar los datos del usuario:', error)
+      // Si hay un error al cargar los datos del usuario, hacer logout
+      authStore.logout()
+      router.push('/login')
+    })
+  }
+})
+
+// Observar cambios en la autenticación
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (!isAuthenticated) {
+    router.push('/login')
+  }
+})
+
+// Exponer el estado del sidebar para que pueda ser modificado desde los componentes hijos
+defineExpose({
+  toggleSidebar: () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value
   }
 })
 </script>

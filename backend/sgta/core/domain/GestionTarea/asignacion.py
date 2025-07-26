@@ -16,11 +16,11 @@ class Asignacion(models.Model):
     fecha_entrega = models.DateField()
     tipo_tarea = models.CharField(max_length=3, choices=TIPO_TAREA_CHOICES)
     es_grupal = models.BooleanField(default=False)
-    docente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='tareas_asignadas')
+    docente = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='tareas_asignadas')
     
     # Campos opcionales
     rubrica = models.TextField(blank=True, null=True)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     activa = models.BooleanField(default=True)
     
     # Relaciones

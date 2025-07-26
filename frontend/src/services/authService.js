@@ -1,124 +1,74 @@
-// Datos de usuarios simulados para desarrollo
-const usuariosMock = [
-  {
-    id: 1,
-    email: 'admin@universidad.edu',
-    nombre: 'Admin',
-    apellido: 'Sistema',
-    rol: 'ADM'
-  },
-  {
-    id: 2,
-    email: 'maria.garcia@universidad.edu',
-    nombre: 'María',
-    apellido: 'García',
-    rol: 'DOC'
-  },
-  {
-    id: 3,
-    email: 'juan.rodriguez@universidad.edu',
-    nombre: 'Juan',
-    apellido: 'Rodríguez',
-    rol: 'DOC'
-  },
-  {
-    id: 4,
-    email: 'ana.lopez@universidad.edu',
-    nombre: 'Ana',
-    apellido: 'López',
-    rol: 'EST'
-  }
-];
-
-// Simulación de autenticación simple
+// Servicio de autenticación
 export const authService = {
   currentUser: null,
 
-  // Login real con tu endpoint de autenticación
+  // Autenticación con el backend
   async login(email, password) {
     try {
-      // Intentar primero con tu endpoint de login real
-      try {
-        const response = await fetch('http://localhost:8000/api/login/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email,
-            contrasenia: password
-          })
-          
-          
-        });
-        console.log('Response from login:', response);
+      // Hacer login para obtener el token JWT
+      const response = await fetch('http://localhost:8000/api/token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          
-          // Guardar el token JWT
-          if (data.access) {
-            localStorage.setItem('access_token', data.access);
-          }
-          
-          // Ahora obtener los datos del usuario autenticado
-          try {
-            const userResponse = await fetch(`http://localhost:8000/api/usuarios/by-email/?email=${encodeURIComponent(email)}`);
-            
-            if (userResponse.ok) {
-              const usuario = await userResponse.json();
-              
-              this.currentUser = {
-                id: usuario.email, // Usar email como ID
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                email: usuario.email,
-                rol: usuario.rol
-              };
-              
-              localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-              return this.currentUser;
-            }
-          } catch (userError) {
-            console.warn('Error al obtener datos del usuario, usando datos del token');
-          }
-          
-          // Si no podemos obtener datos del usuario, crear un usuario básico
+      const data = await response.json();
+      console.log(data);
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Error de autenticación');
+      }
+      
+      // Guardar el token JWT
+      if (data.access) {
+        localStorage.setItem('access_token', data.access);
+        
+        // Si el backend devuelve los datos del usuario en la respuesta
+        if (data.user) {
           this.currentUser = {
-            email: email,
-            nombre: email.split('@')[0], // Usar la parte antes del @ como nombre
-            token: data.access
+            email: data.user.email,
+            nombre: data.user.nombre,
+            apellido: data.user.apellido,
+            rol: data.user.rol
           };
           
           localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
           return this.currentUser;
-        } else {
-          // Si la autenticación real falla, intentar con datos simulados
-          console.warn('Autenticación real falló, intentando con datos simulados');
-          throw new Error('Credenciales incorrectas');
         }
-      } catch (authError) {
-        console.warn('Error en autenticación real:', authError.message);
         
-        // Fallback a datos simulados solo en desarrollo
-        const usuario = usuariosMock.find(u => u.email === email);
+        // Si no vienen los datos del usuario, hacer una petición para obtenerlos
+        const userResponse = await fetch(`http://localhost:8000/api/usuarios/by-email/?email=${encodeURIComponent(email)}`, {
+          headers: {
+            'Authorization': `Bearer ${data.access}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        if (usuario) {
+        if (userResponse.ok) {
+          const usuario = await userResponse.json();
           this.currentUser = {
-            id: usuario.id,
+            email: usuario.email,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
-            email: usuario.email,
             rol: usuario.rol
           };
           
           localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
           return this.currentUser;
-        } else {
-          throw new Error('Usuario no encontrado');
         }
+        
+        // Si no se pueden obtener los datos del usuario, devolver un error
+        throw new Error('No se pudieron obtener los datos del usuario');
       }
+      
+      throw new Error('Error en la respuesta del servidor');
     } catch (error) {
+      console.error('Error en login:', error);
       throw error;
     }
   },

@@ -15,7 +15,14 @@
             <label for="email">Email</label>
             <div class="input-icon">
               <i class="fa fa-envelope"></i>
-              <input type="email" v-model="email" id="email" placeholder="Ingresa tu email" required />
+              <input 
+                type="email" 
+                v-model="email" 
+                id="email" 
+                placeholder="Ingresa tu email" 
+                required 
+                :disabled="loading"
+              />
             </div>
           </div>
 
@@ -23,11 +30,19 @@
             <label for="password">Contraseña</label>
             <div class="input-icon">
               <i class="fa fa-lock"></i>
-              <input type="password" v-model="password" id="password" placeholder="Ingresa tu contraseña" required />
+              <input 
+                type="password" 
+                v-model="password" 
+                id="password" 
+                placeholder="Ingresa tu contraseña" 
+                required 
+                :disabled="loading"
+                @keyup.enter="handleLogin"
+              />
             </div>
           </div>
 
-          <button type="submit" :disabled="loading">
+          <button type="submit" :disabled="loading" :class="{ 'loading': loading }">
             <span v-if="loading">Iniciando sesión...</span>
             <span v-else>Iniciar Sesión</span>
           </button>
@@ -46,52 +61,51 @@
   </div>
 </template>
 
-<script>
-import { authService } from '@/services/authService'
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-export default {
-  name: 'LoginView',
-  data() {
-    return {
-      email: '',
-      password: '',
-      error: '',
-      loading: false
-    };
-  },
-  methods: {
-    async handleLogin() {
-      this.loading = true;
-      this.error = '';
-      
-      try {
-        console.log('Intentando login con:', this.email);
-        
-        const user = await authService.login(this.email, this.password);
-        
-        if (user) {
-          console.log('Login exitoso:', user);
-          // Redirigir según el rol del usuario
-          if (user.rol === 'ADM') {
-            this.$router.push('/admin/usuarios');
-          } else if (user.rol === 'DOC') {
-            this.$router.push('/docente/entregas');
-          } else if (user.rol === 'EST') {
-            this.$router.push('/estudiante/cursos-estudiante');
-          } else {
-            this.$router.push('/');
-          }
-        }
-      } catch (error) {
-        this.error = 'Usuario o contraseña incorrectos';
-        console.error('Error en login:', error);
-      } finally {
-        this.loading = false;
-      }
+const router = useRouter()
+const authStore = useAuthStore()
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const loading = ref(false)
+
+const handleLogin = async () => {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    console.log('Intentando login con:', email.value)
+    
+    // Usar el store de autenticación para hacer login
+    await authStore.login({
+      email: email.value,
+      password: password.value
+    })
+    
+    console.log('Login exitoso, redirigiendo...')
+    
+    // Redirigir según el rol del usuario
+    if (authStore.user.rol === 'ADM') {
+      router.push('/admin/usuarios')
+    } else if (authStore.user.rol === 'DOC') {
+      router.push('/docente/entregas')
+    } else if (authStore.user.rol === 'EST') {
+      router.push('/estudiante/cursos-estudiante')
+    } else {
+      router.push('/')
     }
+  } catch (err) {
+    console.error('Error en login:', err)
+    error.value = 'Usuario o contraseña incorrectos'
+  } finally {
+    loading.value = false
   }
-};
-
+}
 </script>
 
 <style scoped>
@@ -210,33 +224,62 @@ export default {
 }
 
 /* Botón */
-button {
+button[type="submit"] {
   width: 100%;
   padding: 15px;
-  background-color: #002147;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
   border: none;
   border-radius: 10px;
-  color: white;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
-button:hover {
-  background-color: #00152e;
+button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 33, 71, 0.3);
+  box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
 }
 
-button:active {
+button[type="submit"]:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-button:disabled {
-  opacity: 0.7;
+button[type="submit"]:disabled {
+  background: #c7d2fe;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Estilo para el botón de carga */
+button[type="submit"].loading {
+  color: transparent;
+  position: relative;
+}
+
+button[type="submit"].loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -10px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Mensaje de error */
