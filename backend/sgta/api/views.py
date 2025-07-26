@@ -593,6 +593,37 @@ class CursoViewSet(viewsets.ModelViewSet):
         except Curso.DoesNotExist:
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 class EntregaTareaViewSet(viewsets.ModelViewSet):
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        tarea = instance.tarea  # Asignacion
+        estudiante = instance.estudiante
+
+        # Si la tarea es grupal
+        if hasattr(tarea, 'es_grupal') and tarea.es_grupal:
+            grupo = getattr(instance, 'grupo', None)
+            if grupo:
+                integrantes = grupo.estudiantes.all()
+                for integrante in integrantes:
+                    entrega, created = self.queryset.model.objects.get_or_create(
+                        tarea=tarea,
+                        estudiante=integrante,
+                        grupo=grupo
+                    )
+                    # Actualiza archivo y fecha para todos
+                    if 'archivo' in request.FILES:
+                        entrega.archivo = request.FILES['archivo']
+                    from django.utils import timezone
+                    entrega.fecha_entregada = timezone.now()
+                    entrega.save()
+                from rest_framework.response import Response
+                from rest_framework import status
+                return Response({'mensaje': 'Entrega subida para todo el grupo'}, status=status.HTTP_200_OK)
+            else:
+                # Si no hay grupo, solo actualiza la entrega individual
+                return super().partial_update(request, *args, **kwargs)
+        else:
+            # Si no es grupal, solo actualiza la entrega individual
+            return super().partial_update(request, *args, **kwargs)
     queryset = EntregaTarea.objects.all()
     serializer_class = EntregaTareaSerializer
 

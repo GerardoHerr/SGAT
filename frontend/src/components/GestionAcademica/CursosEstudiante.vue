@@ -33,44 +33,44 @@
       </div>
     </div>
 
-    <!-- Lista de solicitudes ya realizadas -->
-    <div v-if="solicitudes.length" class="mt-4">
-      <h4>Solicitudes Realizadas</h4>
+    <!-- Lista de cursos del estudiante logeado -->
+    <div v-if="cursos.length" class="mt-4">
+      <h4>Mis Cursos</h4>
       <ul class="list-group">
         <li
-          v-for="solicitud in solicitudes"
-          :key="solicitud.id"
+          v-for="curso in cursos"
+          :key="curso.id"
           class="list-group-item d-flex justify-content-between align-items-center"
         >
-          {{ solicitud.asignatura_nombre || solicitud.asignatura }}
-          <span
-            class="badge"
-            :class="{
-              'bg-success': solicitud.estado === 'aceptado',
-              'bg-warning text-dark': solicitud.estado === 'pendiente',
-              'bg-danger': solicitud.estado === 'rechazado'
-            }"
-          >
-            {{ solicitud.estado }}
+          <span>
+            {{ curso.asignatura_nombre || curso.asignatura }}
           </span>
+          <button class="btn-revisar" @click="revisarCurso(curso.id)">Revisar</button>
         </li>
       </ul>
     </div>
     <div v-else class="mt-3">
-      <p>No tienes solicitudes registradas aún.</p>
+      <p>No tienes cursos asignados aún.</p>
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import MostarTareasEstudiante from '../GestionTarea/MostarTareasEstudiante.vue';
 
 export default {
+  components: {
+    MostarTareasEstudiante
+  },
   data() {
     return {
       mostrarFormulario: false,
       asignaturas: [],
-      solicitudes: []
+      solicitudes: [],
+      cursos: [],
+      cursoSeleccionado: null,
+      estudianteEmail: '',
     };
   },
   methods: {
@@ -81,10 +81,24 @@ export default {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.solicitudes = response.data;
-        console.log('Solicitudes cargadas:', this.solicitudes);
+        this.$router.push({ name: 'MostarTareasEstudiante', params: { cursoId } });
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
       }
+    },
+    async cargarCursos() {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.rol !== 'EST') return;
+        const response = await axios.get(`http://localhost:8000/api/cursos/?estudiante_id=${currentUser.email}`);
+        this.cursos = response.data;
+      } catch (error) {
+        this.cursos = [];
+        console.error('Error al cargar cursos:', error);
+      }
+    },
+    revisarCurso(cursoId) {
+      this.$router.push({ path: '/estudiante/listar-tareas', query: { curso: cursoId } });
     },
     async cargarAsignaturas() {
       try {
@@ -152,11 +166,28 @@ export default {
   },
   mounted() {
     this.cargarSolicitudes();
+    this.cargarCursos();
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser && currentUser.email) {
+      this.estudianteEmail = currentUser.email;
+    }
   }
 };
 </script>
 
 <style scoped>
+.btn-revisar {
+  background-color: #3a86ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.btn-revisar:hover {
+  background-color: #265ecf;
+}
 /* Tipografía general */
 * {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
