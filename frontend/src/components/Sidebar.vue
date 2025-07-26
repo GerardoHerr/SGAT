@@ -89,6 +89,12 @@
             </div>
             <ul class="nav-submenu">
               <!-- Prioridad Alta -->
+               <li>
+                <RouterLink to="/docente/cursos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Mis Cursos">
+                  <span class="nav-icon">🔔</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis Cursos</span>
+                </RouterLink>
+              </li>
               <li>
                 <RouterLink to="/docente/asignar-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Asignación de Tareas">
                   <span class="nav-icon">📝</span>
@@ -138,7 +144,7 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/docente/registrar-estudiantes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Estudiantes">
+                <RouterLink to="/docente/aceptar-solicitud" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Estudiantes">
                   <span class="nav-icon">🎓</span>
                   <span v-show="!isCollapsed" class="nav-text">Registrar Estudiantes</span>
                 </RouterLink>
