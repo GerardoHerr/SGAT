@@ -296,7 +296,8 @@ class GrupoViewSet(viewsets.ModelViewSet):
             nombre_base = request.data.get('nombre_base') or serializer.validated_data.get('nombre_base')
             try:
                 asignatura = Asignatura.objects.get(id=asignatura_id)
-                from ..models import SolicitudAsignatura, Curso
+                from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+                from ..core.domain.GestionAcademica.curso import Curso
                 curso_objeto = Curso.objects.filter(asignatura=asignatura).first()
                 if not curso_objeto:
                     return Response({'error': 'No existe un curso para esta asignatura'}, status=status.HTTP_400_BAD_REQUEST)
