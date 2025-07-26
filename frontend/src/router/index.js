@@ -113,7 +113,7 @@ const router = createRouter({
       component: MostrarTareas,
     },
     {
-      path: '/docente/calificar-tarea/',
+      path: '/docente/calificar-tarea/:id',
       name: 'CalificarTarea',
       component: CalificarTarea,
     }
