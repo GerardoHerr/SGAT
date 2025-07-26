@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from ..models import Usuario, EntregaTarea, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura, Curso
+from sgta.core.domain.Autenticacion import Usuario
+from sgta.core.domain.GestionTarea import Asignacion, Grupo
+from sgta.core.domain.GestionAcademica import Asignatura, PeriodoLectivo, Inscripcion, SolicitudAsignatura, EntregaTarea
+from sgta.core.domain.GestionAcademica.curso import Curso
 
 class UsuarioSerializer(serializers.ModelSerializer):
     contrasenia = serializers.CharField(write_only=True)  # Solo para escritura, no se devuelve en las respuestas

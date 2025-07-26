@@ -1,5 +1,16 @@
 ﻿from rest_framework import viewsets
-from ..models import Usuario, Asignatura, PeriodoLectivo, Inscripcion, Asignacion, Grupo, SolicitudAsignatura, Curso, EntregaTarea
+
+# Importar los modelos necesarios desde domain
+from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+from ..core.domain.GestionAcademica.entregarTarea import EntregaTarea
+from ..core.domain.GestionAcademica.asignatura import Asignatura
+from ..core.domain.GestionTarea.asignacion import Asignacion
+from ..core.domain.GestionAcademica.periodo_lectivo import PeriodoLectivo
+from ..core.domain.GestionAcademica.inscripcion import Inscripcion
+from ..core.domain.GestionTarea.grupo import Grupo
+from ..core.domain.GestionAcademica.curso import Curso
+from ..core.domain.Autenticacion.usuario import Usuario
+
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer, SolicitudAsignaturaSerializer, CursoSerializer, EntregaTareaSerializer
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
