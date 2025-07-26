@@ -14,4 +14,6 @@ __all__ = [
     'Asignacion',
     'Grupo',
     'PeriodoLectivo',
+    'SolicitudAsignatura',
+    'EntregaTarea'
 ]
