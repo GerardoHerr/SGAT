@@ -14,6 +14,8 @@ import AceptarSolicitud from '../components/GestionAcademica/AceptarSolicitud.vu
 import CursosDocente from '../components/GestionAcademica/CursosDocente.vue'
 import MostrarTareas from '../components/GestionTarea/MostrarTareas.vue'
 import CalificarTarea from '../components/GestionTarea/CalificarTarea.vue'
+import MostarTareasEstudiante from '@/components/GestionTarea/MostarTareasEstudiante.vue'
+import SubirTarea from '@/components/GestionTarea/SubirTarea.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -116,7 +118,18 @@ const router = createRouter({
       path: '/docente/calificar-tarea/:id',
       name: 'CalificarTarea',
       component: CalificarTarea,
+    },
+    {
+      path: '/estudiante/listar-tareas',
+      name: 'ListarTareasEstudiante',
+      component: MostarTareasEstudiante,
+    },
+    {
+      path: '/estudiante/subir-tarea/:id',
+      name: 'SubirTareaEstudiante',
+      component: SubirTarea,
     }
+
   ],
 })
 
