@@ -56,23 +56,35 @@
           </div>
 
           <div class="form-group">
-            <label for="asignatura">Asignatura</label>
+            <label for="curso">Curso</label>
             <select
-              id="asignatura"
-              v-model="tarea.asignatura"
+              id="curso"
+              v-model="tarea.curso"
               class="form-select"
               required
               @change="cargarEstudiantesYGrupos"
+              :disabled="!!cursoSoloQuery"
             >
-              <option value="">Seleccionar asignatura</option>
+              <option value="">Seleccionar curso</option>
               <option
-                v-for="asignatura in asignaturas"
-                :key="asignatura.id"
-                :value="asignatura.id"
+                v-for="curso in cursos"
+                :key="curso.id"
+                :value="curso.id"
+                :disabled="cursoSoloQuery && String(curso.id) !== String(cursoSoloQuery)"
               >
-                {{ asignatura.nombre }}
+                {{ curso.asignatura_nombre }} - {{ curso.periodo }}
               </option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="archivo_explicacion">Archivo PDF de explicación (opcional)</label>
+            <input
+              id="archivo_explicacion"
+              type="file"
+              accept="application/pdf"
+              @change="onArchivoExplicacionChange"
+              class="form-input"
+            />
           </div>
 
           <div class="form-group">
@@ -86,23 +98,8 @@
             </label>
           </div>
 
-          <div v-if="!tarea.es_grupal && estudiantes.length > 0" class="form-group">
-            <label>Asignar a Estudiantes</label>
-            <div class="checkbox-group">
-              <label
-                v-for="estudiante in estudiantes"
-                :key="estudiante.id"
-                class="checkbox-item"
-              >
-                <input
-                  type="checkbox"
-                  :value="estudiante.id"
-                  v-model="estudiantesSeleccionados"
-                />
-                {{ estudiante.nombre }} {{ estudiante.apellido }}
-              </label>
-            </div>
-          </div>
+          <!-- El select de estudiantes está oculto, la selección es automática -->
+          <input v-if="false" id="estudiantes-select" />
 
           <div v-if="tarea.es_grupal && grupos.length > 0" class="form-group">
             <label>Asignar a Grupos</label>
@@ -152,11 +149,12 @@ export default {
         descripcion: '',
         tipo_tarea: '',
         fecha_entrega: '',
-        asignatura: '',
+        curso: '',
         es_grupal: false,
         docente: null
       },
-      asignaturas: [],
+      archivoExplicacion: null,
+      cursos: [],
       estudiantes: [],
       grupos: [],
       estudiantesSeleccionados: [],
@@ -165,18 +163,35 @@ export default {
       mensaje: '',
       esError: false,
       docenteEmail: '' // Email del docente autenticado
+      ,
+      cursoSoloQuery: null // Si viene por query, aquí se guarda
     }
   },
+    onArchivoExplicacionChange(e) {
+      const file = e.target.files[0]
+      if (file && file.type === 'application/pdf') {
+        this.archivoExplicacion = file
+      } else {
+        this.archivoExplicacion = null
+      }
+    },
   async mounted() {
     this.obtenerUsuarioActual()
-    await this.cargarAsignaturas()
+    await this.cargarCursos()
+    // Si viene un curso por query, seleccionarlo por defecto y guardar
+    const cursoId = this.$route.query.curso
+    if (cursoId) {
+      this.tarea.curso = String(cursoId)
+      this.cursoSoloQuery = String(cursoId)
+      await this.cargarEstudiantesYGrupos()
+    }
   },
   methods: {
     obtenerUsuarioActual() {
       // Obtener usuario del authService
       const currentUser = JSON.parse(localStorage.getItem('currentUser'))
       if (currentUser && currentUser.rol === 'DOC') {
-        this.tarea.docente = currentUser.id
+        this.tarea.docente = currentUser.email // Usar email como PK
         this.docenteEmail = currentUser.email
       } else {
         // Redirigir al login si no es docente
@@ -184,32 +199,27 @@ export default {
       }
     },
     
-    async cargarAsignaturas() {
+    async cargarCursos() {
       try {
-        // Filtrar solo las asignaturas del docente autenticado
-        const response = await fetch(`http://localhost:8000/api/asignaturas/mis_asignaturas/?email=${this.docenteEmail}`)
-        if (response.ok) {
-          this.asignaturas = await response.json()
-        } else {
-          console.error('Error al cargar asignaturas del docente')
-          this.mostrarMensaje('Error al cargar sus asignaturas', true)
-        }
+        // Usar axios para obtener los cursos del docente autenticado
+        const response = await axios.get(`http://localhost:8000/api/cursos/?docente_email=${this.docenteEmail}`)
+        this.cursos = response.data
       } catch (error) {
-        console.error('Error al cargar asignaturas:', error)
-        this.mostrarMensaje('Error al cargar asignaturas', true)
+        console.error('Error al cargar cursos del docente:', error)
+        this.mostrarMensaje('Error al cargar sus cursos', true)
       }
     },
 
     async cargarEstudiantesYGrupos() {
-      if (!this.tarea.asignatura) return
-      
+      if (!this.tarea.curso) return
       try {
-        // Cargar estudiantes de la asignatura
-        const estudiantesResponse = await axios.get(`http://localhost:8000/api/usuarios/?rol=EST&asignatura=${this.tarea.asignatura}`)
+        // Cargar estudiantes del curso seleccionado
+        const estudiantesResponse = await axios.get(`http://localhost:8000/api/cursos/${this.tarea.curso}/estudiantes/`)
         this.estudiantes = estudiantesResponse.data
-        
-        // Cargar grupos de la asignatura
-        const gruposResponse = await axios.get(`http://localhost:8000/api/grupos/?asignatura_id=${this.tarea.asignatura}`)
+        // Seleccionar automáticamente todos los estudiantes
+        this.estudiantesSeleccionados = this.estudiantes.map(e => e.id)
+        // Cargar grupos del curso (usando el id del curso)
+        const gruposResponse = await axios.get(`http://localhost:8000/api/grupos/?curso_id=${this.tarea.curso}`)
         this.grupos = gruposResponse.data
       } catch (error) {
         console.error('Error al cargar estudiantes y grupos:', error)
@@ -223,42 +233,81 @@ export default {
     },
 
     async crearTarea() {
-      if (!this.validarFormulario()) return
-      
+      // DEPURACIÓN: Mostrar el estado de estudiantes, seleccionados y grupos
+      console.log('[DEPURACIÓN] estudiantes:', this.estudiantes)
+      console.log('[DEPURACIÓN] estudiantesSeleccionados:', this.estudiantesSeleccionados)
+      console.log('[DEPURACIÓN] gruposSeleccionados:', this.gruposSeleccionados)
+
+      if (!this.tarea.curso) {
+        this.mostrarMensaje('Debe seleccionar un curso', true)
+        return
+      }
+
+      // Validación según tipo de tarea
+      if (this.tarea.es_grupal) {
+        if (this.gruposSeleccionados.length === 0) {
+          this.mostrarMensaje('Debe seleccionar al menos un grupo para tareas grupales', true)
+          return
+        }
+      } else {
+        // Si no hay seleccionados pero sí hay estudiantes, selecciona todos
+        if (this.estudiantes.length > 0 && this.estudiantesSeleccionados.length === 0) {
+          this.estudiantesSeleccionados = this.estudiantes.map(e => e.id)
+          console.log('[DEPURACIÓN] Forzando selección de todos los estudiantes:', this.estudiantesSeleccionados)
+        }
+        if (this.estudiantesSeleccionados.length === 0) {
+          this.mostrarMensaje('Debe seleccionar al menos un estudiante para tareas individuales', true)
+          return
+        }
+      }
+
       this.loading = true
-      
       try {
-        // Crear la tarea
-        const tareaData = {
-          titulo: this.tarea.titulo,
-          descripcion: this.tarea.descripcion,
-          tipo_tarea: this.tarea.tipo_tarea,
-          fecha_entrega: this.tarea.fecha_entrega,
-          asignatura: this.tarea.asignatura,
-          es_grupal: this.tarea.es_grupal,
-          docente: this.tarea.docente
+        // Usar FormData para enviar archivo y datos
+        const formData = new FormData()
+        formData.append('titulo', this.tarea.titulo)
+        formData.append('descripcion', this.tarea.descripcion)
+        formData.append('tipo_tarea', this.tarea.tipo_tarea)
+        formData.append('fecha_entrega', this.tarea.fecha_entrega)
+        formData.append('curso', this.tarea.curso)
+        formData.append('es_grupal', this.tarea.es_grupal)
+        formData.append('docente', this.tarea.docente)
+        if (this.archivoExplicacion) {
+          formData.append('archivo_explicacion', this.archivoExplicacion)
         }
-        
-        const response = await axios.post('http://localhost:8000/api/asignaciones/', tareaData)
+        formData.append('activa', true)
+
+        const response = await axios.post('http://localhost:8000/api/asignaciones/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         const tareaCreada = response.data
-        
-        // Asignar estudiantes o grupos
-        if (this.estudiantesSeleccionados.length > 0 || this.gruposSeleccionados.length > 0) {
-          await axios.post(
-            `http://localhost:8000/api/asignaciones/${tareaCreada.id}/asignar_estudiantes_grupos/`,
-            {
-              estudiantes_ids: this.estudiantesSeleccionados,
-              grupos_ids: this.gruposSeleccionados
-            }
-          )
+
+        // Enviar estudiantes o grupos según el tipo de tarea
+        let estudiantesIds = []
+        let gruposIds = []
+        if (this.tarea.es_grupal) {
+          gruposIds = this.gruposSeleccionados
+        } else {
+          estudiantesIds = this.estudiantesSeleccionados
         }
-        
-        this.mostrarMensaje('Tarea creada y asignada correctamente', false)
+
+        await axios.post(
+          `http://localhost:8000/api/asignaciones/${tareaCreada.id}/asignar_estudiantes_grupos/`,
+          {
+            tarea_id: tareaCreada.id,
+            estudiantes_ids: estudiantesIds,
+            grupos_ids: gruposIds
+          }
+        )
+        this.mostrarMensaje('Tarea creada y entregas generadas correctamente', false)
         this.limpiarFormulario()
-        
       } catch (error) {
         console.error('Error al crear tarea:', error)
-        this.mostrarMensaje('Error al crear la tarea', true)
+        let msg = 'Error al crear la tarea'
+        if (error.response && error.response.data && typeof error.response.data === 'object') {
+          msg += ': ' + JSON.stringify(error.response.data)
+        }
+        this.mostrarMensaje(msg, true)
       } finally {
         this.loading = false
       }
@@ -284,7 +333,7 @@ export default {
         descripcion: '',
         tipo_tarea: '',
         fecha_entrega: '',
-        asignatura: '',
+        curso: '',
         es_grupal: false,
         docente: this.tarea.docente
       }
