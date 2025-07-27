@@ -13,7 +13,7 @@ from ..core.domain.Autenticacion.usuario import Usuario
 
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer, SolicitudAsignaturaSerializer, CursoSerializer, EntregaTareaSerializer
 from rest_framework.views import APIView
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from datetime import datetime, timedelta
 import jwt
 from rest_framework.viewsets import ViewSet
@@ -385,9 +385,10 @@ class LoginView(APIView):
             contrasenia = serializer.validated_data['contrasenia']
 
             try:
+
                 user = Usuario.objects.get(email=email)
                 # Verificar contraseña (comparación directa ya que están en texto plano)
-                if contrasenia == user.contrasenia:
+                if check_password(contrasenia, user.contrasenia):
                     payload = {
                         'id': user.email,
                         'email': user.email,
