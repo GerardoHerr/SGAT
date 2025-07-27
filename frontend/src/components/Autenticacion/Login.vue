@@ -75,7 +75,7 @@ export default {
           if (user.rol === 'ADM') {
             this.$router.push('/admin/usuarios');
           } else if (user.rol === 'DOC') {
-            this.$router.push('/docente/entregas');
+            this.$router.push('/docente/cursos');
           } else if (user.rol === 'EST') {
             this.$router.push('/estudiante/calendario-tareas');
           } else {

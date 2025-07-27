@@ -90,8 +90,21 @@ export default {
       try {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser || currentUser.rol !== 'EST') return;
-        const response = await axios.get(`http://localhost:8000/api/cursos/?estudiante_id=${currentUser.email}`);
-        this.cursos = response.data;
+
+        // 1. Trae todas las solicitudes aceptadas del estudiante
+        const solicitudesResp = await axios.get(`http://localhost:8000/api/solicitudAsignatura/?estudiante=${currentUser.email}`);
+        const solicitudesAceptadas = solicitudesResp.data.filter(s => s.estado === 'aceptado');
+
+        // 2. Obtén los IDs de asignaturas aceptadas
+        const asignaturasAceptadasIds = solicitudesAceptadas.map(s => s.asignatura.id || s.asignatura);
+
+        // 3. Trae todos los cursos y filtra solo los que correspondan a esas asignaturas
+        const cursosResp = await axios.get('http://localhost:8000/api/cursos/');
+        this.cursos = cursosResp.data.filter(curso =>
+          asignaturasAceptadasIds.includes(curso.asignatura)
+          || asignaturasAceptadasIds.includes(curso.asignatura_id)
+          || asignaturasAceptadasIds.includes(curso.asignatura?.id)
+        );
       } catch (error) {
         this.cursos = [];
         console.error('Error al cargar cursos:', error);
