@@ -1,4 +1,4 @@
-﻿from rest_framework import viewsets
+from rest_framework import viewsets
 
 # Importar los modelos necesarios desde domain
 from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
@@ -603,7 +603,48 @@ class CursoViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Curso.DoesNotExist:
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
 class EntregaTareaViewSet(viewsets.ModelViewSet):
+    @action(detail=True, methods=['post'])
+    def calificar(self, request, pk=None):
+        """Permite al docente calificar una entrega de tarea, validando el rango según el tipo de tarea."""
+        from rest_framework import status
+        from rest_framework.response import Response
+        entrega = self.get_object()
+        tarea = entrega.tarea
+        docente = tarea.creada_por
+        user = request.user
+        # Permitir calificar solo al docente responsable
+        if not user.is_authenticated or user.email != docente.email:
+            return Response({'error': 'Solo el docente responsable puede calificar esta tarea.'}, status=status.HTTP_403_FORBIDDEN)
+
+        calificacion = request.data.get('calificacion')
+        observaciones = request.data.get('observaciones', '')
+        if calificacion is None:
+            return Response({'error': 'Debe proporcionar una calificación.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            calificacion = float(calificacion)
+        except ValueError:
+            return Response({'error': 'La calificación debe ser un número.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar rango según tipo de tarea
+        tipo = tarea.tipo_tarea
+        if tipo in ['ACD', 'AA']:
+            max_calif = 2.0
+        elif tipo == 'APE':
+            max_calif = 2.5
+        else:
+            max_calif = 2.5
+        if not (0 <= calificacion <= max_calif):
+            return Response({'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # No permitir duplicados, solo actualizar si ya existe
+        entrega.calificacion = calificacion
+        if observaciones:
+            entrega.observaciones = observaciones
+        entrega.save()
+        return Response({'mensaje': 'Calificación registrada correctamente', 'calificacion': calificacion}, status=status.HTTP_200_OK)
+    
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         tarea = instance.tarea  # Asignacion
