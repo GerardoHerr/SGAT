@@ -77,7 +77,7 @@ export default {
           } else if (user.rol === 'DOC') {
             this.$router.push('/docente/entregas');
           } else if (user.rol === 'EST') {
-            this.$router.push('/estudiante/cursos-estudiante');
+            this.$router.push('/estudiante/calendario-tareas');
           } else {
             this.$router.push('/');
           }

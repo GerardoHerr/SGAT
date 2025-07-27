@@ -603,6 +603,7 @@ class CursoViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Curso.DoesNotExist:
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
 class EntregaTareaViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
