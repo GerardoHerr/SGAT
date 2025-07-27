@@ -1,4 +1,10 @@
 from rest_framework import viewsets
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from rest_framework.views import APIView
+from ..core.domain.GestionAcademica.curso import Curso
+from ..core.domain.GestionTarea.asignacion import Asignacion
+import tempfile
 
 # Importar los modelos necesarios desde domain
 from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
@@ -708,3 +714,112 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         if tarea_id:
             queryset = queryset.filter(tarea__id=tarea_id)
         return queryset
+
+class ReporteTareasCursoPDFView(APIView):
+    def get(self, request, *args, **kwargs):
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+        import io
+
+        curso_id = request.query_params.get('curso')
+        tipo = request.query_params.get('tipo', 'tareas')  # 'tareas' o 'entregas'
+        if not curso_id:
+            return HttpResponse('Curso no especificado', status=400)
+        try:
+            curso = Curso.objects.get(pk=curso_id)
+        except Curso.DoesNotExist:
+            return HttpResponse('Curso no encontrado', status=404)
+        tareas = Asignacion.objects.filter(curso_id=curso_id)
+        docente = getattr(curso, 'docente', None)
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        if tipo == 'entregas':
+            elements.append(Paragraph(f"Reporte de Entregas de Tareas", styles['Title']))
+        else:
+            elements.append(Paragraph(f"Reporte de Tareas del Curso", styles['Title']))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"Curso: {curso}", styles['Heading2']))
+        if docente:
+            elements.append(Paragraph(f"Docente: {docente}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+        if tipo == 'entregas':
+            # Por cada tarea, mostrar entregas
+            for tarea in tareas:
+                elements.append(Paragraph(f"Tarea: {getattr(tarea, 'titulo', '')}", styles['Heading3']))
+                entregas = EntregaTarea.objects.filter(tarea=tarea)
+                data = [["Estudiante", "Email", "Calificación", "Fecha de entrega"]]
+                for entrega in entregas:
+                    estudiante = getattr(entrega, 'estudiante', None)
+                    estudiante_nombre = getattr(estudiante, 'nombre', '') if estudiante else ''
+                    estudiante_email = getattr(estudiante, 'email', '') if estudiante else ''
+                    calificacion = getattr(entrega, 'calificacion', '')
+                    fecha_obj = getattr(entrega, 'fecha_entregada', None)
+                    if fecha_obj:
+                        fecha_entrega = fecha_obj.strftime('%d/%m/%Y %H:%M')
+                    else:
+                        fecha_entrega = ''
+                    data.append([
+                        estudiante_nombre,
+                        estudiante_email,
+                        calificacion,
+                        fecha_entrega
+                    ])
+                table = Table(data, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ]))
+                elements.append(table)
+                elements.append(Spacer(1, 18))
+        else:
+            # Tabla de tareas
+            data = [["Título", "Descripción", "Fecha de creación", "Fecha de entrega"]]
+            for tarea in tareas:
+                # Formatear fechas si existen
+                fecha_creacion_obj = getattr(tarea, 'fecha_creacion', None)
+                if fecha_creacion_obj:
+                    fecha_creacion = fecha_creacion_obj.strftime('%d/%m/%Y %H:%M')
+                else:
+                    fecha_creacion = ''
+                fecha_entrega_obj = getattr(tarea, 'fecha_entrega', None)
+                if fecha_entrega_obj:
+                    fecha_entrega = fecha_entrega_obj.strftime('%d/%m/%Y %H:%M')
+                else:
+                    fecha_entrega = ''
+                data.append([
+                    str(getattr(tarea, 'titulo', '')),
+                    str(getattr(tarea, 'descripcion', '')),
+                    fecha_creacion,
+                    fecha_entrega
+                ])
+            table = Table(data, repeatRows=1)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table)
+
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+        nombre = f"reporte_{'entregas' if tipo == 'entregas' else 'tareas'}_{curso_id}.pdf"
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre}"'
+        return response
