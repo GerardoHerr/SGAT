@@ -442,6 +442,68 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(solicitud)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, pk=None):
+        """Actualiza el estado de una solicitud y asigna tareas si es aceptada"""
+        from django.core.files.base import ContentFile
+        from ..core.domain.GestionTarea.asignacion import Asignacion
+        from ..core.domain.GestionAcademica.entregarTarea import EntregaTarea
+        from ..core.domain.GestionAcademica.curso import Curso
+        from rest_framework.response import Response
+        from rest_framework import status
+        
+        try:
+            solicitud = self.get_object()
+            nuevo_estado = request.data.get('estado')
+
+            if nuevo_estado not in ['aceptada', 'rechazada']:
+                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Si la solicitud está siendo aceptada y no estaba ya aceptada
+            if nuevo_estado == 'aceptada' and solicitud.estado != 'aceptada':
+                # Obtener todos los cursos para esta asignatura
+                cursos = Curso.objects.filter(asignatura=solicitud.asignatura)
+                
+                for curso in cursos:
+                    # Agregar estudiante al curso si no está ya inscrito
+                    if not curso.estudiantes.filter(email=solicitud.estudiante.email).exists():
+                        curso.estudiantes.add(solicitud.estudiante)
+                    
+                    # Obtener todas las tareas existentes para este curso
+                    tareas = Asignacion.objects.filter(curso=curso)
+                    
+                    # Crear entregas para cada tarea
+                    for tarea in tareas:
+                        # Verificar si ya existe una entrega para esta tarea y estudiante
+                        if not EntregaTarea.objects.filter(
+                            tarea=tarea, 
+                            estudiante=solicitud.estudiante
+                        ).exists():
+                            # Crear un archivo temporal vacío
+                            empty_file = ContentFile(b'', name='temporal.txt')
+                            
+                            # Crear la entrega de tarea
+                            # No incluimos 'curso' ya que no es un campo del modelo
+                            # La relación con el curso ya está a través de tarea.curso
+                            EntregaTarea.objects.create(
+                                tarea=tarea,
+                                estudiante=solicitud.estudiante,
+                                archivo=empty_file,
+                                calificacion=None,
+                                observaciones='',
+                                grupo=None  # Se asigna None por defecto, se actualizará si es grupal
+                            )
+            
+            # Actualizar el estado de la solicitud
+            solicitud.estado = nuevo_estado
+            solicitud.save()
+            
+            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
+            
+        except SolicitudAsignatura.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+    
     def list(self, request):
         try:
             token = request.headers.get('Authorization', None)
@@ -481,38 +543,6 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print("Error:", e)
             return Response({'error': 'Error al obtener solicitudes'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    def partial_update(self, request, pk=None):
-        try:
-            solicitud = SolicitudAsignatura.objects.get(pk=pk)
-            nuevo_estado = request.data.get('estado')
-
-            if nuevo_estado not in ['aceptado', 'rechazado']:
-                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
-
-            solicitud.estado = nuevo_estado
-            solicitud.save()
-
-            # Si la solicitud fue aceptada, agregar al estudiante al curso
-            if nuevo_estado == 'aceptado':
-                asignatura = solicitud.asignatura
-                estudiante = solicitud.estudiante
-
-                # Buscar el curso asociado a esa asignatura
-                curso = Curso.objects.filter(asignatura=asignatura).first()
-                if not curso:
-                    # Crear el curso si no existe
-                    curso = Curso.objects.create(asignatura=asignatura)
-
-                # Agregar al estudiante
-                curso.estudiantes.add(estudiante)
-
-            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
-
-        except SolicitudAsignatura.DoesNotExist:
-            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CursoViewSet(viewsets.ModelViewSet):
 
