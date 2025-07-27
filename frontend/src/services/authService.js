@@ -73,7 +73,7 @@ export const authService = {
         
         if (usuario) {
           this.currentUser = {
-            id: usuario.id,
+            id: usuario.email,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
             email: usuario.email,
