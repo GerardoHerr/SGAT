@@ -7,7 +7,7 @@
         <h2 v-show="!isCollapsed" class="app-title">SGAT</h2>
       </div>
       <button @click="toggleSidebar" class="toggle-btn">
-        <span class="toggle-icon">{{ isCollapsed ? '→' : '←' }}</span>
+        <span class="toggle-icon">{{ isCollapsed ? '>' : '<' }}</span>
       </button>
     </div>
 
@@ -48,8 +48,26 @@
                 </RouterLink>
               </li>
               <li>
+                <RouterLink to="/admin/asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Asignaturas">
+                  <span class="nav-icon">�</span>
+                  <span v-show="!isCollapsed" class="nav-text">Registrar Asignaturas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/admin/asignar-docente" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Asignar Docentes">
+                  <span class="nav-icon">👨‍�</span>
+                  <span v-show="!isCollapsed" class="nav-text">Asignar Docentes</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/admin/registrar-periodo" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Periodos Lectivos">
+                  <span class="nav-icon">�</span>
+                  <span v-show="!isCollapsed" class="nav-text">Periodos Lectivos</span>
+                </RouterLink>
+              </li>
+              <li>
                 <RouterLink to="/admin/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Reportes de Actividad">
-                  <span class="nav-icon">📈</span>
+                  <span class="nav-icon">�</span>
                   <span v-show="!isCollapsed" class="nav-text">Reportes de Actividad</span>
                 </RouterLink>
               </li>
@@ -57,18 +75,6 @@
                 <RouterLink to="/admin/roles" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Gestión de Roles">
                   <span class="nav-icon">🎭</span>
                   <span v-show="!isCollapsed" class="nav-text">Gestión de Roles</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/admin/asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Asignaturas">
-                  <span class="nav-icon">📖</span>
-                  <span v-show="!isCollapsed" class="nav-text">Registrar Asignaturas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/admin/periodos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Periodos Lectivos">
-                  <span class="nav-icon">📅</span>
-                  <span v-show="!isCollapsed" class="nav-text">Periodos Lectivos</span>
                 </RouterLink>
               </li>
             </ul>
@@ -83,10 +89,28 @@
             </div>
             <ul class="nav-submenu">
               <!-- Prioridad Alta -->
+               <li>
+                <RouterLink to="/docente/cursos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Mis Cursos">
+                  <span class="nav-icon">🔔</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis Cursos</span>
+                </RouterLink>
+              </li>
               <li>
                 <RouterLink to="/docente/asignar-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Asignación de Tareas">
                   <span class="nav-icon">📝</span>
                   <span v-show="!isCollapsed" class="nav-text">Asignación de Tareas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/listar-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Mis Tareas">
+                  <span class="nav-icon">📋</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis Tareas</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/docente/gestion-grupos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Gestión de Grupos">
+                  <span class="nav-icon">👥</span>
+                  <span v-show="!isCollapsed" class="nav-text">Gestión de Grupos</span>
                 </RouterLink>
               </li>
               <li>
@@ -97,14 +121,8 @@
               </li>
               <li>
                 <RouterLink to="/docente/retroalimentacion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Retroalimentación">
-                  <span class="nav-icon">💬</span>
+                  <span class="nav-icon">�</span>
                   <span v-show="!isCollapsed" class="nav-text">Retroalimentación</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/docente/grupos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Creación de Grupos">
-                  <span class="nav-icon">👥</span>
-                  <span v-show="!isCollapsed" class="nav-text">Creación de Grupos</span>
                 </RouterLink>
               </li>
               <li>
@@ -126,7 +144,7 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/docente/registrar-estudiantes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Estudiantes">
+                <RouterLink to="/docente/aceptar-solicitud" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Estudiantes">
                   <span class="nav-icon">🎓</span>
                   <span v-show="!isCollapsed" class="nav-text">Registrar Estudiantes</span>
                 </RouterLink>
@@ -171,7 +189,7 @@
             <ul class="nav-submenu">
               <!-- Prioridad Alta -->
               <li>
-                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                <RouterLink to="/estudiante/calendario-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
                   <span class="nav-icon">📅</span>
                   <span v-show="!isCollapsed" class="nav-text">Calendario de Tareas</span>
                 </RouterLink>
@@ -180,6 +198,12 @@
                 <RouterLink to="/estudiante/solicitar-asignatura" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Solicitar Registro">
                   <span class="nav-icon">✍️</span>
                   <span v-show="!isCollapsed" class="nav-text">Solicitar Registro</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                  <span class="nav-icon">📅</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis cursos</span>
                 </RouterLink>
               </li>
               <li>
@@ -236,10 +260,10 @@
 
     <!-- Footer del Sidebar -->
     <div class="sidebar-footer">
-      <button @click="logout" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }" title="Cerrar Sesión">
+      <RouterLink to="/login-simple" class="logout-btn" :class="{ 'logout-btn-collapsed': isCollapsed }" title="Cerrar Sesión">
         <span class="nav-icon">🚪</span>
         <span v-show="!isCollapsed" class="nav-text">Cerrar Sesión</span>
-      </button>
+      </RouterLink>
     </div>
   </aside>
 </template>
@@ -255,11 +279,7 @@ const isCollapsed = ref(false)
 const props = defineProps({
   user: {
     type: Object,
-    default: () => ({
-      name: 'Usuario Demo',
-      role: 'Docente',
-      avatar: null
-    })
+    default: () => null
   },
   notificationCount: {
     type: Number,
@@ -268,16 +288,25 @@ const props = defineProps({
 })
 
 // Computed properties
-const userName = computed(() => props.user.name)
-const userRole = computed(() => props.user.role)
+const userName = computed(() => {
+  if (!props.user) return 'Usuario Demo'
+  return props.user.name || 'Usuario Demo'
+})
+
+const userRole = computed(() => {
+  if (!props.user) return 'Docente'
+  return props.user.role || 'Docente'
+})
+
 const userInitials = computed(() => {
-  const names = props.user.name.split(' ')
+  const name = userName.value
+  const names = name.split(' ')
   return names.map(name => name[0]).join('').toUpperCase()
 })
 
-const isAdmin = computed(() => props.user.role === 'Administrador')
-const isDocente = computed(() => props.user.role === 'Docente')
-const isEstudiante = computed(() => props.user.role === 'Estudiante')
+const isAdmin = computed(() => userRole.value === 'Administrador')
+const isDocente = computed(() => userRole.value === 'Docente')
+const isEstudiante = computed(() => userRole.value === 'Estudiante')
 
 // Métodos
 const toggleSidebar = () => {
@@ -554,6 +583,7 @@ const logout = () => {
   gap: 0.75rem;
   transition: all 0.2s;
   font-size: 0.9rem;
+  text-decoration: none;
 }
 
 .logout-btn:hover {

@@ -9,8 +9,11 @@ __all__ = [
     'Usuario',
     # GestionAcademica
     'Asignatura',
+    'Inscripcion',
     # GestionTarea
     'Asignacion',
     'Grupo',
     'PeriodoLectivo',
+    'SolicitudAsignatura',
+    'EntregaTarea'
 ]
