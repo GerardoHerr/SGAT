@@ -1,7 +1,8 @@
 <template>
   <div class="asignar-docente">
-    <div class="main-content">
-      <div class="card">
+    <!-- Formulario -->
+    <div class="formulario-section">
+      <div class="card-formulario">
         <h2>Asignar Docente Responsable</h2>
         
         <!-- Selector de Asignatura -->
@@ -48,30 +49,40 @@
           {{ mensaje }}
         </div>
       </div>
+    </div>
 
-      <!-- Lista de Asignaturas con Docentes -->
-      <div class="card">
+    <!-- Tabla -->
+    <div class="tabla-section">
+      <div class="card-tabla">
         <h3>Asignaturas y Docentes Responsables</h3>
-        <div class="tabla-asignaturas">
-          <div class="tabla-header">
-            <span>Código</span>
-            <span>Asignatura</span>
-            <span>Docente Responsable</span>
-            <span>Estado</span>
-          </div>
-          <div v-for="asignatura in asignaturas" :key="asignatura.id" class="tabla-row">
-            <span>{{ asignatura.codigo }}</span>
-            <span>{{ asignatura.nombre }}</span>
-            <span>
-              <span v-if="asignatura.docente_responsable_nombre">
-                {{ asignatura.docente_responsable_nombre }} {{ asignatura.docente_responsable_apellido }}
-              </span>
-              <span v-else class="sin-docente">Sin asignar</span>
-            </span>
-            <span :class="asignatura.activa ? 'activa' : 'inactiva'">
-              {{ asignatura.activa ? 'Activa' : 'Inactiva' }}
-            </span>
-          </div>
+        <div class="tabla-container">
+          <table class="tabla-asignaturas">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Asignatura</th>
+                <th>Docente Responsable</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="asignatura in asignaturas" :key="asignatura.id">
+                <td>{{ asignatura.codigo }}</td>
+                <td>{{ asignatura.nombre }}</td>
+                <td>
+                  <span v-if="asignatura.docente_responsable_nombre">
+                    {{ asignatura.docente_responsable_nombre }} {{ asignatura.docente_responsable_apellido }}
+                  </span>
+                  <span v-else class="sin-docente">Sin asignar</span>
+                </td>
+                <td>
+                  <span :class="asignatura.activa ? 'estado-activo' : 'estado-inactivo'">
+                    {{ asignatura.activa ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -155,7 +166,7 @@ export default {
         if (response.ok) {
           this.mensaje = result.mensaje;
           this.tipoMensaje = 'success';
-          this.cargarAsignaturas(); // Recargar para mostrar los cambios
+          this.cargarAsignaturas();
           this.asignaturaSeleccionada = '';
           this.docenteSeleccionado = '';
           this.docenteActual = null;
@@ -177,166 +188,323 @@ export default {
 
 <style scoped>
 .asignar-docente {
-  padding: 2rem;
-  background: #323232;
+  background: #f8fafc;
   min-height: 100vh;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 0;
+  box-sizing: border-box;
 }
 
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
+/* FORMULARIO */
+.formulario-section {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
-.card {
-  background: #DDD0C8;
-  padding: 2rem;
-  border-radius: 1rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.card-formulario {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+  border: 2px solid #3b82f6;
 }
 
-.card h2, .card h3 {
-  color: #323232;
-  margin-bottom: 1.5rem;
+.card-formulario h2 {
+  color: #1e40af;
   text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  color: #323232;
-  font-weight: 500;
+  margin-bottom: 0.8rem;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .form-group select {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #323232;
-  border-radius: 0.5rem;
+  padding: 1.2rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   background: white;
-  color: #323232;
-  font-size: 1rem;
+  color: #1e40af;
+  font-size: 1.1rem;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1.2em 1.2em;
+  padding-right: 3rem;
+  transition: all 0.3s ease;
+}
+
+.form-group select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .docente-actual {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin: 1rem 0;
-  border-left: 4px solid #3498db;
+  background: #eff6ff;
+  padding: 1.8rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border-left: 4px solid #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .docente-actual h3 {
-  margin: 0 0 0.5rem 0;
-  color: #3498db;
-  font-size: 1rem;
+  margin: 0 0 0.8rem 0;
+  color: #1e40af;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .docente-actual p {
   margin: 0;
-  color: #323232;
-  font-weight: 500;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .btn-asignar {
-  background: #3498db;
+  background: #3b82f6;
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  padding: 1.2rem 2.5rem;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
   display: block;
-  margin: 1.5rem auto;
+  margin: 2rem auto;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  min-width: 220px;
 }
 
 .btn-asignar:hover:not(:disabled) {
-  background: #2980b9;
+  background: #2563eb;
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .btn-asignar:disabled {
-  background: #bdc3c7;
+  background: #9ca3af;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .mensaje {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border-radius: 8px;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .mensaje.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 2px solid #c3e6cb;
+  background: #dcfce7;
+  color: #15803d;
+  border: 2px solid #4ade80;
 }
 
 .mensaje.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 2px solid #f5c6cb;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #f87171;
+}
+
+/* TABLA */
+.tabla-section {
+  flex: 1;
+  width: 100%;
+}
+
+.card-tabla {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #3b82f6;
+  width: 100%;
+}
+
+.card-tabla h3 {
+  color: #1e40af;
+  text-align: center;
+  margin-bottom: 1.8rem;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.tabla-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .tabla-asignaturas {
-  margin-top: 1rem;
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 1rem;
 }
 
-.tabla-header, .tabla-row {
-  display: grid;
-  grid-template-columns: 1fr 2fr 2fr 1fr;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #323232;
-}
-
-.tabla-header {
-  background: #323232;
-  color: #DDD0C8;
+.tabla-asignaturas th {
+  background: #3b82f6;
+  color: white;
+  padding: 1.4rem 1.2rem;
+  text-align: center;
   font-weight: 600;
-  border-radius: 0.5rem 0.5rem 0 0;
+  font-size: 1rem;
 }
 
-.tabla-row {
-  background: white;
-  color: #323232;
+.tabla-asignaturas td {
+  padding: 1.4rem 1.2rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+  font-weight: 500;
+  text-align: center;
+  font-size: 1rem;
+  vertical-align: middle;
 }
 
-.tabla-row:last-child {
-  border-radius: 0 0 0.5rem 0.5rem;
+.tabla-asignaturas tr:hover {
+  background: #f8fafc;
+  transition: background 0.2s ease;
+}
+
+.tabla-asignaturas tr:last-child td {
+  border-bottom: none;
 }
 
 .sin-docente {
-  color: #e74c3c;
+  color: #ef4444;
   font-style: italic;
+  font-weight: 600;
 }
 
-.activa {
-  color: #27ae60;
-  font-weight: 500;
+.estado-activo {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: 1px solid #4ade80;
 }
 
-.inactiva {
-  color: #e74c3c;
-  font-weight: 500;
+.estado-inactivo {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: 1px solid #f87171;
+}
+
+/* Borde superior azul */
+.card-formulario::before,
+.card-tabla::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #3b82f6;
+  border-radius: 12px 12px 0 0;
+}
+
+.card-formulario,
+.card-tabla {
+  position: relative;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .asignar-docente {
+    padding: 1.2rem;
+  }
+  
+  .card-formulario {
+    max-width: 100%;
+    padding: 2rem;
+  }
+  
+  .card-formulario h2 {
+    font-size: 1.7rem;
+  }
 }
 
 @media (max-width: 768px) {
-  .tabla-header, .tabla-row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+  .asignar-docente {
+    padding: 1rem;
   }
   
-  .tabla-header span, .tabla-row span {
-    padding: 0.25rem 0;
+  .card-formulario,
+  .card-tabla {
+    padding: 1.5rem;
+  }
+  
+  .card-formulario h2,
+  .card-tabla h3 {
+    font-size: 1.4rem;
+  }
+  
+  .tabla-asignaturas th,
+  .tabla-asignaturas td {
+    padding: 1rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-group select {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+  
+  .btn-asignar {
+    font-size: 1rem;
+    padding: 1rem 2rem;
+  }
+}
+
+/* Animación suave */
+.card-formulario,
+.card-tabla {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
