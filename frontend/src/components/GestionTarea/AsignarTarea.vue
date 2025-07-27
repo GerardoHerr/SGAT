@@ -162,23 +162,14 @@ export default {
       loading: false,
       mensaje: '',
       esError: false,
-      docenteEmail: '' // Email del docente autenticado
-      ,
-      cursoSoloQuery: null // Si viene por query, aquí se guarda
+      docenteEmail: '',
+      cursoSoloQuery: null
     }
   },
-    onArchivoExplicacionChange(e) {
-      const file = e.target.files[0]
-      if (file && file.type === 'application/pdf') {
-        this.archivoExplicacion = file
-      } else {
-        this.archivoExplicacion = null
-      }
-    },
+  
   async mounted() {
     this.obtenerUsuarioActual()
     await this.cargarCursos()
-    // Si viene un curso por query, seleccionarlo por defecto y guardar
     const cursoId = this.$route.query.curso
     if (cursoId) {
       this.tarea.curso = String(cursoId)
@@ -186,22 +177,34 @@ export default {
       await this.cargarEstudiantesYGrupos()
     }
   },
+  
   methods: {
+    // MÉTODO MOVIDO AQUÍ DESDE data()
+    onArchivoExplicacionChange(e) {
+      const file = e.target.files[0]
+      if (file && file.type === 'application/pdf') {
+        this.archivoExplicacion = file
+        console.log('[DEBUG] Archivo PDF seleccionado:', file.name, 'Tamaño:', file.size)
+      } else {
+        this.archivoExplicacion = null
+        if (file) {
+          this.mostrarMensaje('Por favor seleccione un archivo PDF válido', true)
+        }
+      }
+    },
+
     obtenerUsuarioActual() {
-      // Obtener usuario del authService
       const currentUser = JSON.parse(localStorage.getItem('currentUser'))
       if (currentUser && currentUser.rol === 'DOC') {
-        this.tarea.docente = currentUser.email // Usar email como PK
+        this.tarea.docente = currentUser.email
         this.docenteEmail = currentUser.email
       } else {
-        // Redirigir al login si no es docente
         this.$router.push('/login')
       }
     },
     
     async cargarCursos() {
       try {
-        // Usar axios para obtener los cursos del docente autenticado
         const response = await axios.get(`http://localhost:8000/api/cursos/?docente_email=${this.docenteEmail}`)
         this.cursos = response.data
       } catch (error) {
@@ -213,12 +216,10 @@ export default {
     async cargarEstudiantesYGrupos() {
       if (!this.tarea.curso) return
       try {
-        // Cargar estudiantes del curso seleccionado
         const estudiantesResponse = await axios.get(`http://localhost:8000/api/cursos/${this.tarea.curso}/estudiantes/`)
         this.estudiantes = estudiantesResponse.data
-        // Seleccionar automáticamente todos los estudiantes
         this.estudiantesSeleccionados = this.estudiantes.map(e => e.id)
-        // Cargar grupos del curso (usando el id del curso)
+        
         const gruposResponse = await axios.get(`http://localhost:8000/api/grupos/?curso_id=${this.tarea.curso}`)
         this.grupos = gruposResponse.data
       } catch (error) {
@@ -233,27 +234,22 @@ export default {
     },
 
     async crearTarea() {
-      // DEPURACIÓN: Mostrar el estado de estudiantes, seleccionados y grupos
-      console.log('[DEPURACIÓN] estudiantes:', this.estudiantes)
-      console.log('[DEPURACIÓN] estudiantesSeleccionados:', this.estudiantesSeleccionados)
-      console.log('[DEPURACIÓN] gruposSeleccionados:', this.gruposSeleccionados)
-
+      console.log('[DEBUG] Creando tarea...')
+      console.log('[DEBUG] Archivo seleccionado:', this.archivoExplicacion)
+      
       if (!this.tarea.curso) {
         this.mostrarMensaje('Debe seleccionar un curso', true)
         return
       }
 
-      // Validación según tipo de tarea
       if (this.tarea.es_grupal) {
         if (this.gruposSeleccionados.length === 0) {
           this.mostrarMensaje('Debe seleccionar al menos un grupo para tareas grupales', true)
           return
         }
       } else {
-        // Si no hay seleccionados pero sí hay estudiantes, selecciona todos
         if (this.estudiantes.length > 0 && this.estudiantesSeleccionados.length === 0) {
           this.estudiantesSeleccionados = this.estudiantes.map(e => e.id)
-          console.log('[DEPURACIÓN] Forzando selección de todos los estudiantes:', this.estudiantesSeleccionados)
         }
         if (this.estudiantesSeleccionados.length === 0) {
           this.mostrarMensaje('Debe seleccionar al menos un estudiante para tareas individuales', true)
@@ -263,7 +259,6 @@ export default {
 
       this.loading = true
       try {
-        // Usar FormData para enviar archivo y datos
         const formData = new FormData()
         formData.append('titulo', this.tarea.titulo)
         formData.append('descripcion', this.tarea.descripcion)
@@ -272,17 +267,30 @@ export default {
         formData.append('curso', this.tarea.curso)
         formData.append('es_grupal', this.tarea.es_grupal)
         formData.append('docente', this.tarea.docente)
+        formData.append('activa', true)
+        
+        // VERIFICAR QUE EL ARCHIVO SE AGREGUE AL FORMDATA
         if (this.archivoExplicacion) {
           formData.append('archivo_explicacion', this.archivoExplicacion)
+          console.log('[DEBUG] Archivo agregado al FormData:', this.archivoExplicacion.name)
+        } else {
+          console.log('[DEBUG] No hay archivo para agregar')
         }
-        formData.append('activa', true)
+
+        // Debug: Ver contenido del FormData
+        for (let pair of formData.entries()) {
+          console.log('[DEBUG] FormData:', pair[0], pair[1])
+        }
 
         const response = await axios.post('http://localhost:8000/api/asignaciones/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 
+            'Content-Type': 'multipart/form-data'
+          }
         })
+        
         const tareaCreada = response.data
+        console.log('[DEBUG] Tarea creada:', tareaCreada)
 
-        // Enviar estudiantes o grupos según el tipo de tarea
         let estudiantesIds = []
         let gruposIds = []
         if (this.tarea.es_grupal) {
@@ -299,6 +307,7 @@ export default {
             grupos_ids: gruposIds
           }
         )
+        
         this.mostrarMensaje('Tarea creada y entregas generadas correctamente', false)
         this.limpiarFormulario()
       } catch (error) {
@@ -313,20 +322,6 @@ export default {
       }
     },
 
-    validarFormulario() {
-      if (!this.tarea.es_grupal && this.estudiantesSeleccionados.length === 0) {
-        this.mostrarMensaje('Debe seleccionar al menos un estudiante para tareas individuales', true)
-        return false
-      }
-      
-      if (this.tarea.es_grupal && this.gruposSeleccionados.length === 0) {
-        this.mostrarMensaje('Debe seleccionar al menos un grupo para tareas grupales', true)
-        return false
-      }
-      
-      return true
-    },
-
     limpiarFormulario() {
       this.tarea = {
         titulo: '',
@@ -337,6 +332,9 @@ export default {
         es_grupal: false,
         docente: this.tarea.docente
       }
+      this.archivoExplicacion = null
+      const input = document.getElementById('archivo_explicacion')
+      if (input) input.value = ''
       this.estudiantesSeleccionados = []
       this.gruposSeleccionados = []
       this.estudiantes = []

@@ -7,8 +7,15 @@
         <div v-for="tipo in tiposTarea" :key="tipo" class="tipo-tarea">
           <h3>{{ tipoLabels[tipo] }}</h3>
           <ul>
-            <li v-for="tarea in tareasPorTipo(tipo)" :key="tarea.id">
-              <strong>{{ tarea.titulo }}</strong> - {{ tarea.fecha_entrega | fecha }}
+            <li v-for="tarea in tareasPorTipo(tipo)" :key="tarea.id" class="tarea-item">
+              <div class="tarea-info">
+                <strong class="tarea-titulo">{{ tarea.titulo }}</strong>
+                <span class="tarea-fecha">Entregas: {{ tarea.cantidad_entregas }}</span>
+                <span class="tarea-tipo">
+                  <i :class="tarea.es_grupal ? 'fas fa-users' : 'fas fa-user'" style="margin-right:4px"></i>
+                  {{ tarea.es_grupal ? 'Grupal' : 'Individual' }}
+                </span>
+              </div>
               <button class="btn-calificar" @click="irACalificarTarea(tarea.id)">Calificar</button>
             </li>
           </ul>
@@ -132,5 +139,39 @@ li {
   color: #b94a48;
   font-weight: 500;
   margin-bottom: 24px;
+}
+
+/* Mejor presentación de la tarea */
+.tarea-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  box-shadow: 0 2px 8px rgba(52,152,219,0.07);
+}
+
+.tarea-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tarea-titulo {
+  color: #3498db;
+  font-weight: 600;
+  font-size: 1.08em;
+}
+.tarea-fecha {
+  color: #555;
+  font-size: 0.98em;
+}
+.tarea-tipo {
+  color: #1e874b;
+  font-size: 0.98em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
 }
 </style>

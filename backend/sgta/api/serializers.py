@@ -41,9 +41,17 @@ class LoginSerializer(serializers.Serializer):
     contrasenia = serializers.CharField()
 
 class AsignacionSerializer(serializers.ModelSerializer):
+    cantidad_entregas = serializers.SerializerMethodField()
+
     class Meta:
         model = Asignacion
         fields = '__all__'
+        # Agregamos el campo calculado
+        extra_fields = ['cantidad_entregas']
+
+    def get_cantidad_entregas(self, obj):
+        # Cuenta solo entregas con archivo no vacío
+        return obj.entregas.exclude(archivo='').exclude(archivo=None).count()
 
 class GrupoSerializer(serializers.ModelSerializer):
     estudiantes = UsuarioSerializer(many=True, read_only=True)
@@ -123,6 +131,7 @@ class EntregaTareaSerializer(serializers.ModelSerializer):
     estudiante_email = serializers.CharField(source='estudiante.email', read_only=True)
     grupo_nombre = serializers.CharField(source='grupo.nombre', read_only=True, default=None)
     tarea_titulo = serializers.CharField(source='tarea.titulo', read_only=True)
+    fecha_entrega = serializers.DateTimeField(source='tarea.fecha_entrega', format='%Y-%m-%d %H:%M:%S', read_only=True)
 
     class Meta:
         model = EntregaTarea
