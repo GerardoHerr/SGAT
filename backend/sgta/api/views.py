@@ -10,10 +10,10 @@ from ..core.domain.GestionAcademica.inscripcion import Inscripcion
 from ..core.domain.GestionTarea.grupo import Grupo
 from ..core.domain.GestionAcademica.curso import Curso
 from ..core.domain.Autenticacion.usuario import Usuario
-import logging
+
 from .serializers import UsuarioSerializer, AsignaturaSerializer,PeriodoLectivoSerializer, LoginSerializer, AsignacionSerializer, GrupoSerializer, CrearGrupoAleatorioSerializer, AsignarTareaSerializer, InscripcionSerializer, InscripcionSerializer, AsignarDocenteSerializer, SolicitudAsignaturaSerializer, CursoSerializer, EntregaTareaSerializer
 from rest_framework.views import APIView
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password
 from datetime import datetime, timedelta
 import jwt
 from rest_framework.viewsets import ViewSet
@@ -190,63 +190,45 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         return queryset.filter(activa=True)
 
 class AsignacionViewSet(viewsets.ModelViewSet):
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        # Si viene 'docente' en el request, usarlo para creada_por
+        docente_email = data.get('docente')
+        if docente_email:
+            try:
+                docente = Usuario.objects.get(email=docente_email, rol='DOC')
+                data['creada_por'] = docente.pk
+            except Usuario.DoesNotExist:
+                return Response({'error': 'Docente no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     queryset = Asignacion.objects.all()
     serializer_class = AsignacionSerializer
-
+    
     def get_queryset(self):
         queryset = Asignacion.objects.all()
-        curso_id = self.request.query_params.get('curso')
+        docente_id = self.request.query_params.get('docente_id')
         docente_email = self.request.query_params.get('docente_email')
+        curso_id = self.request.query_params.get('curso')
+        tipo_tarea = self.request.query_params.get('tipo_tarea')
+        tarea_id = self.request.query_params.get('tarea_id')
 
+        if docente_id:
+            queryset = queryset.filter(creada_por__id=docente_id)
+        if docente_email:
+            try:
+                docente = Usuario.objects.get(email=docente_email, rol='DOC')
+                queryset = queryset.filter(creada_por=docente)
+            except Usuario.DoesNotExist:
+                queryset = Asignacion.objects.none()
         if curso_id:
             queryset = queryset.filter(curso__id=curso_id)
-        if docente_email:
-            queryset = queryset.filter(creada_por__email=docente_email)
+        if tipo_tarea:
+            queryset = queryset.filter(tipo_tarea=tipo_tarea)
+
         return queryset.order_by('-fecha_creacion')
-
-    def create(self, request, *args, **kwargs):
-        logger = logging.getLogger(__name__)
-        logger.info("[DEPURACIÓN] request.data: %s", request.data)
-        logger.info("[DEPURACIÓN] request.FILES: %s", request.FILES)
-        
-        # Verificar específicamente el archivo
-        if 'archivo_explicacion' in request.FILES:
-            archivo = request.FILES['archivo_explicacion']
-            logger.info("[DEPURACIÓN] Archivo recibido: %s, tamaño: %s", archivo.name, archivo.size)
-        else:
-            logger.info("[DEPURACIÓN] No se recibió archivo")
-        
-        docente_email = request.data.get('docente')
-        if docente_email:
-            try:
-                docente = Usuario.objects.get(email=docente_email, rol='DOC')
-            except Usuario.DoesNotExist:
-                logger.error("[DEPURACIÓN] Docente no encontrado: %s", docente_email)
-                return Response({'error': 'Docente no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            docente = None
-
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            logger.info("[DEPURACIÓN] Serializer válido. Datos validados: %s", serializer.validated_data)
-            instance = self.perform_create(serializer)
-            logger.info("[DEPURACIÓN] Asignación creada. ID: %s, Archivo: %s", instance.id, instance.archivo_explicacion)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            logger.error("[DEPURACIÓN] Errores de validación: %s", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def perform_create(self, serializer):
-        docente_email = self.request.data.get('docente')
-        if docente_email:
-            try:
-                docente = Usuario.objects.get(email=docente_email, rol='DOC')
-                instance = serializer.save(creada_por=docente)
-                return instance
-            except Usuario.DoesNotExist:
-                raise serializer.ValidationError({'error': 'Docente no encontrado'})
-        else:
-            return serializer.save()
     
     @action(detail=True, methods=['post'])
     def asignar_estudiantes_grupos(self, request, pk=None):
@@ -404,10 +386,8 @@ class LoginView(APIView):
 
             try:
                 user = Usuario.objects.get(email=email)
-                print("Usuario encontrado:", user.email)
-                # Verificar contraseña hasheada
-                if check_password(contrasenia, user.contrasenia):
-                    print("Login exitoso para:", user.email)
+                # Verificar contraseña (comparación directa ya que están en texto plano)
+                if contrasenia == user.contrasenia:
                     payload = {
                         'id': user.email,
                         'email': user.email,
@@ -416,7 +396,6 @@ class LoginView(APIView):
                         'iat': datetime.utcnow(),
                     }
                     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-                    print("Token generado:", token)
                     return Response({'access': token})
                 return Response({'error': 'Credenciales invalidas'}, status=status.HTTP_401_UNAUTHORIZED)
             except Usuario.DoesNotExist:
@@ -631,18 +610,35 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         """Permite al docente calificar una entrega de tarea, validando el rango según el tipo de tarea."""
         from rest_framework import status
         from rest_framework.response import Response
-        entrega = self.get_object()
-        tarea = entrega.tarea
-        docente = tarea.creada_por
-        user = request.user
-        print(user)
-        # Verificar que el usuario esté autenticado y sea el docente de la asignación
-        if not user.is_authenticated:
-            return Response({'error': 'Debe iniciar sesión para calificar tareas.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Obtener el email del docente del request
+        docente_email = request.data.get('docente_email')
+        if not docente_email:
+            return Response(
+                {'error': 'Se requiere el email del docente'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Obtener la entrega y la tarea
+            entrega = self.get_object()
+            tarea = entrega.tarea
             
-        # Verificar si el docente de la asignación coincide con el usuario actual
-        if user.email != docente.email:
-            return Response({'error': 'Solo el docente asignado puede calificar esta tarea.'}, status=status.HTTP_403_FORBIDDEN)
+            # Verificar que el docente existe
+            docente = Usuario.objects.get(email=docente_email, rol='DOC')
+            
+            # Verificar si el docente de la asignación coincide con el docente que está calificando
+            if tarea.creada_por.email != docente.email:
+                return Response(
+                    {'error': 'Solo el docente asignado puede calificar esta tarea.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+                
+        except Usuario.DoesNotExist:
+            return Response(
+                {'error': 'Docente no encontrado o no tiene permisos para calificar'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         calificacion = request.data.get('calificacion')
         observaciones = request.data.get('observaciones', '')
@@ -710,6 +706,4 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         tarea_id = self.request.query_params.get('tarea_id')
         if tarea_id:
             queryset = queryset.filter(tarea__id=tarea_id)
-        
-        
         return queryset
