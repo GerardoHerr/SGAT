@@ -196,9 +196,16 @@ export default {
       entrega.guardando = true;
       
       try {
+        // Obtener el usuario actual del localStorage
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || !currentUser.email) {
+          throw new Error('No se encontró la información del docente. Por favor, inicie sesión nuevamente.');
+        }
+        
         await api.post(`entregas/${entrega.id}/calificar/`, {
           calificacion: parseFloat(entrega.calificacionInput),
-          observaciones: entrega.observacionesInput || ''
+          observaciones: entrega.observacionesInput || '',
+          docente_email: currentUser.email  // Usar el email del usuario actual
         });
         
         entrega.calificacion = parseFloat(entrega.calificacionInput);

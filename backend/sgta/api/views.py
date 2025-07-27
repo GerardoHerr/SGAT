@@ -614,9 +614,14 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         tarea = entrega.tarea
         docente = tarea.creada_por
         user = request.user
-        # Permitir calificar solo al docente responsable
-        if not user.is_authenticated or user.email != docente.email:
-            return Response({'error': 'Solo el docente responsable puede calificar esta tarea.'}, status=status.HTTP_403_FORBIDDEN)
+        print(user)
+        # Verificar que el usuario esté autenticado y sea el docente de la asignación
+        if not user.is_authenticated:
+            return Response({'error': 'Debe iniciar sesión para calificar tareas.'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        # Verificar si el docente de la asignación coincide con el usuario actual
+        if user.email != docente.email:
+            return Response({'error': 'Solo el docente asignado puede calificar esta tarea.'}, status=status.HTTP_403_FORBIDDEN)
 
         calificacion = request.data.get('calificacion')
         observaciones = request.data.get('observaciones', '')
