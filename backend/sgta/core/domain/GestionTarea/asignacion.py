@@ -4,9 +4,9 @@ from ..GestionAcademica.curso import Curso
 
 class Asignacion(models.Model):
     TIPOS_TAREA = [
-        ('ACD', 'Actividad de Construcción del Conocimiento'),
-        ('AA', 'Actividad de Aprendizaje'),
-        ('APE', 'Actividad Práctica Específica')
+        ('ACD', 'Aprendizaje en contacto con el docente'), # 20% 2 puntos
+        ('AA', 'Aprendizaje autonomo'), # 20% 2 puntos
+        ('APE', 'Aprendizaje practico experimental') # 25% 2.5 puntos
     ]
     
     titulo = models.CharField(max_length=200)
