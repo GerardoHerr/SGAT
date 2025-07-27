@@ -25,4 +25,4 @@ class Asignacion(models.Model):
     #grupos_asignados = models.ManyToManyField(Grupo, blank=True, related_name='tareas_asignadas')
     
     def __str__(self):
-        return f"{self.titulo} - {self.curso}"  # O solo self.titulo si prefieres
+        return f"{self.titulo}"

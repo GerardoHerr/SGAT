@@ -189,7 +189,7 @@
             <ul class="nav-submenu">
               <!-- Prioridad Alta -->
               <li>
-                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                <RouterLink to="/estudiante/calendario-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
                   <span class="nav-icon">📅</span>
                   <span v-show="!isCollapsed" class="nav-text">Calendario de Tareas</span>
                 </RouterLink>
@@ -198,6 +198,12 @@
                 <RouterLink to="/estudiante/solicitar-asignatura" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Solicitar Registro">
                   <span class="nav-icon">✍️</span>
                   <span v-show="!isCollapsed" class="nav-text">Solicitar Registro</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                  <span class="nav-icon">📅</span>
+                  <span v-show="!isCollapsed" class="nav-text">Mis cursos</span>
                 </RouterLink>
               </li>
               <li>
