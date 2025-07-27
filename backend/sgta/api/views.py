@@ -29,7 +29,7 @@ from rest_framework.authentication import BasicAuthentication
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    
+
     def get_queryset(self):
         queryset = Usuario.objects.all()
         rol = self.request.query_params.get('rol')
@@ -50,19 +50,39 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             
         return queryset
     
-    @action(detail=False, methods=['get'], url_path='by-email')
+    @action(detail=False, methods=['get', 'put', 'delete'], url_path='by-email')
     def get_by_email(self, request):
-        """Obtener usuario por email - usado después del login"""
         email = request.query_params.get('email')
         if not email:
             return Response({'error': 'Email requerido'}, status=400)
-        
+
         try:
             usuario = Usuario.objects.get(email=email)
-            serializer = self.get_serializer(usuario)
-            return Response(serializer.data)
         except Usuario.DoesNotExist:
             return Response({'error': 'Usuario no encontrado'}, status=404)
+
+        # GET
+        if request.method == 'GET':
+            serializer = self.get_serializer(usuario)
+            return Response(serializer.data)
+
+        # PUT (actualizar)
+        elif request.method == 'PUT':
+            data = request.data.copy()
+            if 'contrasenia' in data and data['contrasenia']:
+                data['contrasenia'] = make_password(data['contrasenia'])
+            else:
+                data['contrasenia'] = usuario.contrasenia  # Mantener la existente
+
+            serializer = self.get_serializer(usuario, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+        # DELETE
+        elif request.method == 'DELETE':
+            usuario.delete()
+            return Response({'mensaje': 'Usuario eliminado correctamente'}, status=204)
     
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
