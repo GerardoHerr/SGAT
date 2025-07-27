@@ -55,10 +55,11 @@ export default {
   },
   computed: {
     tareasPorFecha() {
-      // Agrupa las tareas por fecha_entregada
+      // Agrupa las tareas por la fecha de entrega de la asignación (fecha_entrega)
       const agrupadas = {};
       for (const tarea of this.tareas) {
-        const fecha = tarea.fecha_entregada;
+        // Puede venir como tarea.fecha_entrega o fecha_entrega
+        const fecha = tarea.fecha_entrega || (tarea.tarea && tarea.tarea.fecha_entrega);
         if (!fecha) continue;
         const fechaKey = fecha.split('T')[0]; // Solo la parte de la fecha
         if (!agrupadas[fechaKey]) agrupadas[fechaKey] = [];
@@ -81,6 +82,7 @@ export default {
         this.tareas = response.data.filter(
           t => t.estudiante_email === this.estudianteEmail
         );
+        console.log('Tareas cargadas:', this.tareas);
       } catch (error) {
         this.tareas = [];
       }
@@ -101,12 +103,12 @@ export default {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
 .calendario-tareas {
-  max-width: 1100px; /* antes 700px */
+  max-width: 5400px; /* Aumenta el ancho máximo */
   margin: 40px auto;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px; /* Más redondeado */
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  padding: 30px 48px; /* antes 24px */
+  padding: 40px 80px; /* Más espacio interno */
 }
 
 .titulo-calendario {
@@ -134,12 +136,12 @@ export default {
 }
 
 .fecha-bloque {
-  margin-bottom: 32px; /* antes 28px */
+  margin-bottom: 40px;
   border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 24px; /* antes 18px */
+  padding-bottom: 32px;
   background: #f8f8f8;
-  border-radius: 12px; /* antes 8px */
-  box-shadow: 0 2px 12px rgba(30,135,75,0.06); /* antes 8px y menos opacidad */
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(30,135,75,0.08);
 }
 
 .fecha-header {
@@ -162,12 +164,12 @@ ul {
   justify-content: space-between;
   align-items: center;
   background: #fff;
-  border-radius: 10px; /* antes 6px */
-  margin-bottom: 16px; /* antes 10px */
-  padding: 16px 24px; /* antes 10px 14px */
-  box-shadow: 0 2px 8px rgba(30,135,75,0.03);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  padding: 24px 40px;
+  box-shadow: 0 4px 16px rgba(30,135,75,0.06);
   transition: box-shadow 0.2s;
-  font-size: 1.08em;
+  font-size: 1.15em;
 }
 
 .tarea-item:hover {

@@ -17,6 +17,7 @@ import CalificarTarea from '../components/GestionTarea/CalificarTarea.vue'
 import MostarTareasEstudiante from '@/components/GestionTarea/MostarTareasEstudiante.vue'
 import SubirTarea from '@/components/GestionTarea/SubirTarea.vue'
 import CalendarioTareas from '@/components/GestionAcademica/CalendarioTareas.vue'
+import CrearCurso from '@/components/GestionAcademica/CrearCurso.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -134,7 +135,13 @@ const router = createRouter({
       path: '/estudiante/calendario-tareas',
       name: 'CalendarioTareas',
       component: CalendarioTareas,
+    },
+    {
+      path: '/admin/crear-curso',
+      name: 'CrearCursoAdmin',
+      component: CrearCurso,
     }
+
 
   ],
 })

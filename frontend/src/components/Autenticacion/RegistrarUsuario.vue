@@ -55,7 +55,7 @@
         <div class="input-wrapper">
           <select v-model="usuario.rol" :class="{ 'error': errors.rol }">
             <option disabled value="">Seleccione su rol</option>
-            <option value="ADMIN">👑 Administrador</option>
+            <option value="ADM">👑 Administrador</option>
             <option value="DOC">👨‍🏫 Docente</option>
             <option value="EST">🎓 Estudiante</option>
           </select>
