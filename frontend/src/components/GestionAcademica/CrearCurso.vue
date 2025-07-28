@@ -39,12 +39,6 @@
               Por favor ingrese el período académico
             </div>
           </div>
-          
-          <div v-if="curso.docente" class="alert alert-info mb-4">
-            <i class="fas fa-info-circle me-2"></i>
-            Docente asignado: {{ obtenerNombreDocente(curso.docente) }}
-          </div>
-          
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">
               <i class="fas fa-save me-2"></i>Crear Curso
@@ -62,49 +56,60 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '@/services/api';
+import { authService } from '@/services/authService';
 
 export default {
   name: 'CrearCurso',
   data() {
     return {
+      asignaturas: [],
+      docentes: [],
       curso: {
         asignatura: '',
         docente: '',
         periodo: ''
       },
-      asignaturas: [],
-      docentes: [],
-      mensaje: null
-    }
+      mensaje: null,
+      currentUser: null,
+      userEmail: ''
+    };
   },
   async mounted() {
+    this.currentUser = authService.getCurrentUser();
+    if (this.currentUser) {
+      this.userEmail = this.currentUser.email;
+      console.log('Usuario actual:', this.currentUser);
+    } else {
+      console.warn('No se pudo obtener el usuario actual');
+      this.$router.push('/login');
+      return;
+    }
     await this.cargarAsignaturas();
   },
   methods: {
     async cargarAsignaturas() {
       try {
-        const token = localStorage.getItem('access_token');
-        const [asignaturasRes, docentesRes] = await Promise.all([
-          axios.get('http://localhost:8000/api/asignaturas/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          axios.get('http://localhost:8000/api/usuarios/docentes/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-        
-        this.asignaturas = asignaturasRes.data;
-        this.docentes = docentesRes.data;
+        const response = await api.get('asignaturas/');
+        this.asignaturas = response.data;
       } catch (error) {
         console.error('Error al cargar datos:', error);
         this.mostrarMensaje('Error al cargar los datos necesarios', 'error');
       }
     },
     
-    obtenerNombreDocente(id) {
-      const docente = this.docentes.find(d => d.id === id);
-      return docente ? `${docente.nombres} ${docente.apellidos}` : 'No asignado';
+    async obtenerNombreDocente(email) {
+      if (!email) return 'No asignado';
+      try {
+        const response = await api.get(`usuarios/by-email/?email=${encodeURIComponent(email)}`);
+        if (response.data) {
+          return `${response.data.nombres || ''} ${response.data.apellidos || ''}`.trim() || email;
+        }
+        return email;
+      } catch (error) {
+        console.error('Error al obtener docente:', error);
+        return email; // Devolver el email si hay un error
+      }
     },
     
     mostrarMensaje(texto, tipo = 'success') {
@@ -113,27 +118,82 @@ export default {
         this.mensaje = null;
       }, 5000);
     },
-    asignarDocente() {
-      // Busca la asignatura seleccionada y asigna el docente responsable
-      const asig = this.asignaturas.find(a => a.id === this.curso.asignatura);
-      this.curso.docente = asig ? asig.docente_responsable : '';
+    async asignarDocente() {
+      if (!this.curso.asignatura) return;
+      
+      try {
+        const response = await api.get(`asignaturas/${this.curso.asignatura}/`);
+        if (response.data && response.data.docente_responsable) {
+          // Guardamos directamente el email del docente
+          this.curso.docente = response.data.docente_responsable;
+          
+          // Si necesitas mostrar el nombre del docente, usa obtenerNombreDocente
+          const nombreDocente = await this.obtenerNombreDocente(response.data.docente_responsable);
+          console.log('Docente asignado:', nombreDocente);
+        } else {
+          console.warn('La asignatura no tiene docente responsable');
+          this.mostrarMensaje('La asignatura seleccionada no tiene un docente asignado', 'advertencia');
+        }
+      } catch (error) {
+        console.error('Error al obtener la asignatura:', error);
+        this.mostrarMensaje('Error al cargar la información de la asignatura', 'error');
+      }
     },
     async crearCurso() {
       try {
-        const token = localStorage.getItem('access_token');
-        await axios.post('http://localhost:8000/api/cursos/', this.curso, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Verificar que se haya seleccionado una asignatura
+        if (!this.curso.asignatura) {
+          this.mostrarMensaje('Por favor selecciona una asignatura', 'error');
+          return;
+        }
+
+        // Verificar que se haya seleccionado un docente
+        if (!this.curso.docente) {
+          this.mostrarMensaje('Por favor selecciona un docente', 'error');
+          return;
+        }
+
+        // Verificar que se haya ingresado un período
+        if (!this.curso.periodo) {
+          this.mostrarMensaje('Por favor ingresa el período académico', 'error');
+          return;
+        }
+
+        // Agregar el creador del curso (el administrador)
+        const cursoData = {
+          ...this.curso,
+          creado_por: this.userEmail // Guardamos quién creó el curso (el admin)
+        };
+
+        const response = await api.post('cursos/', cursoData);
+        console.log('Curso creado:', response.data);
         
         this.mostrarMensaje('Curso creado exitosamente');
+        
+        // Limpiar el formulario
         this.curso = { asignatura: '', docente: '', periodo: '' };
+        
+        // Resetear validación del formulario
         this.$nextTick(() => {
           const form = document.querySelector('.needs-validation');
-          form.classList.remove('was-validated');
+          if (form) form.classList.remove('was-validated');
         });
       } catch (error) {
         console.error('Error al crear curso:', error);
-        const mensaje = error.response?.data?.detail || 'Error al crear el curso';
+        let mensaje = 'Error al crear el curso';
+        
+        if (error.response) {
+          // Manejar errores específicos de la API
+          if (error.response.status === 400) {
+            mensaje = error.response.data.detail || 'Datos inválidos';
+          } else if (error.response.status === 401) {
+            this.$router.push('/login');
+            return;
+          } else if (error.response.status === 403) {
+            mensaje = 'No tienes permiso para realizar esta acción';
+          }
+        }
+        
         this.mostrarMensaje(mensaje, 'error');
       }
     }
