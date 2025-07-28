@@ -1,4 +1,3 @@
-
 <template>
   <div class="subir-tarea">
     <div v-if="loading" class="cargando-info"><i class="fas fa-spinner fa-spin"></i> Cargando información de la tarea...</div>
@@ -101,12 +100,15 @@
           </button>
         </div>
         <form v-if="mostrarForm" @submit.prevent="enviarEntrega" class="form-entrega">
-          <div>
-            <label for="archivo"><i class="fas fa-paperclip"></i> Selecciona tu archivo:</label>
-            <input type="file" id="archivo" ref="archivoInput" required />
+          <div class="file-input-wrapper">
+            <label for="archivo" class="file-label"><i class="fas fa-paperclip"></i> Selecciona tu archivo:</label>
+            <input type="file" id="archivo" ref="archivoInput" required class="file-input" />
           </div>
-          <button type="submit" class="btn-agregar-entrega"><i class="fas fa-upload"></i> Subir archivo</button>
-          <button type="button" @click="cancelarEntrega" class="btn-cancelar">Cancelar</button>
+          <div class="form-btns">
+            <button type="submit" class="btn-agregar-entrega"><i class="fas fa-upload"></i> Subir archivo</button>
+            <button type="button" @click="cancelarEntrega" class="btn-cancelar">Cancelar</button>
+            <button v-if="tareaEntrega?.archivo" type="button" @click="borrarEntrega" class="btn-borrar"><i class="fas fa-trash"></i> Borrar entrega</button>
+          </div>
         </form>
       </div>
     </div>
@@ -166,6 +168,23 @@ export default {
     }
   },
   methods: {
+    async borrarEntrega() {
+      if (!confirm('¿Seguro que deseas borrar tu archivo PDF subido?')) return;
+      try {
+        const formData = new FormData();
+        formData.append('archivo', '');
+        await axios.patch(`http://localhost:8000/api/entregas/${this.tareaEntrega.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        alert('Archivo eliminado correctamente');
+        this.mostrarForm = false;
+        // Recargar datos de la entrega para mostrar el estado actualizado
+        const response = await axios.get(`http://localhost:8000/api/entregas/${this.tareaEntrega.id}/`);
+        this.tareaEntrega = response.data;
+      } catch (e) {
+        alert('Error al borrar el archivo');
+      }
+    },
     mostrarFormularioEntrega() {
       this.mostrarForm = true;
     },
@@ -362,5 +381,56 @@ export default {
   .card-tarea {
     padding: 12px 2px;
   }
+}
+// Estilo para el input de archivo y botón borrar
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.file-label {
+  font-weight: 600;
+  color: #1e874b;
+  margin-right: 8px;
+}
+.file-input {
+  border: 1px solid #27ae60;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 1em;
+  background: #f8f9fa;
+  color: #222;
+  outline: none;
+  transition: border 0.2s;
+}
+.file-input:focus {
+  border: 1.5px solid #1e874b;
+}
+.form-btns {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+.btn-borrar {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  font-size: 1.08em;
+  font-weight: 600;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.10);
+  outline: none;
+}
+.btn-borrar:hover {
+  background: #c0392b;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 </style>

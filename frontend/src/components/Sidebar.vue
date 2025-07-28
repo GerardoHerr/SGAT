@@ -147,34 +147,9 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/estudiante/calendario" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
+                <RouterLink to="/estudiante/mis-cursos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calendario de Tareas">
                   <span class="nav-icon">📅</span>
                   <span v-show="!isCollapsed" class="nav-text">Mis cursos</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/estudiante/editar-entrega" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Editar Entrega">
-                  <span class="nav-icon">✏️</span>
-                  <span v-show="!isCollapsed" class="nav-text">Editar Entrega</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/estudiante/notificaciones" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Notificaciones">
-                  <span class="nav-icon">🔔</span>
-                  <span v-show="!isCollapsed" class="nav-text">Notificaciones</span>
-                  <span v-show="!isCollapsed && notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/estudiante/historial" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Historial de Tareas">
-                  <span class="nav-icon">📜</span>
-                  <span v-show="!isCollapsed" class="nav-text">Historial de Tareas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/estudiante/entregar" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Entregar Tareas">
-                  <span class="nav-icon">📤</span>
-                  <span v-show="!isCollapsed" class="nav-text">Entregar Tareas</span>
                 </RouterLink>
               </li>
             </ul>

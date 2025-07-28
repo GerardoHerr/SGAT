@@ -571,6 +571,20 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Error al obtener solicitudes'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CursoViewSet(viewsets.ModelViewSet):
+    @action(detail=False, methods=['get'], url_path='por-estudiante')
+    def cursos_por_estudiante(self, request):
+        """Devuelve los cursos en los que está inscrito el estudiante con el email dado."""
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Se requiere el email del estudiante'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            estudiante = Usuario.objects.get(email=email, rol='EST')
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Estudiante no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        # Buscar cursos donde el estudiante está inscrito
+        cursos = Curso.objects.filter(estudiantes__email=estudiante.email).distinct()
+        serializer = CursoSerializer(cursos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     permission_classes = [AllowAny]
     queryset = Curso.objects.all()
     serializer_class = CursoSerializer
@@ -719,8 +733,6 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         - observaciones: texto
         - retroalimentacion_archivo: archivo PDF opcional
         """
-        from rest_framework import status
-        from rest_framework.response import Response
         from django.utils import timezone
         
         # Obtener el email del docente del token de autenticación
@@ -826,11 +838,29 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
             )
     
     def partial_update(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
         instance = self.get_object()
-        tarea = instance.tarea  # Asignacion
-        estudiante = instance.estudiante
-
+        archivo = request.data.get('archivo', None)
+        # Si el usuario quiere borrar el archivo
+        if archivo == '' or archivo is None:
+            try:
+                logger.info(f"[ENTREGA] Solicitando borrado de archivo para entrega {instance.id}")
+                if hasattr(instance, 'archivo') and instance.archivo:
+                    logger.info(f"[ENTREGA] Archivo actual: {instance.archivo}")
+                    instance.archivo.delete(save=False)  # Borra el archivo físico
+                else:
+                    logger.warning(f"[ENTREGA] No hay archivo para borrar en entrega {instance.id}")
+                instance.archivo = None
+                instance.save()
+                serializer = self.get_serializer(instance)
+                logger.info(f"[ENTREGA] Archivo borrado correctamente para entrega {instance.id}")
+                return Response(serializer.data)
+            except Exception as e:
+                logger.error(f"[ENTREGA] Error al borrar archivo en entrega {instance.id}: {e}", exc_info=True)
+                return Response({'error': f'Error al borrar archivo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         # Si la tarea es grupal
+        tarea = instance.tarea  # Asignacion
         if hasattr(tarea, 'es_grupal') and tarea.es_grupal:
             grupo = getattr(instance, 'grupo', None)
             if grupo:
@@ -847,8 +877,6 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                     from django.utils import timezone
                     entrega.fecha_entregada = timezone.now()
                     entrega.save()
-                from rest_framework.response import Response
-                from rest_framework import status
                 return Response({'mensaje': 'Entrega subida para todo el grupo'}, status=status.HTTP_200_OK)
             else:
                 # Si no hay grupo, solo actualiza la entrega individual

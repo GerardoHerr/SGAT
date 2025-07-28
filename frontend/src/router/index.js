@@ -20,6 +20,7 @@ import CalendarioTareas from '@/components/GestionAcademica/CalendarioTareas.vue
 import CrearCurso from '@/components/GestionAcademica/CrearCurso.vue'
 import GeneracionReportes from '@/components/GestionAcademica/GeneracionReportes.vue'
 import VisualizarEntregas from '@/components/GestionTarea/VisualizarEntregas.vue'
+import MisCursosEstudainte from '@/components/GestionAcademica/MisCursosEstudainte.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -157,6 +158,11 @@ const router = createRouter({
       path: '/docente/visualizar-entregas',
       name: 'VisualizarEntregas',
       component: VisualizarEntregas,
+    },
+    {
+      path: '/estudiante/mis-cursos',
+      name: 'MisCursosEstudiante',
+      component: MisCursosEstudainte,
     }
 
 
