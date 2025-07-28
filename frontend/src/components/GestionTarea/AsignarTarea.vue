@@ -354,12 +354,11 @@ export default {
 
 <style scoped>
 .asignar-tarea {
-
-  background: #32323277;
+  min-height: 100vh;
+  background: #323232;
   padding: 20px 0;
   display: flex;
   align-items: center;
-  border-radius: 15px;
 }
 
 .container {

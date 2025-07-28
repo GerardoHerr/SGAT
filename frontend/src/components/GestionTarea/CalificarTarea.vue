@@ -39,13 +39,20 @@
                 <strong>Observaciones:</strong> {{ entrega.observaciones }}
               </div>
               
-              <div v-if="entrega.retroalimentacion_archivo_url" class="retroalimentacion-archivo">
-                <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
-                  <i class="fas fa-file-pdf"></i> Ver retroalimentación
-                </a>
-                <span v-if="entrega.fecha_retroalimentacion" class="fecha-retro">
-                  ({{ new Date(entrega.fecha_retroalimentacion).toLocaleDateString() }})
-                </span>
+              <div v-if="entrega.archivo || entrega.retroalimentacion_archivo_url" class="retroalimentacion-archivo">
+                <template v-if="entrega.archivo">
+                  <a :href="entrega.archivo" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver archivo entregado
+                  </a>
+                </template>
+                <template v-if="entrega.retroalimentacion_archivo_url">
+                  <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver retroalimentación
+                  </a>
+                  <span v-if="entrega.fecha_retroalimentacion" class="fecha-retro">
+                    ({{ new Date(entrega.fecha_retroalimentacion).toLocaleDateString() }})
+                  </span>
+                </template>
               </div>
             </div>
           </div>
@@ -226,6 +233,7 @@ export default {
           editando: false,
           estudiantesGrupo: entrega.estudiantesGrupo || []
         }));
+        console.log('Entregas cargadas:', this.entregas);
       } catch (error) {
         console.error('Error al cargar entregas:', error);
         this.entregas = [];
