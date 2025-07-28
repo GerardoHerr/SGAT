@@ -717,6 +717,7 @@ class CursoViewSet(viewsets.ModelViewSet):
 class EntregaTareaViewSet(viewsets.ModelViewSet):
     queryset = EntregaTarea.objects.all()
     serializer_class = EntregaTareaSerializer
+    permission_classes = [AllowAny]
 
     def get_serializer_context(self):
         """Agregar el request al contexto del serializador para generar URLs absolutas."""
@@ -727,69 +728,30 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def calificar(self, request, pk=None):
         """
-        Permite al docente calificar una entrega de tarea y adjuntar retroalimentación.
-        Se puede enviar:
-        - calificacion: número
-        - observaciones: texto
-        - retroalimentacion_archivo: archivo PDF opcional
+        Permite calificar una entrega de tarea y adjuntar retroalimentación. SIN autenticación.
         """
         from django.utils import timezone
-        
-        # Obtener el email del docente del token de autenticación
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response(
-                {'error': 'Token de autenticación no proporcionado'}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-            
         try:
-            # Obtener la entrega y la tarea
             entrega = self.get_object()
             tarea = entrega.tarea
-            
-            # Verificar que el usuario es docente
-            token = auth_header.split(' ')[1]
-            try:
-                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-                docente_email = decoded.get('email')
-                docente = Usuario.objects.get(email=docente_email, rol='DOC')
-            except (jwt.ExpiredSignatureError, jwt.DecodeError, Usuario.DoesNotExist):
-                return Response(
-                    {'error': 'Token inválido o usuario no autorizado'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            
-            # Verificar si el docente de la asignación coincide con el docente que está calificando
-            if tarea.creada_por.email != docente.email:
-                return Response(
-                    {'error': 'Solo el docente asignado puede calificar esta tarea.'}, 
-                    status=status.HTTP_403_FORBIDDEN
-                )
-                
-            # Obtener datos de la solicitud
             calificacion = request.data.get('calificacion')
             observaciones = request.data.get('observaciones', '')
             retroalimentacion_archivo = request.FILES.get('retroalimentacion_archivo')
-            
-            # Validar que se proporcione al menos calificación u observaciones/archivo
+
             if calificacion is None and not observaciones and not retroalimentacion_archivo:
                 return Response(
-                    {'error': 'Debe proporcionar al menos una calificación, observaciones o archivo de retroalimentación.'}, 
+                    {'error': 'Debe proporcionar al menos una calificación, observaciones o archivo de retroalimentación.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-                
-            # Validar que la calificación sea un número si se proporciona
+
             if calificacion is not None:
                 try:
                     calificacion = float(calificacion)
                 except (ValueError, TypeError):
                     return Response(
-                        {'error': 'La calificación debe ser un número válido.'}, 
+                        {'error': 'La calificación debe ser un número válido.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
-                # Validar rango según tipo de tarea
                 tipo = tarea.tipo_tarea
                 if tipo in ['ACD', 'AA']:
                     max_calif = 2.0
@@ -797,43 +759,31 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                     max_calif = 2.5
                 else:
                     max_calif = 2.5
-                    
                 if not (0 <= calificacion <= max_calif):
                     return Response(
-                        {'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'}, 
+                        {'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
-                # Actualizar la calificación
                 entrega.calificacion = calificacion
-            
-            # Actualizar la entrega con el archivo de retroalimentación si se proporciona
+
             if retroalimentacion_archivo:
-                # Si ya existe un archivo, eliminarlo primero
                 if entrega.retroalimentacion_archivo:
                     entrega.retroalimentacion_archivo.delete(save=False)
                 entrega.retroalimentacion_archivo = retroalimentacion_archivo
-            
-            # Actualizar observaciones si se proporcionan
+
             if observaciones:
                 entrega.observaciones = observaciones
-                
-            # Actualizar la fecha de retroalimentación
+
             entrega.fecha_retroalimentacion = timezone.now()
-            
-            # Guardar los cambios
             entrega.save()
-            
-            # Serializar la respuesta
             serializer = self.get_serializer(entrega)
             return Response(
-                {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data}, 
+                {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data},
                 status=status.HTTP_200_OK
             )
-            
         except Exception as e:
             return Response(
-                {'error': f'Error al procesar la solicitud: {str(e)}'}, 
+                {'error': f'Error al procesar la solicitud: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     

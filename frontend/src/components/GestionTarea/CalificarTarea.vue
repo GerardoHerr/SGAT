@@ -326,7 +326,7 @@ export default {
         entrega.error = 'Debes proporcionar al menos una calificación, observaciones o un archivo de retroalimentación.';
         return;
       }
-      
+
       if (entrega.calificacionInput !== null && entrega.calificacionInput !== undefined) {
         const maxCalif = 2.5;
         if (entrega.calificacionInput < 0 || entrega.calificacionInput > maxCalif) {
@@ -334,58 +334,48 @@ export default {
           return;
         }
       }
-      
+
       entrega.error = '';
       entrega.exito = false;
       entrega.guardando = true;
-      
+
       try {
         const formData = new FormData();
-        
-        // Agregar datos al formData solo si están presentes
         if (entrega.calificacionInput !== null && entrega.calificacionInput !== undefined) {
           formData.append('calificacion', parseFloat(entrega.calificacionInput));
         }
-        
         if (entrega.observacionesInput) {
           formData.append('observaciones', entrega.observacionesInput);
         }
-        
         if (entrega.archivoRetroalimentacion) {
           formData.append('retroalimentacion_archivo', entrega.archivoRetroalimentacion);
         }
-        
-        // Configuración para enviar archivos
         const config = {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         };
-        
-        // Realizar la petición
-        const response = await api.patch(`entregas/${entrega.id}/`, formData, config);
-        
-        // Actualizar los datos de la entrega con la respuesta del servidor
-        Object.assign(entrega, response.data);
-        
-        // Limpiar el archivo temporal
+        const response = await api.post(`entregas/${entrega.id}/calificar/`, formData, config);
+        // Actualizar los campos principales de la entrega con la respuesta del backend
+        if (response.data && response.data.data) {
+          const d = response.data.data;
+          entrega.calificacion = d.calificacion;
+          entrega.calificacionInput = d.calificacion;
+          entrega.observaciones = d.observaciones;
+          entrega.observacionesInput = d.observaciones;
+          entrega.retroalimentacion_archivo_url = d.retroalimentacion_archivo || null;
+          entrega.fecha_retroalimentacion = d.fecha_retroalimentacion || null;
+        }
         entrega.archivoRetroalimentacion = null;
-        
-        // Salir del modo edición
         entrega.editando = false;
-        
-        // Mostrar mensaje de éxito
         entrega.exito = true;
         setTimeout(() => {
           entrega.exito = false;
         }, 3000);
-        
       } catch (error) {
         console.error('Error al guardar calificación:', error);
-        
         let errorMessage = 'Error al guardar la calificación';
         if (error.response) {
-          // Si el servidor devuelve un mensaje de error, usarlo
           if (error.response.data) {
             if (typeof error.response.data === 'object') {
               errorMessage = Object.values(error.response.data).flat().join(' ');
@@ -394,7 +384,6 @@ export default {
             }
           }
         }
-        
         entrega.error = errorMessage;
       } finally {
         entrega.guardando = false;
