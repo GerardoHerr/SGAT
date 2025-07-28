@@ -39,9 +39,29 @@ export default {
   methods: {
     async obtenerAsignaturas() {
       try {
-        const response = await fetch('http://localhost:8000/api/asignaturas')
-        const data = await response.json()
-        this.asignaturas = data
+        // Obtener todas las asignaturas
+        const response = await fetch('http://localhost:8000/api/asignaturas');
+        const data = await response.json();
+
+        // Obtener solicitudes aceptadas del estudiante
+        let solicitudesAceptadas = [];
+        try {
+          const token = localStorage.getItem('access_token');
+          const respSol = await fetch('http://localhost:8000/api/solicitudAsignatura/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (respSol.ok) {
+            const solicitudes = await respSol.json();
+            solicitudesAceptadas = solicitudes
+              .filter(s => s.estado === 'aceptado')
+              .map(s => s.asignatura_id || s.asignatura); // id o nombre según backend
+          }
+        } catch (e) {
+          // Si falla, mostrar todas
+        }
+
+        // Filtrar asignaturas que no estén aceptadas
+        this.asignaturas = data.filter(a => !solicitudesAceptadas.includes(a.id));
       } catch (error) {
         console.error('Error al obtener asignaturas:', error)
       }

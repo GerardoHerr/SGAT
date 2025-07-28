@@ -39,13 +39,20 @@
                 <strong>Observaciones:</strong> {{ entrega.observaciones }}
               </div>
               
-              <div v-if="entrega.retroalimentacion_archivo_url" class="retroalimentacion-archivo">
-                <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
-                  <i class="fas fa-file-pdf"></i> Ver retroalimentación
-                </a>
-                <span v-if="entrega.fecha_retroalimentacion" class="fecha-retro">
-                  ({{ new Date(entrega.fecha_retroalimentacion).toLocaleDateString() }})
-                </span>
+              <div v-if="entrega.archivo || entrega.retroalimentacion_archivo_url" class="retroalimentacion-archivo">
+                <template v-if="entrega.archivo">
+                  <a :href="entrega.archivo" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver archivo entregado
+                  </a>
+                </template>
+                <template v-if="entrega.retroalimentacion_archivo_url">
+                  <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver retroalimentación
+                  </a>
+                  <span v-if="entrega.fecha_retroalimentacion" class="fecha-retro">
+                    ({{ new Date(entrega.fecha_retroalimentacion).toLocaleDateString() }})
+                  </span>
+                </template>
               </div>
             </div>
           </div>
@@ -226,6 +233,7 @@ export default {
           editando: false,
           estudiantesGrupo: entrega.estudiantesGrupo || []
         }));
+        console.log('Entregas cargadas:', this.entregas);
       } catch (error) {
         console.error('Error al cargar entregas:', error);
         this.entregas = [];
@@ -441,7 +449,10 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
 .calificar-tarea {
   background-color: #ffffff;
   width: 100%;
@@ -689,25 +700,54 @@ ul {
   font-size: 0.95em;
 }
 
-.btn-editar {
-  background-color: #4caf50;
-  color: white;
+
+
+.btn-guardar, .btn-editar, .btn-cancelar {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.9em;
-  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+}
+.btn-guardar:disabled,
+.btn-editar:disabled,
+.btn-cancelar:disabled {
+  background: #b2dfdb;
+  color: #eee;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-guardar:hover:not(:disabled),
+.btn-guardar:focus:not(:disabled),
+.btn-editar:hover:not(:disabled),
+.btn-editar:focus:not(:disabled),
+.btn-cancelar:hover:not(:disabled),
+.btn-cancelar:focus:not(:disabled) {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 
-.btn-editar:hover {
-  background-color: #388e3c;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+/* Ajuste de padding para editar/cancelar si se requiere diferente tamaño */
+.btn-editar {
+  padding: 8px 20px;
+  font-size: 0.98em;
 }
+.btn-cancelar {
+  /* Si quieres un color diferente para cancelar, descomenta la siguiente línea: */
+  /* background: linear-gradient(90deg, #f09819 0%, #ff5858 100%); */
+}
+
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }

@@ -571,15 +571,13 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Error al obtener solicitudes'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CursoViewSet(viewsets.ModelViewSet):
-
+    permission_classes = [AllowAny]
     queryset = Curso.objects.all()
     serializer_class = CursoSerializer
 
     def get_queryset(self):
         """Filtrar cursos según el rol del usuario"""
         queryset = Curso.objects.all()
-        
-        # Filtrar por docente si se especifica
         docente_email = self.request.query_params.get('docente_email', None)
         if docente_email:
             try:
@@ -587,7 +585,6 @@ class CursoViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(docente_id=docente.email)
             except Usuario.DoesNotExist:
                 queryset = Curso.objects.none()
-
         return queryset
 
     @action(detail=False, methods=['get'])

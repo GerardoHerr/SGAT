@@ -93,6 +93,11 @@ const router = createRouter({
       component: AsignarTarea,
     },
     {
+      path: '/docente/asignar-tareas/:cursoId',
+      name: 'AsignarTareasPorCurso',
+      component: AsignarTarea,
+    },
+    {
       path: '/docente/entregas',
       name: 'ListarTareas',
       component: ListarTareas,
@@ -113,7 +118,7 @@ const router = createRouter({
       component: CursosDocente,
     }, 
     {
-      path: '/docente/mostrar-tareas',
+      path: '/docente/mostrar-tareas/:cursoId',
       name: 'MostrarTareas',
       component: MostrarTareas,
     },
