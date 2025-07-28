@@ -164,240 +164,169 @@ export default {
 }
 </script>
 
-<style scoped>
-/* IMPORTAR FUENTE TAHOMA */
-@import url('https://fonts.googleapis.com/css2?family=Tahoma:wght@400;700;900&display=swap');
-
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
 .registrar-periodo {
   width: 100%;
-  min-height: 100vh;
-  background: #f8fafc; /* FONDO GRIS CLARO EN LUGAR DEL AZUL FEO */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 1rem 2rem 2rem 2rem;
-  box-sizing: border-box;
-  font-family: 'Tahoma', Arial, sans-serif;
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .main-content {
-  width: 100%;
-  max-width: 1600px; /* MÁS ANCHO - ERA 1400px */
-  background: transparent;
-  margin-top: 1rem; /* REDUCIDO - ERA 2rem */
-  font-family: 'Tahoma', Arial, sans-serif;
+  background: $bg-white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .form-card {
-  background: white;
-  padding: 1.5rem 12rem; /* MÁS PADDING HORIZONTAL - ERA 10rem Y ALTURA REDUCIDA - ERA 2rem */
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
-  border: 2px solid #dbeafe;
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-  transition: none;
-  font-family: 'Tahoma', Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.form-card:hover {
-  transform: none;
-  box-shadow: 0 12px 48px rgba(30, 58, 138, 0.4);
-}
-
-.form-card h2 {
+h2 {
+  color: $text-primary;
   text-align: center;
-  margin-bottom: 0.8rem; /* REDUCIDO - ERA 1rem */
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 1.8rem;
-  font-weight: 900;
-  font-family: 'Tahoma', Arial, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
   position: relative;
-}
-
-.form-card h2::after {
-  content: '';
-  position: absolute;
-  bottom: -0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 3px;
-  background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-  border-radius: 2px;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: $color-primary;
+  }
 }
 
 .form-group {
-  margin-bottom: 0.8rem; /* REDUCIDO - ERA 1rem */
-  position: relative;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.3rem; /* REDUCIDO - ERA 0.5rem */
-  color: #1e3a8a;
-  font-weight: 700;
-  font-size: 1rem;
-  font-family: 'Tahoma', Arial, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.8rem 2rem; /* ALTURA REDUCIDA - ERA 1rem */
-  border: 3px solid #dbeafe;
-  border-radius: 16px;
-  font-size: 1rem;
-  color: #1e3a8a;
-  background: white;
-  transition: none;
-  box-sizing: border-box;
-  font-weight: 400;
-  font-family: 'Tahoma', Arial, sans-serif;
-  min-height: 44px; /* ALTURA REDUCIDA - ERA 48px */
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-  transform: none;
-}
-
-.form-group input:hover:not(:focus) {
-  border-color: #93c5fd;
-  transform: none;
-  box-shadow: none;
+  margin-bottom: 1.5rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: $text-primary;
+    font-weight: 500;
+  }
+  
+  input, select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    font-size: 1rem;
+    transition: $transition-base;
+    
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    }
+    
+    &[disabled] {
+      background-color: $bg-lighter;
+      cursor: not-allowed;
+    }
+  }
+  
+  /* Date picker styles */
+  input[type="date"] {
+    &::-webkit-calendar-picker-indicator {
+      color: $color-primary;
+      cursor: pointer;
+      padding: 0.2rem;
+      border-radius: 4px;
+      
+      &:hover {
+        background: rgba($color-primary, 0.1);
+      }
+    }
+  }
 }
 
 .readonly-field {
-  background: linear-gradient(135deg, #f0f9ff, #dbeafe) !important;
-  color: #1e40af !important;
+  background-color: $bg-lighter !important;
+  color: $text-secondary !important;
   cursor: not-allowed;
-  border-color: #93c5fd !important;
   font-style: italic;
-  font-family: 'Tahoma', Arial, sans-serif !important;
-  font-size: 0.95rem !important;
-}
-
-.readonly-field:focus {
-  border-color: #93c5fd !important;
-  box-shadow: none !important;
-  transform: none !important;
 }
 
 .register-btn {
+  @extend .btn;
+  @extend .btn-primary;
   width: 100%;
-  padding: 1rem; /* ALTURA REDUCIDA - ERA 1.2rem */
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  font-family: 'Tahoma', Arial, sans-serif;
-  cursor: pointer;
-  transition: none;
-  margin-top: 1rem; /* REDUCIDO - ERA 1.5rem */
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.register-btn::before {
-  display: none;
-}
-
-.register-btn:hover {
-  background: linear-gradient(135deg, #1e40af, #2563eb);
-  transform: none;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
-}
-
-.register-btn:active {
-  transform: none;
-}
-
-.register-btn:disabled {
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* QUITAR TODAS LAS ANIMACIONES */
-.form-card {
-  animation: none;
-}
-
-.form-group {
-  animation: none;
-}
-
-.register-btn {
-  animation: none;
+  letter-spacing: 0.5px;
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
 }
 
 .mensaje {
-  margin-top: 1rem;
-  padding: 1rem 1.5rem;
-  border-radius: 16px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Tahoma', Arial, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: none;
-  backdrop-filter: blur(10px);
-}
-
-.mensaje.success {
-  background: linear-gradient(135deg, rgba(219, 234, 254, 0.9), rgba(147, 197, 253, 0.9));
-  color: #1e40af;
-  border: 3px solid #3b82f6;
-}
-
-.mensaje.error {
-  background: linear-gradient(135deg, rgba(254, 226, 226, 0.9), rgba(252, 165, 165, 0.9));
-  color: #dc2626;
-  border: 3px solid #f87171;
-}
-
-/* Efectos para date inputs */
-.form-group input[type="date"]::-webkit-calendar-picker-indicator {
-  color: #3b82f6;
-  font-size: 1.2em;
-  cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 8px;
-  transition: none;
-}
-
-.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  background: rgba(59, 130, 246, 0.1);
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &-success {
+    background-color: $color-primary-bg;
+    color: $color-primary-dark;
+    border-left: 4px solid $color-primary;
+  }
+  
+  &-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #f44336;
+  }
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .form-card {
-    padding: 1.5rem 2rem;
+@media (max-width: $breakpoint-md) {
+  .registrar-periodo {
+    padding: 1rem;
   }
   
   .main-content {
-    margin-top: 1rem;
-    max-width: 95%;
+    padding: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .form-card {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .form-group {
+    input, select {
+      padding: 0.6rem 0.8rem;
+    }
+  }
+  
+  .register-btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>

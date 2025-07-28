@@ -35,11 +35,6 @@
           <div v-if="error" class="error-message">
             {{ error }}
           </div>
-
-          <p class="register-text">
-            ¿No tienes cuenta? <a href="#">Regístrate</a><br />
-            <a href="#">Recuperar contraseña</a>
-          </p>
         </form>
       </div>
     </div>

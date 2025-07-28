@@ -1,61 +1,161 @@
 <template>
   <div class="calificar-tarea">
-    <h2>Entregas de la Tarea</h2>
+    <div class="header-actions">
+      <router-link to="/docente/cursos" class="back-button">
+        <i class="fas fa-arrow-left"></i> Volver a Cursos
+      </router-link>
+      <h2>Entregas de la Tarea</h2>
+    </div>
     <div v-if="loading">Cargando entregas...</div>
     <div v-else>
       <div v-if="entregas.length === 0" class="no-entregas">No hay entregas registradas para esta tarea.</div>
       <ul v-else>
         <li v-for="entrega in entregasFiltradas" :key="entrega.id" class="entrega-item">
-          <template v-if="entrega.grupo">
-            <strong>Grupo: {{ entrega.grupo_nombre || 'ID ' + entrega.grupo }}</strong><br>
-            <span v-if="entrega.estudiantesGrupo && entrega.estudiantesGrupo.length">
-              <span>Integrantes: </span>
-              <span v-for="(est, idx) in entrega.estudiantesGrupo" :key="est.email">
-                {{ est.nombre }} {{ est.apellido }}<span v-if="idx < entrega.estudiantesGrupo.length - 1">, </span>
+          <div class="entrega-header">
+            <template v-if="entrega.grupo">
+              <strong>Grupo: {{ entrega.grupo_nombre || 'ID ' + entrega.grupo }}</strong><br>
+              <span v-if="entrega.estudiantesGrupo && entrega.estudiantesGrupo.length">
+                <span>Integrantes: </span>
+                <span v-for="(est, idx) in entrega.estudiantesGrupo" :key="est.email">
+                  {{ est.nombre }} {{ est.apellido }}<span v-if="idx < entrega.estudiantesGrupo.length - 1">, </span>
+                </span>
               </span>
+              <span v-else>Cargando integrantes...</span>
+            </template>
+            <template v-else>
+              <strong>{{ entrega.estudiante_nombre || entrega.estudiante_email }}</strong>
+            </template>
+            <span class="fecha-entrega">
+              {{ entrega.fecha_entrega | fecha }}
             </span>
-            <span v-else>Cargando integrantes...</span>
-            <br>
-            Fecha entrega: {{ entrega.fecha_entrega | fecha }}
-          </template>
-          <template v-else>
-            <strong>{{ entrega.estudiante_nombre || entrega.estudiante_email }}</strong> - {{ entrega.fecha_entrega | fecha }}
-          </template>
+          </div>
 
-          <div class="calificacion-form">
-            <template v-if="entrega.calificacion === null || entrega.calificacion === undefined">
+          <!-- Mostrar calificación y retroalimentación existente -->
+          <div v-if="!entrega.editando" class="calificacion-info">
+            <div class="calificacion-display">
+              <div class="calificacion-header">
+                <strong>Calificación: {{ entrega.calificacion || 'Sin calificar' }}</strong>
+                <button @click="habilitarEdicion(entrega)" class="btn-editar">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+              </div>
+              
+              <div v-if="entrega.observaciones" class="observaciones">
+                <strong>Observaciones:</strong> {{ entrega.observaciones }}
+              </div>
+              
+              <div v-if="entrega.archivo || entrega.retroalimentacion_archivo_url" class="retroalimentacion-archivo">
+                <template v-if="entrega.archivo">
+                  <a :href="entrega.archivo" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver archivo entregado
+                  </a>
+                </template>
+                <template v-if="entrega.retroalimentacion_archivo_url">
+                  <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
+                    <i class="fas fa-file-pdf"></i> Ver retroalimentación
+                  </a>
+                  <span v-if="entrega.fecha_retroalimentacion" class="fecha-retro">
+                    ({{ new Date(entrega.fecha_retroalimentacion).toLocaleDateString() }})
+                  </span>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario de calificación -->
+          <div v-else class="calificacion-form">
+            <div class="form-group">
+              <label for="calificacion">Calificación</label>
               <input 
+                id="calificacion"
                 v-model.number="entrega.calificacionInput" 
                 type="number" 
                 step="0.01" 
                 min="0" 
                 max="2.5" 
-                placeholder="Calificación" 
+                placeholder="0.00" 
                 class="input-calif" 
                 @keyup.enter="calificarEntrega(entrega)"
               />
-              <input 
+            </div>
+            
+            <div class="form-group">
+              <label for="observaciones">Observaciones</label>
+              <textarea
+                id="observaciones"
                 v-model="entrega.observacionesInput" 
-                type="text" 
-                placeholder="Observaciones" 
-                class="input-obs" 
-                @keyup.enter="calificarEntrega(entrega)"
-              />
+                placeholder="Escribe aquí tus comentarios..." 
+                class="input-obs"
+                rows="3"
+              ></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>Retroalimentación</label>
+              <div class="file-upload-container">
+                <label for="retroalimentacion-archivo" class="file-upload">
+                  <i class="fas fa-upload"></i>
+                  {{ entrega.archivoRetroalimentacion ? entrega.archivoRetroalimentacion.name : 'Subir retroalimentación (PDF)' }}
+                  <input 
+                    id="retroalimentacion-archivo"
+                    type="file" 
+                    accept=".pdf"
+                    @change="onFileChange($event, entrega)"
+                    style="display: none;"
+                  />
+                </label>
+                <small v-if="entrega.archivoRetroalimentacion" class="file-info">
+                  {{ entrega.archivoRetroalimentacion.name }} ({{ (entrega.archivoRetroalimentacion.size / 1024).toFixed(2) }} KB)
+                  <button 
+                    type="button" 
+                    @click.stop="entrega.archivoRetroalimentacion = null"
+                    class="btn-remove-file"
+                    title="Eliminar archivo"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </small>
+                <small v-if="entrega.retroalimentacion_archivo_url && !entrega.archivoRetroalimentacion" class="file-info">
+                  Archivo actual: 
+                  <a :href="entrega.retroalimentacion_archivo_url" target="_blank" class="archivo-link">
+                    Ver archivo actual
+                  </a>
+                  <button 
+                    type="button" 
+                    @click.stop="eliminarArchivoRetroalimentacion(entrega)"
+                    class="btn-remove-file"
+                    title="Eliminar archivo"
+                  >
+                    <i class="fas fa-trash"></i> Eliminar
+                  </button>
+                </small>
+              </div>
+            </div>
+            
+            <div class="form-actions">
               <button 
                 @click="calificarEntrega(entrega)" 
-                :disabled="entrega.guardando"
+                :disabled="entrega.guardando || (!entrega.calificacionInput && !entrega.observacionesInput && !entrega.archivoRetroalimentacion)"
                 class="btn-guardar"
               >
+                <i v-if="entrega.guardando" class="fas fa-spinner fa-spin"></i>
                 {{ entrega.guardando ? 'Guardando...' : 'Guardar' }}
               </button>
-              <span v-if="entrega.error" class="error">{{ entrega.error }}</span>
-              <span v-if="entrega.exito" class="exito">Calificación guardada</span>
-            </template>
-            <template v-else>
-              <span class="calif-guardada">Calificación: {{ entrega.calificacion }}</span>
-              <span v-if="entrega.observaciones"> | Observaciones: {{ entrega.observaciones }}</span>
-              <button @click="habilitarEdicion(entrega)" class="btn-editar">Editar</button>
-            </template>
+              <button 
+                @click="cancelarEdicion(entrega)" 
+                class="btn-cancelar"
+                :disabled="entrega.guardando"
+              >
+                Cancelar
+              </button>
+            </div>
+            
+            <div v-if="entrega.error" class="error-message">
+              <i class="fas fa-exclamation-circle"></i> {{ entrega.error }}
+            </div>
+            <div v-if="entrega.exito" class="success-message">
+              <i class="fas fa-check-circle"></i> ¡Calificación guardada correctamente!
+            </div>
           </div>
         </li>
       </ul>
@@ -131,11 +231,14 @@ export default {
           ...entrega,
           calificacionInput: entrega.calificacion,
           observacionesInput: entrega.observaciones || '',
+          archivoRetroalimentacion: null,
           guardando: false,
           error: '',
           exito: false,
+          editando: false,
           estudiantesGrupo: entrega.estudiantesGrupo || []
         }));
+        console.log('Entregas cargadas:', this.entregas);
       } catch (error) {
         console.error('Error al cargar entregas:', error);
         this.entregas = [];
@@ -145,81 +248,143 @@ export default {
     },
     
     async cargarEstudiantesDeGrupos() {
-      const gruposIds = [...new Set(this.entregas.filter(e => e.grupo).map(e => e.grupo))];
+      const gruposIds = [...new Set(this.entregas
+        .filter(e => e.grupo)
+        .map(e => e.grupo)
+      )];
       
       await Promise.all(gruposIds.map(async (grupoId) => {
         try {
-          const resp = await api.get(`grupos/${grupoId}/`);
-          const estudiantes = resp.data.estudiantes || [];
-          const grupoNombre = resp.data.nombre || null;
+          const { data } = await api.get(`grupos/${grupoId}/`);
+          const estudiantes = data.estudiantes || [];
           
-          this.entregas = this.entregas.map(e => {
-            if (e.grupo === grupoId) {
-              return {
-                ...e,
-                estudiantesGrupo: estudiantes,
-                grupo_nombre: grupoNombre
-              };
-            }
-            return e;
-          });
+          this.entregas = this.entregas.map(e => 
+            e.grupo === grupoId 
+              ? { ...e, estudiantesGrupo: estudiantes, grupo_nombre: data.nombre || null }
+              : e
+          );
         } catch (err) {
           console.error(`Error cargando grupo ${grupoId}:`, err);
-          this.entregas = this.entregas.map(e => {
-            if (e.grupo === grupoId) {
-              return {
-                ...e,
-                estudiantesGrupo: [],
-                grupo_nombre: null
-              };
-            }
-            return e;
-          });
+          this.entregas = this.entregas.map(e => 
+            e.grupo === grupoId 
+              ? { ...e, estudiantesGrupo: [], grupo_nombre: null }
+              : e
+          );
         }
       }));
     },
     
+    onFileChange(event, entrega) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (file.type !== 'application/pdf') {
+        entrega.error = 'Por favor, sube un archivo en formato PDF.';
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        entrega.error = 'El archivo es demasiado grande. El tamaño máximo permitido es de 5MB.';
+        return;
+      }
+      
+      entrega.archivoRetroalimentacion = file;
+      entrega.error = '';
+    },
+    
+    async eliminarArchivoRetroalimentacion(entrega) {
+      if (!confirm('¿Estás seguro de que deseas eliminar el archivo de retroalimentación?')) {
+        return;
+      }
+      
+      try {
+        entrega.guardando = true;
+        entrega.error = '';
+        
+        await api.delete(`entregas/${entrega.id}/eliminar-retroalimentacion/`);
+        
+        // Actualizar la interfaz
+        entrega.retroalimentacion_archivo_url = null;
+        entrega.fecha_retroalimentacion = null;
+        entrega.exito = 'Archivo de retroalimentación eliminado correctamente';
+        
+        setTimeout(() => {
+          entrega.exito = '';
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Error al eliminar archivo de retroalimentación:', error);
+        entrega.error = error.response?.data?.error || 'Error al eliminar el archivo de retroalimentación';
+      } finally {
+        entrega.guardando = false;
+      }
+    },
+    
     async calificarEntrega(entrega) {
-      if (!entrega.calificacionInput && entrega.calificacionInput !== 0) {
-        entrega.error = 'Ingrese una calificación.';
+      // Validaciones
+      if (!entrega.calificacionInput && entrega.calificacionInput !== 0 && !entrega.observacionesInput && !entrega.archivoRetroalimentacion) {
+        entrega.error = 'Debes proporcionar al menos una calificación, observaciones o un archivo de retroalimentación.';
         return;
       }
-      
-      const maxCalif = 2.5;
-      if (entrega.calificacionInput < 0 || entrega.calificacionInput > maxCalif) {
-        entrega.error = `La calificación debe estar entre 0 y ${maxCalif}`;
-        return;
+
+      if (entrega.calificacionInput !== null && entrega.calificacionInput !== undefined) {
+        const maxCalif = 2.5;
+        if (entrega.calificacionInput < 0 || entrega.calificacionInput > maxCalif) {
+          entrega.error = `La calificación debe estar entre 0 y ${maxCalif}`;
+          return;
+        }
       }
-      
+
       entrega.error = '';
       entrega.exito = false;
       entrega.guardando = true;
-      
+
       try {
-        // Obtener el usuario actual del localStorage
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser || !currentUser.email) {
-          throw new Error('No se encontró la información del docente. Por favor, inicie sesión nuevamente.');
+        const formData = new FormData();
+        if (entrega.calificacionInput !== null && entrega.calificacionInput !== undefined) {
+          formData.append('calificacion', parseFloat(entrega.calificacionInput));
         }
-        
-        await api.post(`entregas/${entrega.id}/calificar/`, {
-          calificacion: parseFloat(entrega.calificacionInput),
-          observaciones: entrega.observacionesInput || '',
-          docente_email: currentUser.email  // Usar el email del usuario actual
-        });
-        
-        entrega.calificacion = parseFloat(entrega.calificacionInput);
-        entrega.observaciones = entrega.observacionesInput || '';
+        if (entrega.observacionesInput) {
+          formData.append('observaciones', entrega.observacionesInput);
+        }
+        if (entrega.archivoRetroalimentacion) {
+          formData.append('retroalimentacion_archivo', entrega.archivoRetroalimentacion);
+        }
+        const config = {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        };
+        const response = await api.post(`entregas/${entrega.id}/calificar/`, formData, config);
+        // Actualizar los campos principales de la entrega con la respuesta del backend
+        if (response.data && response.data.data) {
+          const d = response.data.data;
+          entrega.calificacion = d.calificacion;
+          entrega.calificacionInput = d.calificacion;
+          entrega.observaciones = d.observaciones;
+          entrega.observacionesInput = d.observaciones;
+          entrega.retroalimentacion_archivo_url = d.retroalimentacion_archivo || null;
+          entrega.fecha_retroalimentacion = d.fecha_retroalimentacion || null;
+        }
+        entrega.archivoRetroalimentacion = null;
+        entrega.editando = false;
         entrega.exito = true;
-        
-        // Reset success message after 3 seconds
         setTimeout(() => {
           entrega.exito = false;
         }, 3000);
-        
-      } catch (err) {
-        console.error('Error al guardar calificación:', err);
-        entrega.error = err.response?.data?.error || 'Error al guardar la calificación';
+      } catch (error) {
+        console.error('Error al guardar calificación:', error);
+        let errorMessage = 'Error al guardar la calificación';
+        if (error.response) {
+          if (error.response.data) {
+            if (typeof error.response.data === 'object') {
+              errorMessage = Object.values(error.response.data).flat().join(' ');
+            } else {
+              errorMessage = error.response.data;
+            }
+          }
+        }
+        entrega.error = errorMessage;
       } finally {
         entrega.guardando = false;
       }
@@ -228,7 +393,28 @@ export default {
     habilitarEdicion(entrega) {
       entrega.calificacionInput = entrega.calificacion;
       entrega.observacionesInput = entrega.observaciones || '';
-      entrega.calificacion = null;
+      entrega.archivoRetroalimentacion = null;
+      entrega.editando = true;
+      entrega.error = '';
+      entrega.exito = false;
+    },
+    
+    cancelarEdicion(entrega) {
+      // Restaurar los valores originales
+      if (entrega.calificacion !== null && entrega.calificacion !== undefined) {
+        entrega.calificacionInput = entrega.calificacion;
+        entrega.observacionesInput = entrega.observaciones || '';
+        entrega.editando = false;
+      } else {
+        // Si no tenía calificación previa, volver al estado inicial
+        entrega.calificacionInput = null;
+        entrega.observacionesInput = '';
+      }
+      
+      // Limpiar archivo temporal
+      entrega.archivoRetroalimentacion = null;
+      
+      // Limpiar mensajes
       entrega.error = '';
       entrega.exito = false;
     }
@@ -238,180 +424,444 @@ export default {
       if (!val) return '';
       return new Date(val).toLocaleString();
     }
+  },
+  
+  created() {
+    // Inicializar las propiedades necesarias al crear el componente
+    this.entregas = this.entregas.map(entrega => ({
+      ...entrega,
+      calificacionInput: entrega.calificacion,
+      observacionesInput: entrega.observaciones || '',
+      archivoRetroalimentacion: null,
+      guardando: false,
+      editando: false,
+      error: '',
+      exito: false,
+      estudiantesGrupo: entrega.estudiantesGrupo || []
+    }));
   }
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
 .calificar-tarea {
-  max-width: 800px;
-  margin: 40px auto;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  color: #333333;
+  padding: 2rem 1.5rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 80vh;
+  box-sizing: border-box;
+  
+  .header-actions {
+    margin-bottom: 2rem;
+    position: relative;
+    
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f5f5f5;
+      color: #2e7d32;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+      border: 1px solid #e0e0e0;
+      
+      &:hover {
+        background: #e8f0fe;
+        border-color: #4a6cf7;
+      }
+      
+      i {
+        font-size: 0.9em;
+      }
+    }
+  }
+}
+
+.calificar-tarea > * {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 h2 {
-  color: #2c3e50;
-  margin-bottom: 24px;
+  color: #1a365d;
+  margin: 0.5rem 0 2rem 0;
   font-size: 1.8em;
   text-align: center;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 10px;
+  padding-bottom: 1rem;
+  font-weight: 600;
+  position: relative;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
 }
 
-.loading {
+.loading {  
   text-align: center;
   color: #666;
-  font-style: italic;
+  padding: 20px;
 }
 
 .no-entregas {
   text-align: center;
-  color: #b94a48;
-  font-weight: 500;
-  padding: 20px;
-  background-color: #f8d7da;
-  border-radius: 6px;
-  margin: 20px 0;
+  color: #2e7d32;
+  padding: 24px;
+  background-color: #f1f8e9;
+  border-radius: 8px;
+  margin: 24px 0;
+  border: 2px dashed #a5d6a7;
+  line-height: 1.6;
 }
 
 ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 2rem 0 0;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 }
 
 .entrega-item {
   background: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 15px 20px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  padding: 20px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
+  overflow: hidden;
+}
+
+.entrega-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: #4caf50;
+}
+
+.entrega-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #DDD0C8;
+}
+
+.entrega-header strong {
+  color: #323232;
+  font-size: 1.1em;
+  margin-right: 10px;
+}
+
+.fecha-entrega {
+  color: #616161;
+  font-size: 0.85em;
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  font-weight: 500;
 }
 
 .entrega-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
   transform: translateY(-2px);
+  border-color: #a5d6a7;
+  background: #ffffff;
 }
 
-.calificacion-form {
+.calificacion-info {
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px dashed #e0e0e0;
+  border-top: 1px solid #323232;
+  color: #323232;
+}
+
+.calificacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #323232;
+}
+
+.calificacion-display {
+  line-height: 1.6;
+}
+
+.observaciones {
+  display: block;
+  margin: 16px 0;
+  padding: 14px 16px;
+  background-color: #f5f5f5;
+  border-left: 4px solid #81c784;
+  border-radius: 0 4px 4px 0;
+  color: #424242;
+  line-height: 1.6;
+  font-size: 0.95em;
+}
+
+.retroalimentacion-archivo {
+  margin-top: 12px;
+  padding-top: 12px;
   display: flex;
   align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+}
+
+.error-message i,
+.success-message i {
+  font-size: 1.2em;
+}
+
+.error-message {
+  color: #c62828;
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
   gap: 10px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  border-left: 4px solid #f44336;
+}
+
+.success-message {
+  color: #1b5e20;
+  background-color: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  border-left: 4px solid #4caf50;
 }
 
 .input-calif,
-.input-obs {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+.input-obs,
+.file-upload {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
   border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.3s;
+  font-size: 0.95em;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  color: #333;
+}
+
+.input-calif {
+  max-width: 100px;
+  text-align: center;
+  font-weight: 500;
 }
 
 .input-calif:focus,
 .input-obs:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.input-calif {
-  width: 100px;
-  text-align: center;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .input-obs {
-  flex: 1;
-  min-width: 200px;
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.1);
+  }
 }
 
-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 0.95em;
+  }
+}
+
+// Botones base
+%btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   font-weight: 500;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  text-align: center;
+  border: 1px solid transparent;
+  
+  i {
+    font-size: 0.9em;
+  }
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .btn-guardar {
-  background-color: #2ecc71;
+  @extend %btn-base;
+  background-color: #4a6cf7;
   color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    background-color: #3a5bd9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active:not(:disabled) {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    background-color: #a5b4fc;
+  }
 }
 
-.btn-guardar:not(:disabled):hover {
-  background-color: #27ae60;
+.btn-cancelar {
+  @extend %btn-base;
+  background-color: #f5f5f5;
+  color: #4a5568;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  &:hover:not(:disabled) {
+    background-color: #edf2f7;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e2e8f0;
+    color: #a0aec0;
+  }
 }
 
 .btn-editar {
-  background-color: #3498db;
+  @extend %btn-base;
+  background-color: #4a6cf7;
   color: white;
-  margin-left: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  
+  &:hover:not(:disabled) {
+    background-color: #3a5bd9;
+    transform: translateY(-1px);
+  }
 }
 
-.btn-editar:hover {
-  background-color: #2980b9;
+// Animaciones
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-left: 10px;
-  flex-basis: 100%;
-  margin-top: 5px;
+.calificacion-form {
+  animation: fadeIn 0.3s ease-out;
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #4a6cf7;
 }
 
-.exito {
-  color: #27ae60;
-  font-size: 13px;
-  margin-left: 10px;
-  font-weight: 500;
-}
-
-.calif-guardada {
-  font-weight: 600;
-  color: #2c3e50;
-  margin-right: 10px;
-}
-
-/* Responsive adjustments */
+// Estilos responsivos
 @media (max-width: 768px) {
   .calificar-tarea {
-    margin: 20px 15px;
-    padding: 20px 15px;
+    padding: 1rem;
   }
   
-  .calificacion-form {
+  .entrega-header {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.5rem;
   }
   
-  .input-calif,
-  .input-obs,
-  button {
-    width: 100%;
-    margin: 5px 0;
+  .fecha-entrega {
+    align-self: flex-start;
   }
   
+  .form-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .btn-guardar,
+  .btn-cancelar,
   .btn-editar {
-    margin-left: 0;
-    margin-top: 10px;
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .input-calif {
+    max-width: 100%;
   }
 }
 </style>

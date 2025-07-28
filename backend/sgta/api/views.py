@@ -1,4 +1,10 @@
 from rest_framework import viewsets
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from rest_framework.views import APIView
+from ..core.domain.GestionAcademica.curso import Curso
+from ..core.domain.GestionTarea.asignacion import Asignacion
+import tempfile
 
 # Importar los modelos necesarios desde domain
 from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
@@ -462,6 +468,68 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(solicitud)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, pk=None):
+        """Actualiza el estado de una solicitud y asigna tareas si es aceptada"""
+        from django.core.files.base import ContentFile
+        from ..core.domain.GestionTarea.asignacion import Asignacion
+        from ..core.domain.GestionAcademica.entregarTarea import EntregaTarea
+        from ..core.domain.GestionAcademica.curso import Curso
+        from rest_framework.response import Response
+        from rest_framework import status
+        
+        try:
+            solicitud = self.get_object()
+            nuevo_estado = request.data.get('estado')
+
+            if nuevo_estado not in ['aceptada', 'rechazada']:
+                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Si la solicitud está siendo aceptada y no estaba ya aceptada
+            if nuevo_estado == 'aceptada' and solicitud.estado != 'aceptada':
+                # Obtener todos los cursos para esta asignatura
+                cursos = Curso.objects.filter(asignatura=solicitud.asignatura)
+                
+                for curso in cursos:
+                    # Agregar estudiante al curso si no está ya inscrito
+                    if not curso.estudiantes.filter(email=solicitud.estudiante.email).exists():
+                        curso.estudiantes.add(solicitud.estudiante)
+                    
+                    # Obtener todas las tareas existentes para este curso
+                    tareas = Asignacion.objects.filter(curso=curso)
+                    
+                    # Crear entregas para cada tarea
+                    for tarea in tareas:
+                        # Verificar si ya existe una entrega para esta tarea y estudiante
+                        if not EntregaTarea.objects.filter(
+                            tarea=tarea, 
+                            estudiante=solicitud.estudiante
+                        ).exists():
+                            # Crear un archivo temporal vacío
+                            empty_file = ContentFile(b'', name='temporal.txt')
+                            
+                            # Crear la entrega de tarea
+                            # No incluimos 'curso' ya que no es un campo del modelo
+                            # La relación con el curso ya está a través de tarea.curso
+                            EntregaTarea.objects.create(
+                                tarea=tarea,
+                                estudiante=solicitud.estudiante,
+                                archivo=empty_file,
+                                calificacion=None,
+                                observaciones='',
+                                grupo=None  # Se asigna None por defecto, se actualizará si es grupal
+                            )
+            
+            # Actualizar el estado de la solicitud
+            solicitud.estado = nuevo_estado
+            solicitud.save()
+            
+            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
+            
+        except SolicitudAsignatura.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+    
     def list(self, request):
         try:
             token = request.headers.get('Authorization', None)
@@ -501,57 +569,78 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print("Error:", e)
             return Response({'error': 'Error al obtener solicitudes'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    def partial_update(self, request, pk=None):
-        try:
-            solicitud = SolicitudAsignatura.objects.get(pk=pk)
-            nuevo_estado = request.data.get('estado')
-
-            if nuevo_estado not in ['aceptado', 'rechazado']:
-                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
-
-            solicitud.estado = nuevo_estado
-            solicitud.save()
-
-            # Si la solicitud fue aceptada, agregar al estudiante al curso
-            if nuevo_estado == 'aceptado':
-                asignatura = solicitud.asignatura
-                estudiante = solicitud.estudiante
-
-                # Buscar el curso asociado a esa asignatura
-                curso = Curso.objects.filter(asignatura=asignatura).first()
-                if not curso:
-                    # Crear el curso si no existe
-                    curso = Curso.objects.create(asignatura=asignatura)
-
-                # Agregar al estudiante
-                curso.estudiantes.add(estudiante)
-
-            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
-
-        except SolicitudAsignatura.DoesNotExist:
-            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CursoViewSet(viewsets.ModelViewSet):
-
+    @action(detail=False, methods=['get'], url_path='por-estudiante')
+    def cursos_por_estudiante(self, request):
+        """Devuelve los cursos en los que está inscrito el estudiante con el email dado."""
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Se requiere el email del estudiante'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            estudiante = Usuario.objects.get(email=email, rol='EST')
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Estudiante no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        # Buscar cursos donde el estudiante está inscrito
+        cursos = Curso.objects.filter(estudiantes__email=estudiante.email).distinct()
+        serializer = CursoSerializer(cursos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    permission_classes = [AllowAny]
     queryset = Curso.objects.all()
     serializer_class = CursoSerializer
 
     def get_queryset(self):
-        """Filtrar cursos según el rol del usuario"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("[CURSOS] Iniciando get_queryset para cursos")
         queryset = Curso.objects.all()
-        
-        # Filtrar por docente si se especifica
         docente_email = self.request.query_params.get('docente_email', None)
+        logger.info(f"[CURSOS] Param docente_email: {docente_email}")
         if docente_email:
             try:
                 docente = Usuario.objects.get(email=docente_email, rol='DOC')
-                queryset = queryset.filter(docente_id=docente.email)
+                logger.info(f"[CURSOS] Docente encontrado: {docente.email}")
+                queryset = queryset.filter(docente=docente)
+                logger.info(f"[CURSOS] Cursos filtrados por docente: {list(queryset)}")
             except Usuario.DoesNotExist:
-                queryset = Curso.objects.none()
+                logger.warning(f"[CURSOS] Docente no encontrado: {docente_email}")
+                return Curso.objects.none()
+            except Exception as e:
+                logger.error(f"[CURSOS] Error inesperado buscando docente: {e}", exc_info=True)
+                return Curso.objects.none()
 
+        # Intentar obtener usuario autenticado por token
+        user = None
+        try:
+            token = self.request.headers.get('Authorization', None)
+            logger.info(f"[CURSOS] Token recibido: {token}")
+            if token:
+                import jwt
+                from django.conf import settings
+                token = token.split(" ")[-1]
+                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                email = decoded.get('email')
+                logger.info(f"[CURSOS] Email decodificado del token: {email}")
+                if email:
+                    user = Usuario.objects.get(email=email)
+                    logger.info(f"[CURSOS] Usuario autenticado: {user.email}, rol: {user.rol}")
+        except Exception as e:
+            logger.warning(f"[CURSOS] Error decodificando token o usuario: {e}", exc_info=True)
+            user = None
+
+        # Si el usuario autenticado es estudiante, filtrar solo cursos aceptados
+        if user and getattr(user, 'rol', None) == 'EST':
+            try:
+                from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+                solicitudes_aceptadas = SolicitudAsignatura.objects.filter(estudiante=user, estado='aceptado')
+                asignaturas_aceptadas = [s.asignatura for s in solicitudes_aceptadas]
+                queryset = queryset.filter(asignatura__in=asignaturas_aceptadas)
+                logger.info(f"[CURSOS] Filtrando cursos para estudiante {user.email}, asignaturas aceptadas: {asignaturas_aceptadas}")
+            except Exception as e:
+                logger.error(f"[CURSOS] Error filtrando cursos para estudiante: {e}", exc_info=True)
+                return Curso.objects.none()
+
+        logger.info(f"[CURSOS] Cursos retornados finales: {list(queryset)}")
         return queryset
 
     @action(detail=False, methods=['get'])
@@ -626,74 +715,102 @@ class CursoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 class EntregaTareaViewSet(viewsets.ModelViewSet):
+    queryset = EntregaTarea.objects.all()
+    serializer_class = EntregaTareaSerializer
+    permission_classes = [AllowAny]
+
+    def get_serializer_context(self):
+        """Agregar el request al contexto del serializador para generar URLs absolutas."""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     @action(detail=True, methods=['post'])
     def calificar(self, request, pk=None):
-        """Permite al docente calificar una entrega de tarea, validando el rango según el tipo de tarea."""
-        from rest_framework import status
-        from rest_framework.response import Response
-        
-        # Obtener el email del docente del request
-        docente_email = request.data.get('docente_email')
-        if not docente_email:
-            return Response(
-                {'error': 'Se requiere el email del docente'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+        """
+        Permite calificar una entrega de tarea y adjuntar retroalimentación. SIN autenticación.
+        """
+        from django.utils import timezone
         try:
-            # Obtener la entrega y la tarea
             entrega = self.get_object()
             tarea = entrega.tarea
-            
-            # Verificar que el docente existe
-            docente = Usuario.objects.get(email=docente_email, rol='DOC')
-            
-            # Verificar si el docente de la asignación coincide con el docente que está calificando
-            if tarea.creada_por.email != docente.email:
+            calificacion = request.data.get('calificacion')
+            observaciones = request.data.get('observaciones', '')
+            retroalimentacion_archivo = request.FILES.get('retroalimentacion_archivo')
+
+            if calificacion is None and not observaciones and not retroalimentacion_archivo:
                 return Response(
-                    {'error': 'Solo el docente asignado puede calificar esta tarea.'}, 
-                    status=status.HTTP_403_FORBIDDEN
+                    {'error': 'Debe proporcionar al menos una calificación, observaciones o archivo de retroalimentación.'},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-                
-        except Usuario.DoesNotExist:
+
+            if calificacion is not None:
+                try:
+                    calificacion = float(calificacion)
+                except (ValueError, TypeError):
+                    return Response(
+                        {'error': 'La calificación debe ser un número válido.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                tipo = tarea.tipo_tarea
+                if tipo in ['ACD', 'AA']:
+                    max_calif = 2.0
+                elif tipo == 'APE':
+                    max_calif = 2.5
+                else:
+                    max_calif = 2.5
+                if not (0 <= calificacion <= max_calif):
+                    return Response(
+                        {'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                entrega.calificacion = calificacion
+
+            if retroalimentacion_archivo:
+                if entrega.retroalimentacion_archivo:
+                    entrega.retroalimentacion_archivo.delete(save=False)
+                entrega.retroalimentacion_archivo = retroalimentacion_archivo
+
+            if observaciones:
+                entrega.observaciones = observaciones
+
+            entrega.fecha_retroalimentacion = timezone.now()
+            entrega.save()
+            serializer = self.get_serializer(entrega)
             return Response(
-                {'error': 'Docente no encontrado o no tiene permisos para calificar'}, 
-                status=status.HTTP_404_NOT_FOUND
+                {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data},
+                status=status.HTTP_200_OK
             )
-
-        calificacion = request.data.get('calificacion')
-        observaciones = request.data.get('observaciones', '')
-        if calificacion is None:
-            return Response({'error': 'Debe proporcionar una calificación.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            calificacion = float(calificacion)
-        except ValueError:
-            return Response({'error': 'La calificación debe ser un número.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validar rango según tipo de tarea
-        tipo = tarea.tipo_tarea
-        if tipo in ['ACD', 'AA']:
-            max_calif = 2.0
-        elif tipo == 'APE':
-            max_calif = 2.5
-        else:
-            max_calif = 2.5
-        if not (0 <= calificacion <= max_calif):
-            return Response({'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # No permitir duplicados, solo actualizar si ya existe
-        entrega.calificacion = calificacion
-        if observaciones:
-            entrega.observaciones = observaciones
-        entrega.save()
-        return Response({'mensaje': 'Calificación registrada correctamente', 'calificacion': calificacion}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': f'Error al procesar la solicitud: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def partial_update(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
         instance = self.get_object()
-        tarea = instance.tarea  # Asignacion
-        estudiante = instance.estudiante
-
+        archivo = request.data.get('archivo', None)
+        # Si el usuario quiere borrar el archivo
+        if archivo == '' or archivo is None:
+            try:
+                logger.info(f"[ENTREGA] Solicitando borrado de archivo para entrega {instance.id}")
+                if hasattr(instance, 'archivo') and instance.archivo:
+                    logger.info(f"[ENTREGA] Archivo actual: {instance.archivo}")
+                    instance.archivo.delete(save=False)  # Borra el archivo físico
+                else:
+                    logger.warning(f"[ENTREGA] No hay archivo para borrar en entrega {instance.id}")
+                instance.archivo = None
+                instance.save()
+                serializer = self.get_serializer(instance)
+                logger.info(f"[ENTREGA] Archivo borrado correctamente para entrega {instance.id}")
+                return Response(serializer.data)
+            except Exception as e:
+                logger.error(f"[ENTREGA] Error al borrar archivo en entrega {instance.id}: {e}", exc_info=True)
+                return Response({'error': f'Error al borrar archivo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         # Si la tarea es grupal
+        tarea = instance.tarea  # Asignacion
         if hasattr(tarea, 'es_grupal') and tarea.es_grupal:
             grupo = getattr(instance, 'grupo', None)
             if grupo:
@@ -710,8 +827,6 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                     from django.utils import timezone
                     entrega.fecha_entregada = timezone.now()
                     entrega.save()
-                from rest_framework.response import Response
-                from rest_framework import status
                 return Response({'mensaje': 'Entrega subida para todo el grupo'}, status=status.HTTP_200_OK)
             else:
                 # Si no hay grupo, solo actualiza la entrega individual
@@ -728,3 +843,133 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
         if tarea_id:
             queryset = queryset.filter(tarea__id=tarea_id)
         return queryset
+
+class ReporteTareasCursoPDFView(APIView):
+    def get(self, request, *args, **kwargs):
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+        import io
+
+        curso_id = request.query_params.get('curso')
+        tipo = request.query_params.get('tipo', 'tareas')  # 'tareas' o 'entregas'
+        if not curso_id:
+            return HttpResponse('Curso no especificado', status=400)
+        try:
+            curso = Curso.objects.get(pk=curso_id)
+        except Curso.DoesNotExist:
+            return HttpResponse('Curso no encontrado', status=404)
+        tareas = Asignacion.objects.filter(curso_id=curso_id)
+        docente = getattr(curso, 'docente', None)
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        if tipo == 'entregas':
+            elements.append(Paragraph(f"Reporte de Entregas de Tareas", styles['Title']))
+        else:
+            elements.append(Paragraph(f"Reporte de Tareas del Curso", styles['Title']))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"Curso: {curso}", styles['Heading2']))
+        if docente:
+            elements.append(Paragraph(f"Docente: {docente}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+        if tipo == 'entregas':
+            from datetime import datetime
+            import pytz
+            # Por cada tarea, mostrar entregas
+            for tarea in tareas:
+                elements.append(Paragraph(f"Tarea: {getattr(tarea, 'titulo', '')}", styles['Heading3']))
+                entregas = EntregaTarea.objects.filter(tarea=tarea)
+                # Cambiar nombre de columna y agregar tiempo restante
+                data = [["Estudiante", "Email", "Calificación", "Fecha entregada", "Tiempo restante"]]
+                fecha_entrega_obj = getattr(tarea, 'fecha_entrega', None)
+                for entrega in entregas:
+                    estudiante = getattr(entrega, 'estudiante', None)
+                    estudiante_nombre = getattr(estudiante, 'nombre', '') if estudiante else ''
+                    estudiante_email = getattr(estudiante, 'email', '') if estudiante else ''
+                    calificacion = getattr(entrega, 'calificacion', '')
+                    fecha_obj = getattr(entrega, 'fecha_entregada', None)
+                    if fecha_obj:
+                        fecha_entregada = fecha_obj.strftime('%d/%m/%Y %H:%M')
+                    else:
+                        fecha_entregada = ''
+                    # Calcular tiempo restante
+                    tiempo_restante = ''
+                    if fecha_entrega_obj:
+                        # Convertir a datetime si es necesario
+                        now = datetime.now(pytz.UTC) if hasattr(fecha_entrega_obj, 'tzinfo') else datetime.now()
+                        if hasattr(fecha_entrega_obj, 'tzinfo'):
+                            delta = fecha_entrega_obj - now
+                        else:
+                            delta = fecha_entrega_obj - datetime.now()
+                        if delta.total_seconds() > 0:
+                            dias = delta.days
+                            horas, resto = divmod(delta.seconds, 3600)
+                            minutos = resto // 60
+                            tiempo_restante = f"{dias}d {horas}h {minutos}m"
+                        else:
+                            tiempo_restante = "Finalizado"
+                    data.append([
+                        estudiante_nombre,
+                        estudiante_email,
+                        calificacion,
+                        fecha_entregada,
+                        tiempo_restante
+                    ])
+                table = Table(data, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ]))
+                elements.append(table)
+                elements.append(Spacer(1, 18))
+        else:
+            # Tabla de tareas
+            data = [["Título", "Descripción", "Fecha de creación", "Fecha de entrega"]]
+            for tarea in tareas:
+                # Formatear fechas si existen
+                fecha_creacion_obj = getattr(tarea, 'fecha_creacion', None)
+                if fecha_creacion_obj:
+                    fecha_creacion = fecha_creacion_obj.strftime('%d/%m/%Y %H:%M')
+                else:
+                    fecha_creacion = ''
+                fecha_entrega_obj = getattr(tarea, 'fecha_entrega', None)
+                if fecha_entrega_obj:
+                    fecha_entrega = fecha_entrega_obj.strftime('%d/%m/%Y %H:%M')
+                else:
+                    fecha_entrega = ''
+                data.append([
+                    str(getattr(tarea, 'titulo', '')),
+                    str(getattr(tarea, 'descripcion', '')),
+                    fecha_creacion,
+                    fecha_entrega
+                ])
+            table = Table(data, repeatRows=1)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table)
+
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+        nombre = f"reporte_{'entregas' if tipo == 'entregas' else 'tareas'}_{curso_id}.pdf"
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre}"'
+        return response

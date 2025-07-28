@@ -18,6 +18,9 @@ import MostarTareasEstudiante from '@/components/GestionTarea/MostarTareasEstudi
 import SubirTarea from '@/components/GestionTarea/SubirTarea.vue'
 import CalendarioTareas from '@/components/GestionAcademica/CalendarioTareas.vue'
 import CrearCurso from '@/components/GestionAcademica/CrearCurso.vue'
+import GeneracionReportes from '@/components/GestionAcademica/GeneracionReportes.vue'
+import VisualizarEntregas from '@/components/GestionTarea/VisualizarEntregas.vue'
+import MisCursosEstudainte from '@/components/GestionAcademica/MisCursosEstudainte.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -92,6 +95,11 @@ const router = createRouter({
       component: AsignarTarea,
     },
     {
+      path: '/docente/asignar-tareas/:cursoId',
+      name: 'AsignarTareasPorCurso',
+      component: AsignarTarea,
+    },
+    {
       path: '/docente/entregas',
       name: 'ListarTareas',
       component: ListarTareas,
@@ -112,8 +120,8 @@ const router = createRouter({
       component: CursosDocente,
     }, 
     {
-      path: '/docente/mostrar-tareas',
-      name: 'MostrarTareas',
+      path: '/docente/mostrar-tareas/:id',
+      name: 'MostrarTareasPorCurso',
       component: MostrarTareas,
     },
     {
@@ -122,7 +130,7 @@ const router = createRouter({
       component: CalificarTarea,
     },
     {
-      path: '/estudiante/listar-tareas',
+      path: '/estudiante/entregar',
       name: 'ListarTareasEstudiante',
       component: MostarTareasEstudiante,
     },
@@ -140,6 +148,21 @@ const router = createRouter({
       path: '/admin/crear-curso',
       name: 'CrearCursoAdmin',
       component: CrearCurso,
+    },
+    {
+      path: '/docente/reportes',
+      name: 'ReportesDocente',
+      component: GeneracionReportes,
+    },
+    {
+      path: '/docente/visualizar-entregas',
+      name: 'VisualizarEntregas',
+      component: VisualizarEntregas,
+    },
+    {
+      path: '/estudiante/mis-cursos',
+      name: 'MisCursosEstudiante',
+      component: MisCursosEstudainte,
     }
 
 

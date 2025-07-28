@@ -132,8 +132,26 @@ class EntregaTareaSerializer(serializers.ModelSerializer):
     grupo_nombre = serializers.CharField(source='grupo.nombre', read_only=True, default=None)
     tarea_titulo = serializers.CharField(source='tarea.titulo', read_only=True)
     fecha_entrega = serializers.DateTimeField(source='tarea.fecha_entrega', format='%Y-%m-%d %H:%M:%S', read_only=True)
+    retroalimentacion_archivo_url = serializers.SerializerMethodField()
+    fecha_retroalimentacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
 
     class Meta:
         model = EntregaTarea
-        fields = '__all__'
-        # Puedes personalizar los campos si lo deseas
+        fields = [
+            'id', 'tarea', 'estudiante', 'archivo', 'fecha_entregada',
+            'calificacion', 'observaciones', 'grupo', 'estudiante_nombre',
+            'estudiante_email', 'grupo_nombre', 'tarea_titulo', 'fecha_entrega',
+            'retroalimentacion_archivo', 'retroalimentacion_archivo_url',
+            'fecha_retroalimentacion'
+        ]
+        read_only_fields = ['fecha_entregada', 'fecha_retroalimentacion']
+        extra_kwargs = {
+            'retroalimentacion_archivo': {'required': False, 'allow_null': True}
+        }
+    
+    def get_retroalimentacion_archivo_url(self, obj):
+        if obj.retroalimentacion_archivo:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.retroalimentacion_archivo.url)
+        return None

@@ -1,10 +1,10 @@
 <template>
   <div class="app-layout">
     <!-- Sidebar -->
-    <Sidebar :user="currentUser" :notificationCount="notifications" />
+    <Sidebar @toggle="handleSidebarToggle" :user="currentUser" :notificationCount="notifications" />
     
-    <!-- Contenido Principal -->
-    <main class="main-content" :class="{ 'main-content-collapsed': sidebarCollapsed }">
+    <!-- Contenido principal -->
+    <main class="main-content" :class="{ 'main-content-collapsed': isCollapsed }">
       <div class="content-wrapper">
         <slot />
       </div>
@@ -20,7 +20,11 @@ import { authService } from '@/services/authService.js'
 // Estado global del usuario autenticado
 const currentUser = ref(null)
 const notifications = ref(5)
-const sidebarCollapsed = ref(false)
+const isCollapsed = ref(false)
+
+const handleSidebarToggle = (collapsed) => {
+  isCollapsed.value = collapsed
+}
 
 // Cargar usuario al montar el componente
 onMounted(() => {
@@ -49,34 +53,58 @@ onMounted(() => {
 <style scoped>
 .app-layout {
   display: flex;
-  min-height: 100vh;
-  background-color: #f8fafc;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100%;
+  background-color: #ffffff;
+  position: relative;
+  overflow: hidden;
 }
 
 .main-content {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+  position: relative;
   flex: 1;
   margin-left: 280px;
-  transition: margin-left 0.3s ease;
-  min-height: 100vh;
+  width: calc(100vw - 280px);
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content-collapsed {
-  margin-left: 70px;
+  margin-left: 20px;
+  width: calc(100vw - 20px);
 }
 
 .content-wrapper {
-  padding: 2rem;
-  max-width: 100%;
+  flex: 1;
+  padding: 4rem;
+  padding-right: 13rem;
+  width: 100%;
+  max-width: 100%; /* Ancho máximo del contenido */
+  margin: 0 auto; /* Centra el contenido */
+  box-sizing: border-box;
+  overflow-x: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra los elementos horizontalmente */
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Asegurar que el contenido no se desborde en móviles */
+@media (max-width: 1024px) {
   .main-content {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
   
   .main-content-collapsed {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
 </style>

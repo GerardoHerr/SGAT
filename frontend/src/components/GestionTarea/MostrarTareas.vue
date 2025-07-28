@@ -50,20 +50,46 @@ export default {
       return
     }
     this.docenteEmail = currentUser.email
-    // Obtener el curso desde la query
-    const cursoId = this.$route.query.curso
-    if (cursoId) {
-      this.cursoSeleccionado = String(cursoId)
-      await this.cargarTareas()
+    this.setCursoSeleccionadoYcargar()
+  },
+
+  watch: {
+    '$route'(to, from) {
+      this.setCursoSeleccionadoYcargar()
     }
   },
+
   methods: {
+    setCursoSeleccionadoYcargar() {
+      // Obtener el curso desde la query o el parámetro de ruta
+      let cursoId = this.$route.query.curso
+      if (!cursoId && this.$route.params.id) {
+        cursoId = this.$route.params.id
+      }
+      if (cursoId) {
+        this.cursoSeleccionado = String(cursoId)
+        this.cargarTareas()
+      } else {
+        this.cursoSeleccionado = ''
+        this.tareas = []
+      }
+    },
     async cargarTareas() {
-      if (!this.cursoSeleccionado) return
+      if (!this.cursoSeleccionado) {
+        this.tareas = []
+        return
+      }
       try {
-        const response = await axios.get(`http://localhost:8000/api/asignaciones/?curso=${this.cursoSeleccionado}&docente_email=${this.docenteEmail}`)
+        const url = `http://localhost:8000/api/asignaciones/?curso=${this.cursoSeleccionado}&docente_email=${this.docenteEmail}`
+        // Para depuración
+        const response = await axios.get(url)
+        console.log('Cargando tareas desde:', url)
         this.tareas = response.data
+        if (!Array.isArray(this.tareas)) {
+          this.tareas = []
+        }
       } catch (error) {
+        console.error('Error al cargar tareas:', error)
         this.tareas = []
       }
     },
