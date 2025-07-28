@@ -32,55 +32,56 @@
 
     <!-- Tabla de Usuarios -->
     <div class="table-container">
-      <table class="usuarios-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Email</th>
-            <th>Nombres</th>
-            <th>Apellidos</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Opciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(usuario, index) in usuariosFiltrados" :key="usuario.email"
-            :class="{ 'row-even': index % 2 === 0 }">
-            <td>{{ index + 1 }}</td>
-            <td>{{ usuario.email }}</td>
-            <td>{{ usuario.nombre }}</td>
-            <td>{{ usuario.apellido }}</td>
-            <td>
-              <span class="rol-badge" :class="getRolClass(usuario.rol)">
-                {{ getRolText(usuario.rol) }}
-              </span>
-            </td>
-            <td>
-              <span class="status-badge" :class="usuario.activo ? 'active' : 'inactive'">
-                {{ usuario.activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-            <td class="actions-cell">
-              <button class="action-btn edit-btn" @click="editarUsuario(usuario)" title="Editar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
-              </button>
-              <button class="action-btn delete-btn" @click="confirmarEliminar(usuario)" title="Eliminar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916C15.75 3.42 14.58 2.25 13.11 2.25h-2.22c-1.47 0-2.64 1.17-2.64 2.64v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
+      <div>
+        <table class="usuarios-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Email</th>
+              <th>Nombres</th>
+              <th>Apellidos</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Opciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(usuario, index) in usuariosFiltrados" :key="usuario.email"
+              :class="{ 'row-even': index % 2 === 0 }">
+              <td>{{ index + 1 }}</td>
+              <td>{{ usuario.email }}</td>
+              <td>{{ usuario.nombre }}</td>
+              <td>{{ usuario.apellido }}</td>
+              <td>
+                <span class="rol-badge" :class="getRolClass(usuario.rol)">
+                  {{ getRolText(usuario.rol) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" :class="usuario.activo ? 'active' : 'inactive'">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn edit-btn" @click="editarUsuario(usuario)" title="Editar">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </button>
+                <button class="action-btn delete-btn" @click="confirmarEliminar(usuario)" title="Eliminar">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916C15.75 3.42 14.58 2.25 13.11 2.25h-2.22c-1.47 0-2.64 1.17-2.64 2.64v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div v-if="usuariosFiltrados.length === 0" class="empty-state">
         <p>No se encontraron usuarios</p>
       </div>
@@ -449,150 +450,250 @@ export default {
 }
 </script>
 
-<style scoped>
-/* Contenedor principal con borde */
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
 .usuarios-container {
-  padding: 2rem;
-  background: #323232;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #DDD0C8;
-  border: 3px solid #9A8F84;
-  border-radius: 12px;
-  margin: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  min-height: 80vh;
+  box-sizing: border-box;
+  background: #fff;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* Header Bar */
 .header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $border-color;
+
+  .page-title {
+    margin: 0;
+    color: $text-primary;
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
 }
 
 .add-btn {
-  background: #C4B8AD;
-  color: #323232;
-  border: 2px solid #9A8F84;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  @extend .btn;
+  @extend .btn-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
 }
 
-.add-btn:hover {
-  background: #9A8F84;
-  color: #DDD0C8;
-  transform: translateY(-1px);
-}
-
-/* Título */
-.page-title {
-  flex: 1;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #9A8F84;
-  margin-bottom: 1.5rem;
-  margin: 0;
-  text-align: center;
-}
-
-/* Sección de búsqueda */
 .search-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: $bg-lighter;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
 }
 
 .search-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  max-width: 600px;
-  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  gap: 0.5rem;
 }
 
 .search-icon {
   position: absolute;
   left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9A8F84;
-  z-index: 1;
-}
-
-.search-icon svg {
-  width: 20px;
-  height: 20px;
+  color: $text-secondary;
+  pointer-events: none;
+  
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 .search-input {
   flex: 1;
   padding: 0.75rem 1rem 0.75rem 3rem;
-  border: 2px solid #7A6F66;
-  border-radius: 8px;
+  border: 1px solid $border-color;
+  border-radius: $border-radius 0 0 $border-radius;
+  background: $bg-white;
+  color: $text-primary;
   font-size: 0.95rem;
-  background: #7A6F66;
-  color: #DDD0C8;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #C4B8AD;
-  box-shadow: 0 0 0 3px rgba(196, 184, 173, 0.2);
-}
-
-.search-input::placeholder {
-  color: #9A8F84;
+  transition: $transition-base;
+  
+  &::placeholder {
+    color: $text-secondary;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+  }
 }
 
 .search-filter {
-  padding: 0.75rem 1rem;
-  border: 2px solid #7A6F66;
-  border-radius: 8px;
-  background: #7A6F66;
-  color: #DDD0C8;
+  padding: 0 1rem;
+  height: 3rem;
+  background: $bg-white;
+  color: $text-primary;
+  border: 1px solid $border-color;
+  border-left: none;
+  border-radius: 0 $border-radius $border-radius 0;
   cursor: pointer;
-  min-width: 120px;
-}
-
-.search-filter:focus {
-  outline: none;
-  border-color: #C4B8AD;
+  transition: $transition-base;
+  font-size: 0.95rem;
+  
+  &:hover {
+    background: $bg-lighter;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
 }
 
 /* Tabla */
 .table-container {
-  background: #7A6F66;
-  border-radius: 12px;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  background: #fff;
+  max-height: calc(100vh - 300px);
+  min-height: 300px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  border: 2px solid #9A8F84;
+  
+  > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    padding-right: 8px; /* Space for scrollbar */
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+      margin: 4px 0;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  }
 }
 
 .usuarios-table {
   width: 100%;
-  border-collapse: collapse;
-}
-
-.usuarios-table th {
-  background: #9A8F84;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #323232;
-  border-bottom: 2px solid #C4B8AD;
+  background: white;
   font-size: 0.9rem;
-}
-
-.usuarios-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #9A8F84;
-  font-size: 0.9rem;
-  color: #DDD0C8;
-}
-
-.row-even {
-  background: rgba(154, 143, 132, 0.1);
+  table-layout: fixed;
+  min-width: 100%;
+  margin: 0;
+  
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+  }
+  
+  /* Specific column widths */
+  th:nth-child(1), td:nth-child(1) { width: 50px; }  /* # */
+  th:nth-child(2), td:nth-child(2) { width: 250px; } /* Email */
+  th:nth-child(3), td:nth-child(3) { width: 150px; } /* Nombres */
+  th:nth-child(4), td:nth-child(4) { width: 150px; } /* Apellidos */
+  th:nth-child(5), td:nth-child(5) { width: 120px; } /* Rol */
+  th:nth-child(6), td:nth-child(6) { width: 100px; } /* Estado */
+  th:nth-child(7), td:nth-child(7) { width: 120px; } /* Opciones */
+  
+  /* Handle long text */
+  td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+    
+    /* Show full text on hover */
+    &:hover {
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      white-space: normal;
+      word-break: break-word;
+    }
+  }
+  
+  th {
+    background: $bg-lighter;
+    color: $text-secondary;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  
+  td {
+    color: $text-primary;
+    vertical-align: middle;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tr:hover {
+    background: rgba($color-primary, 0.03);
+  }
+  
+  .row-even {
+    background: $bg-lighter;
+  }
 }
 
 .actions-cell {
@@ -601,60 +702,113 @@ export default {
 
 .action-btn {
   background: none;
-  border: 2px solid transparent;
+  border: none;
   padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  margin: 0 0.25rem;
-  transition: all 0.2s;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.action-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.edit-btn {
-  color: #C4B8AD;
-  background: rgba(196, 184, 173, 0.1);
-  border-color: #C4B8AD;
-}
-
-.edit-btn:hover {
-  background: #C4B8AD;
-  color: #323232;
-}
-
-.delete-btn {
-  color: #DDD0C8;
-  background: rgba(221, 208, 200, 0.1);
-  border-color: #DDD0C8;
-}
-
-.delete-btn:hover {
-  background: #DDD0C8;
-  color: #323232;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  &.edit-btn {
+    color: #4a6cf7;
+    border-color: #4a6cf7;
+    
+    &:hover {
+      background: rgba(74, 108, 247, 0.1);
+    }
+  }
+  
+  &.delete-btn {
+    color: #f44336;
+    border-color: #f44336;
+    
+    &:hover {
+      background: rgba(244, 67, 54, 0.1);
+    }
+  }
 }
 
 /* Badges */
 .rol-badge, .status-badge {
+  display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  border-radius: 50px;
   font-size: 0.8rem;
-  font-weight: 600;
-  background: #C4B8AD;
-  color: #323232;
+  font-weight: 500;
+  text-align: center;
+  min-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Rol badges */
+.rol-badge {
+  &.estudiante {
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+    border: 1px solid rgba($color-primary, 0.2);
+  }
+  
+  &.docente {
+    background: rgba($color-primary-dark, 0.1);
+    color: $color-primary-dark;
+    border: 1px solid rgba($color-primary-dark, 0.2);
+  }
+  
+  &.administrador {
+    background: rgba($color-primary-light, 0.2);
+    color: darken($color-primary-light, 20%);
+    border: 1px solid rgba($color-primary-light, 0.3);
+  }
+}
+
+/* Status badges */
+.status-badge {
+  &.active {
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+    border: 1px solid rgba($color-primary, 0.2);
+  }
+  
+  &.inactive {
+    background: rgba(#f44336, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(#f44336, 0.2);
+  }
   border: 1px solid #9A8F84;
 }
 
 /* Estado vacío */
 .empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #9A8F84;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: #757575;
+  font-size: 1.1rem;
+  background: #fafafa;
+  border-radius: 8px;
+  margin: 0;
+  padding: 2rem;
+  
+  p {
+    margin: 0;
+    padding: 1rem 2rem;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Modal overlay */
@@ -664,154 +818,143 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(50, 50, 50, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  backdrop-filter: blur(4px);
 }
 
 /* Modal content */
 .modal-content {
-  background: #7A6F66;
-  border: 2px solid #9A8F84;
-  border-radius: 16px;
-  max-width: 500px;
+  background: $bg-white;
+  border-radius: $border-radius;
   width: 100%;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  color: #DDD0C8;
+  box-shadow: $shadow-lg;
+  position: relative;
+  animation: modalFadeIn 0.3s ease-out;
+  border: 1px solid $border-color;
 }
 
 .modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid $border-color;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 2px solid #9A8F84;
-}
-
-.modal-header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #9A8F84;
-  margin: 0;
+  
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: $text-primary;
+  }
 }
 
 .close-btn {
   background: none;
   border: none;
   padding: 0.5rem;
+  color: #9e9e9e;
   cursor: pointer;
-  color: #9A8F84;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(196, 184, 173, 0.2);
-  color: #C4B8AD;
-}
-
-.close-btn svg {
-  width: 20px;
-  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f5f5f5;
+    color: #757575;
+  }
+  
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 /* Estilos del formulario en modal */
 .form-content {
   padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.input-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.input-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-content input,
-.form-content select {
-  padding: 0.875rem 1rem;
-  font-size: 0.95rem;
-  border: 2px solid #9A8F84;
-  border-radius: 8px;
-  outline: none;
-  transition: all 0.3s ease;
-  background: #7A6F66;
-  font-weight: 500;
-  width: 100%;
-  box-sizing: border-box;
-  color: #DDD0C8;
-}
-
-.form-content input::placeholder {
-  color: #9A8F84;
-}
-
-.form-content input:focus,
-.form-content select:focus {
-  border-color: #C4B8AD;
-  box-shadow: 0 0 0 3px rgba(196, 184, 173, 0.2);
-}
-
-.form-content input.error,
-.form-content select.error {
-  border-color: #DDD0C8;
-  box-shadow: 0 0 0 3px rgba(221, 208, 200, 0.2);
-}
-
-.form-content input:disabled {
-  background: #323232;
-  color: #7A6F66;
-  cursor: not-allowed;
-  border-color: #7A6F66;
-}
-
-.form-content select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23C4B8AD' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.2em 1.2em;
-  padding-right: 2.5rem;
-}
-
-.submit-btn {
-  padding: 0.875rem 1.5rem;
-  font-size: 1rem;
-  background: #C4B8AD;
-  color: #323232;
-  font-weight: 600;
-  border: 2px solid #9A8F84;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 0.5rem;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: #9A8F84;
-  color: #DDD0C8;
-  transform: translateY(-2px);
-}
-
-.submit-btn:disabled {
-  background: #7A6F66;
-  color: #9A8F84;
-  cursor: not-allowed;
-  transform: none;
-  border-color: #7A6F66;
+  
+  .input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    label {
+      font-weight: 500;
+      color: #333;
+      font-size: 0.95rem;
+    }
+    
+    input,
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      transition: all 0.2s ease;
+      
+      &:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+      }
+      
+      &.error {
+        border-color: #f44336;
+      }
+    }
+    
+    .error-msg {
+      color: #f44336;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+  }
+  
+  .submit-btn {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      background: #43A047;
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      background: #81C784;
+    }
+  }
 }
 
 .error-msg {
@@ -844,98 +987,107 @@ export default {
   border-color: #DDD0C8;
 }
 
-/* Modal de confirmación */
+/* Confirmation Modal */
 .confirmation-modal {
-  background: #7A6F66;
-  border: 2px solid #9A8F84;
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 8px;
   padding: 2rem;
   text-align: center;
-  max-width: 400px;
-  width: 100%;
-  color: #DDD0C8;
+  max-width: 500px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  
+  .confirmation-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.5rem;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    svg {
+      width: 2rem;
+      height: 2rem;
+      color: #f44336;
+    }
+  }
+  
+  h3 {
+    margin: 0 0 1rem;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  p {
+    margin: 0.5rem 0;
+    color: #666;
+    line-height: 1.6;
+    
+    strong {
+      color: #333;
+      font-weight: 600;
+    }
+  }
+  
+  .confirmation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    
+    .cancel-btn {
+      min-width: 100px;
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: 1px solid #757575;
+      color: #616161;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: #f5f5f5;
+        border-color: #9e9e9e;
+      }
+    }
+    
+    .confirm-btn {
+      min-width: 100px;
+      padding: 0.75rem 1.5rem;
+      background: #f44336;
+      color: white;
+      border: 1px solid #f44336;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover:not(:disabled) {
+        background: #e53935;
+        transform: translateY(-1px);
+      }
+      
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+  }
 }
 
-.confirmation-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  background: rgba(221, 208, 200, 0.2);
-  border: 2px solid #DDD0C8;
-  border-radius: 50%;
-  color: #DDD0C8;
-  margin-bottom: 1rem;
-}
-
-.confirmation-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.confirmation-modal h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #9A8F84;
-  margin-bottom: 0.5rem;
-}
-
-.confirmation-modal p {
-  color: #DDD0C8;
-  margin-bottom: 1rem;
-}
-
-.confirmation-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.cancel-btn, .confirm-btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid;
-}
-
-.cancel-btn {
-  background: #7A6F66;
-  color: #9A8F84;
-  border-color: #9A8F84;
-}
-
-.cancel-btn:hover {
-  background: #9A8F84;
-  color: #323232;
-}
-
-.confirm-btn {
-  background: #C4B8AD;
-  color: #323232;
-  border-color: #9A8F84;
-}
-
-.confirm-btn:hover:not(:disabled) {
-  background: #9A8F84;
-  color: #DDD0C8;
-}
-
-.confirm-btn:disabled {
-  background: #7A6F66;
-  color: #9A8F84;
-  cursor: not-allowed;
-  border-color: #7A6F66;
-}
-
+/* Success Modal */
 .modal-exito-titulo {
-  color: #9A8F84;
-  font-size: 1.25rem;
-  font-weight: 700;
+  color: #4CAF50;
   margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* Responsive */
