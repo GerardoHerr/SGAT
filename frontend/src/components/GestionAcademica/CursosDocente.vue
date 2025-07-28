@@ -1,105 +1,36 @@
 <template>
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Mis Cursos</h2>
-      <div v-if="cursos.length > 0" class="text-muted">
-        {{ cursos.length }} curso{{ cursos.length !== 1 ? 's' : '' }} asignado{{ cursos.length !== 1 ? 's' : '' }}
-      </div>
+  <div class="cursos-docente">
+    <h2 class="titulo-cursos"><i class="fas fa-chalkboard-teacher"></i> Mis Cursos</h2>
+    <div v-if="loading" class="cursos-loading">
+      <i class="fas fa-spinner fa-spin"></i> Cargando tus cursos...
     </div>
-    
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <p class="mt-2 text-muted">Cargando tus cursos...</p>
-    </div>
-    
     <div v-else>
-      <div v-if="cursos.length === 0" class="alert alert-light text-center py-4">
-        <i class="fas fa-info-circle fa-2x mb-3 text-muted"></i>
-        <h5 class="mb-2">No tienes cursos asignados</h5>
-        <p class="text-muted mb-0">Ponte en contacto con el administrador para que te asigne cursos.</p>
+      <div v-if="cursos.length === 0" class="alerta-cursos">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <h4>No tienes cursos asignados</h4>
+          <p>Ponte en contacto con el administrador para que te asigne cursos.</p>
+        </div>
       </div>
-      
-      <div v-else class="row g-4">
-        <div v-for="curso in cursos" :key="curso.id" class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h5 class="card-title mb-1">{{ curso.asignatura_nombre }}</h5>
-                  <span class="badge bg-primary bg-opacity-10 text-primary">
-                    {{ curso.periodo }}
-                  </span>
-                </div>
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary rounded-circle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <button 
-                        class="dropdown-item" 
-                        @click="irAgregarTarea(curso.id)"
-                        :disabled="curso.cantidad_estudiantes === 0"
-                      >
-                        <i class="fas fa-plus-circle me-2"></i>Agregar Tarea
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        class="dropdown-item" 
-                        @click="irMostrarTareas(curso.id)"
-                        :disabled="curso.cantidad_estudiantes === 0"
-                      >
-                        <i class="fas fa-tasks me-2"></i>Ver Tareas
-                      </button>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                      <button class="dropdown-item text-muted" disabled>
-                        <i class="fas fa-users me-2"></i>
-                        {{ curso.cantidad_estudiantes }} estudiante{{ curso.cantidad_estudiantes !== 1 ? 's' : '' }}
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="d-flex align-items-center text-muted small mb-3">
-                <i class="fas fa-user-tie me-2"></i>
-                <span class="text-truncate">{{ curso.docente_nombre || 'Sin docente asignado' }}</span>
-              </div>
-              
-              <div class="d-grid gap-2">
-                <button 
-                  class="btn btn-outline-primary"
-                  @click="irAgregarTarea(curso.id)"
-                  :disabled="curso.cantidad_estudiantes === 0"
-                >
-                  <i class="fas fa-plus-circle me-2"></i>Nueva Tarea
-                </button>
-                <button 
-                  class="btn btn-outline-secondary"
-                  @click="irMostrarTareas(curso.id)"
-                  :disabled="curso.cantidad_estudiantes === 0"
-                >
-                  <i class="fas fa-tasks me-2"></i>Ver Tareas
-                </button>
-              </div>
+      <div v-else class="cursos-grid">
+        <div v-for="curso in cursos" :key="curso.id" class="curso-card">
+          <div class="curso-header">
+            <div class="curso-titulo">
+              <i class="fas fa-book"></i> {{ curso.asignatura_nombre }}
             </div>
-            
-            <div class="card-footer bg-transparent border-top-0 pt-0">
-              <div class="d-flex justify-content-between align-items-center">
-                <span class="badge bg-light text-muted">
-                  <i class="fas fa-users me-1"></i>
-                  {{ curso.cantidad_estudiantes }} estudiante{{ curso.cantidad_estudiantes !== 1 ? 's' : '' }}
-                </span>
-                <a href="#" class="small" @click.prevent="">
-                  Ver detalles <i class="fas fa-chevron-right small ms-1"></i>
-                </a>
-              </div>
-            </div>
+            <span class="curso-periodo">{{ curso.periodo }}</span>
+          </div>
+          <div class="curso-info">
+            <span class="curso-docente"><i class="fas fa-user-tie"></i> {{ curso.docente_nombre || 'Sin docente asignado' }}</span>
+            <span class="curso-estudiantes"><i class="fas fa-users"></i> {{ curso.cantidad_estudiantes }} estudiante{{ curso.cantidad_estudiantes !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="curso-actions">
+            <button class="btn-curso btn-tarea" @click="irAgregarTarea(curso.id)" :disabled="curso.cantidad_estudiantes === 0">
+              <i class="fas fa-plus-circle"></i> Nueva Tarea
+            </button>
+            <button class="btn-curso btn-ver" @click="irMostrarTareas(curso.id)" :disabled="curso.cantidad_estudiantes === 0">
+              <i class="fas fa-tasks"></i> Ver Tareas
+            </button>
           </div>
         </div>
       </div>
@@ -166,112 +97,150 @@ export default {
 @import '@/assets/styles/variables';
 @import '@/assets/styles/base';
 
-.card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid $border-color;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: $shadow-md !important;
-  }
-  
-  .card-title {
-    font-weight: 600;
-    color: $text-primary;
-  }
-  
-  .badge {
-    font-weight: 500;
-    padding: 0.35em 0.65em;
-  }
-  
-  .dropdown-toggle::after {
-    display: none;
-  }
-  
-  .btn-outline-secondary {
-    border-color: $border-color;
-    color: $text-secondary;
-    
-    &:hover {
-      background-color: $bg-light;
-      border-color: darken($border-color, 10%);
-    }
-  }
+.cursos-docente {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 16px;
 }
-
-/* Estilos para los botones deshabilitados */
-.btn:disabled,
-.dropdown-item:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.titulo-cursos {
+  color: #2e7d32;
+  font-size: 2em;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
 }
-
-/* Ajustes responsivos */
-@media (max-width: 767.98px) {
-  .card {
-    margin-bottom: 1rem;
-  }
-  
-  .btn {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.875rem;
-  }
+.cursos-loading {
+  text-align: center;
+  color: #3498db;
+  font-size: 1.2em;
+  padding: 40px 0;
 }
-
-/* Animación de carga */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.alerta-cursos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 32px 24px;
+  color: #b94a48;
+  font-size: 1.1em;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(52,152,219,0.07);
 }
-
-.alert {
-  animation: fadeIn 0.3s ease-out;
+.alerta-cursos h4 {
+  margin: 0 0 6px 0;
+  color: #b94a48;
+  font-weight: 700;
 }
-
-/* Mejoras de accesibilidad */
-:focus {
-  outline: 2px solid $color-primary;
-  outline-offset: 2px;
+.cursos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 32px;
 }
-
-/* Estilos para el menú desplegable */
-.dropdown-menu {
-  border: 1px solid $border-color;
-  box-shadow: $shadow-sm;
-  
-  .dropdown-item {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    
-    i {
-      width: 1.25rem;
-      text-align: center;
-      margin-right: 0.5rem;
-      color: $text-secondary;
-    }
-    
-    &:hover, &:focus {
-      background-color: $color-primary-bg;
-      color: $color-primary-dark;
-      
-      i {
-        color: $color-primary;
-      }
-    }
-  }
+.curso-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.08);
+  border: 1px solid #e0e0e0;
+  padding: 28px 24px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
-
-.btn-mostrar-tareas {
-  font-size: 15px;
+.curso-card:hover {
+  box-shadow: 0 5px 20px rgba(76, 175, 80, 0.13);
+  border-color: #a5d6a7;
+}
+.curso-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.curso-titulo {
+  color: #3498db;
+  font-size: 1.18em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.curso-periodo {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 14px;
+  border-radius: 12px;
+  font-size: 0.98em;
+  font-weight: 500;
+}
+.curso-info {
+  display: flex;
+  gap: 18px;
+  color: #616161;
+  font-size: 1em;
+  margin-bottom: 8px;
+}
+.curso-docente {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.curso-estudiantes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.curso-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+.btn-curso {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1em;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-
-.btn-mostrar-tareas:disabled {
-  background: #bfc9d1;
+.btn-curso:disabled {
+  background: #b2dfdb;
   color: #eee;
   cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-curso:hover:not(:disabled),
+.btn-curso:focus:not(:disabled) {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
+  transform: translateY(-2px) scale(1.03);
+}
+@media (max-width: 900px) {
+  .cursos-docente {
+    padding: 18px 4px;
+  }
+  .cursos-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .curso-card {
+    padding: 16px 4px;
+    min-width: unset;
+  }
 }
 </style>
