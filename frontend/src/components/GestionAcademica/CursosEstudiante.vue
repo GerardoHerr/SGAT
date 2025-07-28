@@ -43,7 +43,8 @@
           class="list-group-item d-flex justify-content-between align-items-center"
         >
           <span>
-            {{ curso.asignatura_nombre || curso.asignatura }}
+            {{ curso.asignatura_nombre || 'Sin nombre' }}<br>
+            <small>Periodo: {{ curso.periodo || 'Sin periodo' }}</small>
           </span>
           <button class="btn-revisar" @click="revisarCurso(curso.id)">Revisar</button>
         </li>
@@ -81,7 +82,7 @@ export default {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.solicitudes = response.data;
-        this.$router.push({ name: 'MostarTareasEstudiante', params: { cursoId } });
+        //this.$router.push({ name: 'MostarTareasEstudiante', params: { cursoId } });
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
       }
@@ -89,29 +90,17 @@ export default {
     async cargarCursos() {
       try {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser || currentUser.rol !== 'EST') return;
-
-        // 1. Trae todas las solicitudes aceptadas del estudiante
-        const solicitudesResp = await axios.get(`http://localhost:8000/api/solicitudAsignatura/?estudiante=${currentUser.email}`);
-        const solicitudesAceptadas = solicitudesResp.data.filter(s => s.estado === 'aceptado');
-
-        // 2. Obtén los IDs de asignaturas aceptadas
-        const asignaturasAceptadasIds = solicitudesAceptadas.map(s => s.asignatura.id || s.asignatura);
-
-        // 3. Trae todos los cursos y filtra solo los que correspondan a esas asignaturas
-        const cursosResp = await axios.get('http://localhost:8000/api/cursos/');
-        this.cursos = cursosResp.data.filter(curso =>
-          asignaturasAceptadasIds.includes(curso.asignatura)
-          || asignaturasAceptadasIds.includes(curso.asignatura_id)
-          || asignaturasAceptadasIds.includes(curso.asignatura?.id)
-        );
+        const email = currentUser?.email;
+        const cursosResp = await axios.get(`http://localhost:8000/api/cursos/?estudiante_email=${email}`);
+        this.cursos = cursosResp.data;
+        console.log('Cursos cargados:', this.cursos);
       } catch (error) {
         this.cursos = [];
         console.error('Error al cargar cursos:', error);
       }
     },
     revisarCurso(cursoId) {
-      this.$router.push({ path: '/estudiante/listar-tareas', query: { curso: cursoId } });
+      this.$router.push({ name: 'ListarTareasEstudiante', params: { id: cursoId } });
     },
     async cargarAsignaturas() {
       try {
