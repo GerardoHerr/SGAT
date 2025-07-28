@@ -118,8 +118,8 @@ const router = createRouter({
       component: CursosDocente,
     }, 
     {
-      path: '/docente/mostrar-tareas/:cursoId',
-      name: 'MostrarTareas',
+      path: '/docente/mostrar-tareas/:id',
+      name: 'MostrarTareasPorCurso',
       component: MostrarTareas,
     },
     {

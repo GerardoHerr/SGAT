@@ -82,8 +82,8 @@ export default {
       try {
         const url = `http://localhost:8000/api/asignaciones/?curso=${this.cursoSeleccionado}&docente_email=${this.docenteEmail}`
         // Para depuración
-        console.log('Cargando tareas desde:', url)
         const response = await axios.get(url)
+        console.log('Cargando tareas desde:', url)
         this.tareas = response.data
         if (!Array.isArray(this.tareas)) {
           this.tareas = []
