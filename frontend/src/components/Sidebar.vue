@@ -155,27 +155,6 @@
             </ul>
           </li>
         </template>
-
-        <!-- MÓDULO USUARIOS - Para todos los roles 🔴 -->
-        <li class="nav-item">
-          <div class="nav-section usuarios-section">
-            <span v-show="!isCollapsed" class="section-title">🔴 Mi Perfil</span>
-          </div>
-          <ul class="nav-submenu">
-            <li>
-              <RouterLink to="/perfil" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Perfil Personal">
-                <span class="nav-icon">👤</span>
-                <span v-show="!isCollapsed" class="nav-text">Perfil Personal</span>
-              </RouterLink>
-            </li>
-            <li>
-              <RouterLink to="/configuracion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Configuración">
-                <span class="nav-icon">⚙️</span>
-                <span v-show="!isCollapsed" class="nav-text">Configuración</span>
-              </RouterLink>
-            </li>
-          </ul>
-        </li>
       </ul>
     </nav>
 
