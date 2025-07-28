@@ -75,66 +75,160 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
 .contenedor {
-  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .titulo {
+  color: $text-primary;
   text-align: center;
-  margin-bottom: 30px;
-  font-size: 24px;
-  color: #333;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: $color-primary;
+  }
 }
 
 .asignaturas-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .tarjeta-asignatura {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 20px;
-  width: 280px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-  transition: transform 0.2s ease;
-}
-
-.tarjeta-asignatura:hover {
-  transform: translateY(-5px);
-}
-
-.descripcion {
-  font-size: 14px;
-  color: #555;
-  margin: 10px 0;
-}
-
-.docente {
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-
-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-button:hover {
-  background-color: #2980b9;
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $shadow-md;
+    border-color: $color-primary-light;
+  }
+  
+  h3 {
+    color: $text-primary;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .nombre {
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+  
+  .descripcion {
+    color: $text-secondary;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0.75rem 0;
+    flex-grow: 1;
+  }
+  
+  .docente {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 1rem;
+    
+    strong {
+      color: $text-primary;
+    }
+  }
+  
+  button {
+    @extend .btn;
+    @extend .btn-primary;
+    width: 100%;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
 
 .mensaje-vacio {
   text-align: center;
-  color: #888;
+  color: $text-secondary;
+  padding: 2rem;
+  background: $bg-lighter;
+  border-radius: $border-radius;
+  margin: 2rem 0;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: $breakpoint-md) {
+  .contenedor {
+    padding: 1.5rem;
+  }
+  
+  .asignaturas-container {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .titulo {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .contenedor {
+    padding: 1rem;
+  }
+  
+  .asignaturas-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .tarjeta-asignatura {
+    padding: 1.25rem;
+    
+    h3 {
+      font-size: 1.1rem;
+    }
+    
+    .nombre {
+      font-size: 1rem;
+    }
+    
+    .descripcion, .docente {
+      font-size: 0.9rem;
+    }
+  }
 }
 </style>
