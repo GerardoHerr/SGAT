@@ -204,58 +204,82 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
 .subir-tarea {
-  max-width: 650px;
-  margin: 40px auto;
-  background: #f8f8f8;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
-  padding: 36px 30px;
+  max-width: 900px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(67, 233, 123, 0.10);
+  padding: 48px 40px;
+  min-height: 60vh;
 }
 .cargando-info {
   color: #1e874b;
-  font-size: 1.1em;
+  font-size: 1.15em;
   text-align: center;
-  margin: 30px 0;
+  margin: 36px 0;
 }
 .no-tarea {
   color: #b94a48;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
-  margin: 30px 0;
-  font-size: 1.1em;
+  margin: 36px 0;
+  font-size: 1.15em;
+  background: #ffebee;
+  border-radius: 10px;
+  padding: 18px 0;
+  border-left: 4px solid #f44336;
 }
 .card-tarea {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(30,135,75,0.10);
-  padding: 28px 24px 18px 24px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.08);
+  padding: 48px 60px 32px 60px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 28px;
+  border: 1px solid #e0e0e0;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 .titulo-tarea {
-  color: #3498db;
-  margin-bottom: 12px;
-  font-size: 1.5em;
+  color: #2e7d32;
+  margin-bottom: 18px;
+  font-size: 1.7em;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+.titulo-tarea:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: #4caf50;
 }
 .bloques-tarea {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 .bloque-info {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  background: #f6f6f6;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 1.01em;
+  gap: 14px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 1.08em;
+  border: 1px solid #e0e0e0;
 }
 .bloque-estado {
   background: #eafbe7;
@@ -263,61 +287,80 @@ export default {
 }
 .entrega-atrasada {
   background: #ffeaea;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 12px;
   margin-bottom: 4px;
 }
 .entrega-tiempo {
   background: #eafbe7;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 12px;
   margin-bottom: 4px;
 }
 .info-grupal {
   background: #eaf6fb;
   border-left: 4px solid #3498db;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 14px;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 18px;
   color: #1e874b;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .acciones-entrega {
   display: flex;
-  gap: 16px;
-  margin-top: 10px;
+  gap: 20px;
+  margin-top: 16px;
 }
 .btn-agregar-entrega {
-  background: #27ae60;
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
   color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 8px 18px;
+  border-radius: 8px;
+  padding: 10px 28px;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s;
+  font-size: 1.08em;
+  font-weight: 600;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
+  outline: none;
 }
 .btn-agregar-entrega:hover {
-  background: #1e874b;
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 .btn-cancelar {
   background: #b94a48;
   color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 8px 18px;
+  border-radius: 8px;
+  padding: 10px 28px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1.08em;
   margin-left: 10px;
   transition: background 0.2s;
+  font-weight: 600;
 }
 .btn-cancelar:hover {
   background: #a93226;
+}
+@media (max-width: 1200px) {
+  .card-tarea {
+    padding: 24px 10px;
+  }
+}
+@media (max-width: 900px) {
+  .subir-tarea {
+    padding: 18px 4px;
+  }
+  .card-tarea {
+    padding: 12px 2px;
+  }
 }
 </style>

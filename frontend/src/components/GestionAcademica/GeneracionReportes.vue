@@ -175,22 +175,20 @@ export default {
       this.error = null;
       
       try {
-        const token = localStorage.getItem('access_token');
-        const endpoint = this.currentUser.rol === 'DOC' 
-          ? 'http://localhost:8000/api/cursos/docente/'
-          : 'http://localhost:8000/api/cursos/estudiante/';
-        
-        const response = await fetch(endpoint, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        let url = '';
+        if (this.currentUser.rol === 'DOC') {
+          url = `http://localhost:8000/api/cursos/?docente_email=${encodeURIComponent(this.currentUser.email)}`;
+        } else if (this.currentUser.rol === 'EST') {
+          url = `http://localhost:8000/api/cursos/?estudiante_email=${encodeURIComponent(this.currentUser.email)}`;
+        } else {
+          throw new Error('Rol de usuario no soportado');
+        }
+        const response = await fetch(url, {
+          headers: { 'Content-Type': 'application/json' }
         });
-        
         if (!response.ok) {
           throw new Error('Error al cargar los cursos');
         }
-        
         this.cursos = await response.json();
       } catch (error) {
         console.error('Error al cargar cursos:', error);

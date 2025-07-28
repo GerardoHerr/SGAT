@@ -134,13 +134,17 @@ export default {
   methods: {
     async cargarCursos() {
       try {
-        const token = localStorage.getItem('access_token');
-        const response = await axios.get(`http://localhost:8000/api/cursos/docente/${this.docenteEmail}/`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        // Usar query param docente_email en vez de ruta /docente/<email>/
+        const response = await fetch(`http://localhost:8000/api/cursos/?docente_email=${encodeURIComponent(this.currentUser.email)}`, {
+          headers: { 'Content-Type': 'application/json' }
         });
-        this.cursos = response.data;
+        if (!response.ok) {
+          throw new Error('Error al cargar los cursos');
+        }
+        this.cursos = await response.json();
       } catch (error) {
         console.error('Error al cargar los cursos:', error);
+        this.cursos = [];
         if (error.response?.status === 401) {
           this.$router.push('/login');
         }
@@ -149,10 +153,10 @@ export default {
       }
     },
     irAgregarTarea(cursoId) {
-      this.$router.push(`/crear-tarea/${cursoId}`);
+      this.$router.push(`/docente/asignar-tareas/${cursoId}`);
     },
     irMostrarTareas(cursoId) {
-      this.$router.push(`/tareas/${cursoId}`);
+      this.$router.push(`/docente/mostrar-tareas/${cursoId}`);
     }
   }
 }

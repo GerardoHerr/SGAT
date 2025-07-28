@@ -170,11 +170,51 @@ export default {
   async mounted() {
     this.obtenerUsuarioActual()
     await this.cargarCursos()
-    const cursoId = this.$route.query.curso
-    if (cursoId) {
-      this.tarea.curso = String(cursoId)
-      this.cursoSoloQuery = String(cursoId)
-      await this.cargarEstudiantesYGrupos()
+    // Permitir recibir el id del curso por params o query
+    let cursoId = this.$route.params.cursoId || this.$route.query.curso
+    if (cursoId && this.cursos.length > 0) {
+      // Verifica que el curso exista en la lista
+      const existe = this.cursos.some(c => String(c.id) === String(cursoId))
+      if (existe) {
+        this.tarea.curso = String(cursoId)
+        this.cursoSoloQuery = String(cursoId)
+        await this.cargarEstudiantesYGrupos()
+      } else {
+        this.mostrarMensaje('El curso especificado no existe o no tienes acceso', true)
+      }
+    }
+  },
+
+  watch: {
+    '$route.params.cursoId': {
+      immediate: false,
+      handler(newVal) {
+        if (newVal && this.cursos.length > 0) {
+          const existe = this.cursos.some(c => String(c.id) === String(newVal))
+          if (existe) {
+            this.tarea.curso = String(newVal)
+            this.cursoSoloQuery = String(newVal)
+            this.cargarEstudiantesYGrupos()
+          } else {
+            this.mostrarMensaje('El curso especificado no existe o no tienes acceso', true)
+          }
+        }
+      }
+    },
+    cursos: {
+      immediate: false,
+      handler(newCursos) {
+        // Si los cursos se cargan después de tener el param, fijar el curso
+        let cursoId = this.$route.params.cursoId || this.$route.query.curso
+        if (cursoId && newCursos.length > 0) {
+          const existe = newCursos.some(c => String(c.id) === String(cursoId))
+          if (existe) {
+            this.tarea.curso = String(cursoId)
+            this.cursoSoloQuery = String(cursoId)
+            this.cargarEstudiantesYGrupos()
+          }
+        }
+      }
     }
   },
   
@@ -352,7 +392,12 @@ export default {
 }
 </script>
 
-<style scoped>
+
+
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
 .asignar-tarea {
   min-height: 100vh;
   background: #323232;

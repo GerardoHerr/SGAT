@@ -24,9 +24,6 @@ router.register(r'solicitudAsignatura', SolicitarAsignaturaViewSet)
 
 router.register(r'entregas', EntregaTareaViewSet, basename='entregatarea')
 
-
-
-
 urlpatterns = [
     path('', include(router.urls)),
     path('login/', LoginView.as_view(), name='login'),
