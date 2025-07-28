@@ -49,25 +49,25 @@
               </li>
               <li>
                 <RouterLink to="/admin/asignaturas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Registrar Asignaturas">
-                  <span class="nav-icon">�</span>
+                  <span class="nav-icon">📚</span>
                   <span v-show="!isCollapsed" class="nav-text">Registrar Asignaturas</span>
                 </RouterLink>
               </li>
               <li>
                 <RouterLink to="/admin/asignar-docente" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Asignar Docentes">
-                  <span class="nav-icon">👨‍�</span>
+                  <span class="nav-icon">👨‍</span>
                   <span v-show="!isCollapsed" class="nav-text">Asignar Docentes</span>
                 </RouterLink>
               </li>
               <li>
                 <RouterLink to="/admin/registrar-periodo" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Periodos Lectivos">
-                  <span class="nav-icon">�</span>
+                  <span class="nav-icon">📅</span>
                   <span v-show="!isCollapsed" class="nav-text">Periodos Lectivos</span>
                 </RouterLink>
               </li>
               <li>
                 <RouterLink to="/admin/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Reportes de Actividad">
-                  <span class="nav-icon">�</span>
+                  <span class="nav-icon">📊</span>
                   <span v-show="!isCollapsed" class="nav-text">Reportes de Actividad</span>
                 </RouterLink>
               </li>
@@ -121,7 +121,7 @@
               </li>
               <li>
                 <RouterLink to="/docente/retroalimentacion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Retroalimentación">
-                  <span class="nav-icon">�</span>
+                  <span class="nav-icon">📝</span>
                   <span v-show="!isCollapsed" class="nav-text">Retroalimentación</span>
                 </RouterLink>
               </li>
@@ -309,8 +309,11 @@ const isDocente = computed(() => userRole.value === 'Docente')
 const isEstudiante = computed(() => userRole.value === 'Estudiante')
 
 // Métodos
+const emit = defineEmits(['toggle'])
+
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
+  emit('toggle', isCollapsed.value)
 }
 
 const logout = () => {
@@ -326,27 +329,28 @@ const logout = () => {
   top: 0;
   height: 100vh;
   width: 280px;
-  background: #323232;
-  color: #DDD0C8;
+  background: #323232; /* Color principal (fondo) */
+  color: #DDD0C8; /* Color de texto principal */
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .sidebar-collapsed {
-  width: 70px;
+  width: 105px;
 }
 
 /* Header del Sidebar */
 .sidebar-header {
   padding: 1.5rem 1rem;
-  border-bottom: 1px solid rgba(221, 208, 200, 0.1);
+  border-bottom: 1px solid #7A6F66; /* Color de acento secundario */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(221, 208, 200, 0.05);
+  background: rgba(154, 143, 132, 0.1); /* Color de acento principal con opacidad */
 }
 
 .logo-container {
@@ -359,8 +363,13 @@ const logout = () => {
   width: 35px;
   height: 35px;
   border-radius: 8px;
-  background: #DDD0C8;
+  background: #C4B8AD; /* Color de énfasis */
   padding: 5px;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
 }
 
 .app-title {
@@ -401,8 +410,8 @@ const logout = () => {
 .user-avatar {
   width: 45px;
   height: 45px;
-  background: #DDD0C8;
-  color: #323232;
+  background: #C4B8AD; /* Color de énfasis */
+  color: #323232; /* Color principal (fondo) */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -446,8 +455,9 @@ const logout = () => {
   font-size: 0.75rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: rgba(221, 208, 200, 0.6);
+  color: #9A8F84; /* Color de acento principal */
   letter-spacing: 1px;
+  opacity: 0.9;
 }
 
 .nav-submenu {
@@ -461,12 +471,13 @@ const logout = () => {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  color: rgba(221, 208, 200, 0.8);
+  color: #DDD0C8; /* Color de texto principal */
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   border-radius: 0 25px 25px 0;
   margin: 2px 0;
+  border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
@@ -477,9 +488,10 @@ const logout = () => {
 }
 
 .nav-link.router-link-active {
-  background: #DDD0C8;
-  color: #323232;
+  background: rgba(154, 143, 132, 0.2); /* Color de acento principal con opacidad */
+  color: #C4B8AD; /* Color de énfasis */
   font-weight: 600;
+  border-left: 3px solid #9A8F84; /* Color de acento principal */
 }
 
 .nav-link.router-link-active:hover {
@@ -516,21 +528,21 @@ const logout = () => {
   font-weight: bold;
 }
 
-/* Secciones por módulo */
+/* Secciones por módulo con colores más sutiles */
 .admin-section .section-title {
-  color: #9b59b6; /* Morado para admin */
+  color: rgba(155, 89, 182, 0.7); /* Morado atenuado */
 }
 
 .docente-section .section-title {
-  color: #3498db; /* Celeste para docente */
+  color: rgba(52, 152, 219, 0.7); /* Azul atenuado */
 }
 
 .estudiante-section .section-title {
-  color: #27ae60; /* Verde para estudiante */
+  color: rgba(39, 174, 96, 0.7); /* Verde atenuado */
 }
 
 .usuarios-section .section-title {
-  color: #e74c3c; /* Rojo para usuarios */
+  color: rgba(231, 76, 60, 0.7); /* Rojo atenuado */
 }
 
 /* Mejoras para el estado colapsado */
@@ -572,9 +584,9 @@ const logout = () => {
 
 .logout-btn {
   width: 100%;
-  background: rgba(221, 208, 200, 0.1);
-  border: none;
-  color: #DDD0C8;
+  background: rgba(122, 111, 102, 0.2); /* Color de acento secundario con opacidad */
+  border: 1px solid #7A6F66; /* Color de acento secundario */
+  color: #DDD0C8; /* Color de texto principal */
   padding: 0.75rem;
   border-radius: 8px;
   cursor: pointer;
@@ -587,8 +599,9 @@ const logout = () => {
 }
 
 .logout-btn:hover {
-  background: rgba(221, 208, 200, 0.2);
+  background: rgba(196, 184, 173, 0.2); /* Color de énfasis con opacidad */
   transform: translateY(-1px);
+  border-color: #C4B8AD; /* Color de énfasis */
 }
 
 .logout-btn-collapsed {

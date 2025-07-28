@@ -57,16 +57,22 @@ export default {
     async aceptarSolicitud(id) {
       try {
         const token = localStorage.getItem('access_token')
-        await axios.patch(`http://localhost:8000/api/solicitudAsignatura/${id}/`, {
-          estado: 'aceptado',
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        await axios.patch(
+          `http://localhost:8000/api/solicitudAsignatura/${id}/`, 
+          { estado: 'aceptada' },  // Cambiado de 'aceptado' a 'aceptada'
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        )
         this.cargarSolicitudes() // recargar lista
       } catch (error) {
         console.error('Error al aceptar solicitud:', error)
+        if (error.response) {
+          console.error('Detalles del error:', error.response.data)
+        }
       }
     },
   },

@@ -123,7 +123,7 @@ const router = createRouter({
       component: CalificarTarea,
     },
     {
-      path: '/estudiante/listar-tareas',
+      path: '/estudiante/entregar',
       name: 'ListarTareasEstudiante',
       component: MostarTareasEstudiante,
     },

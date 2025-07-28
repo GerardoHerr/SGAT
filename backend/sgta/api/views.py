@@ -468,6 +468,68 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(solicitud)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, pk=None):
+        """Actualiza el estado de una solicitud y asigna tareas si es aceptada"""
+        from django.core.files.base import ContentFile
+        from ..core.domain.GestionTarea.asignacion import Asignacion
+        from ..core.domain.GestionAcademica.entregarTarea import EntregaTarea
+        from ..core.domain.GestionAcademica.curso import Curso
+        from rest_framework.response import Response
+        from rest_framework import status
+        
+        try:
+            solicitud = self.get_object()
+            nuevo_estado = request.data.get('estado')
+
+            if nuevo_estado not in ['aceptada', 'rechazada']:
+                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Si la solicitud está siendo aceptada y no estaba ya aceptada
+            if nuevo_estado == 'aceptada' and solicitud.estado != 'aceptada':
+                # Obtener todos los cursos para esta asignatura
+                cursos = Curso.objects.filter(asignatura=solicitud.asignatura)
+                
+                for curso in cursos:
+                    # Agregar estudiante al curso si no está ya inscrito
+                    if not curso.estudiantes.filter(email=solicitud.estudiante.email).exists():
+                        curso.estudiantes.add(solicitud.estudiante)
+                    
+                    # Obtener todas las tareas existentes para este curso
+                    tareas = Asignacion.objects.filter(curso=curso)
+                    
+                    # Crear entregas para cada tarea
+                    for tarea in tareas:
+                        # Verificar si ya existe una entrega para esta tarea y estudiante
+                        if not EntregaTarea.objects.filter(
+                            tarea=tarea, 
+                            estudiante=solicitud.estudiante
+                        ).exists():
+                            # Crear un archivo temporal vacío
+                            empty_file = ContentFile(b'', name='temporal.txt')
+                            
+                            # Crear la entrega de tarea
+                            # No incluimos 'curso' ya que no es un campo del modelo
+                            # La relación con el curso ya está a través de tarea.curso
+                            EntregaTarea.objects.create(
+                                tarea=tarea,
+                                estudiante=solicitud.estudiante,
+                                archivo=empty_file,
+                                calificacion=None,
+                                observaciones='',
+                                grupo=None  # Se asigna None por defecto, se actualizará si es grupal
+                            )
+            
+            # Actualizar el estado de la solicitud
+            solicitud.estado = nuevo_estado
+            solicitud.save()
+            
+            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
+            
+        except SolicitudAsignatura.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+    
     def list(self, request):
         try:
             token = request.headers.get('Authorization', None)
@@ -507,38 +569,6 @@ class SolicitarAsignaturaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print("Error:", e)
             return Response({'error': 'Error al obtener solicitudes'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    def partial_update(self, request, pk=None):
-        try:
-            solicitud = SolicitudAsignatura.objects.get(pk=pk)
-            nuevo_estado = request.data.get('estado')
-
-            if nuevo_estado not in ['aceptado', 'rechazado']:
-                return Response({'error': 'Estado inválido'}, status=status.HTTP_400_BAD_REQUEST)
-
-            solicitud.estado = nuevo_estado
-            solicitud.save()
-
-            # Si la solicitud fue aceptada, agregar al estudiante al curso
-            if nuevo_estado == 'aceptado':
-                asignatura = solicitud.asignatura
-                estudiante = solicitud.estudiante
-
-                # Buscar el curso asociado a esa asignatura
-                curso = Curso.objects.filter(asignatura=asignatura).first()
-                if not curso:
-                    # Crear el curso si no existe
-                    curso = Curso.objects.create(asignatura=asignatura)
-
-                # Agregar al estudiante
-                curso.estudiantes.add(estudiante)
-
-            return Response({'message': 'Estado actualizado y estudiante agregado al curso'})
-
-        except SolicitudAsignatura.DoesNotExist:
-            return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CursoViewSet(viewsets.ModelViewSet):
 
@@ -632,27 +662,52 @@ class CursoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 class EntregaTareaViewSet(viewsets.ModelViewSet):
+    queryset = EntregaTarea.objects.all()
+    serializer_class = EntregaTareaSerializer
+
+    def get_serializer_context(self):
+        """Agregar el request al contexto del serializador para generar URLs absolutas."""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     @action(detail=True, methods=['post'])
     def calificar(self, request, pk=None):
-        """Permite al docente calificar una entrega de tarea, validando el rango según el tipo de tarea."""
+        """
+        Permite al docente calificar una entrega de tarea y adjuntar retroalimentación.
+        Se puede enviar:
+        - calificacion: número
+        - observaciones: texto
+        - retroalimentacion_archivo: archivo PDF opcional
+        """
         from rest_framework import status
         from rest_framework.response import Response
+        from django.utils import timezone
         
-        # Obtener el email del docente del request
-        docente_email = request.data.get('docente_email')
-        if not docente_email:
+        # Obtener el email del docente del token de autenticación
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
             return Response(
-                {'error': 'Se requiere el email del docente'}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'Token de autenticación no proporcionado'}, 
+                status=status.HTTP_401_UNAUTHORIZED
             )
-        
+            
         try:
             # Obtener la entrega y la tarea
             entrega = self.get_object()
             tarea = entrega.tarea
             
-            # Verificar que el docente existe
-            docente = Usuario.objects.get(email=docente_email, rol='DOC')
+            # Verificar que el usuario es docente
+            token = auth_header.split(' ')[1]
+            try:
+                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                docente_email = decoded.get('email')
+                docente = Usuario.objects.get(email=docente_email, rol='DOC')
+            except (jwt.ExpiredSignatureError, jwt.DecodeError, Usuario.DoesNotExist):
+                return Response(
+                    {'error': 'Token inválido o usuario no autorizado'}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
             
             # Verificar si el docente de la asignación coincide con el docente que está calificando
             if tarea.creada_por.email != docente.email:
@@ -661,38 +716,75 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
                 
-        except Usuario.DoesNotExist:
+            # Obtener datos de la solicitud
+            calificacion = request.data.get('calificacion')
+            observaciones = request.data.get('observaciones', '')
+            retroalimentacion_archivo = request.FILES.get('retroalimentacion_archivo')
+            
+            # Validar que se proporcione al menos calificación u observaciones/archivo
+            if calificacion is None and not observaciones and not retroalimentacion_archivo:
+                return Response(
+                    {'error': 'Debe proporcionar al menos una calificación, observaciones o archivo de retroalimentación.'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            # Validar que la calificación sea un número si se proporciona
+            if calificacion is not None:
+                try:
+                    calificacion = float(calificacion)
+                except (ValueError, TypeError):
+                    return Response(
+                        {'error': 'La calificación debe ser un número válido.'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Validar rango según tipo de tarea
+                tipo = tarea.tipo_tarea
+                if tipo in ['ACD', 'AA']:
+                    max_calif = 2.0
+                elif tipo == 'APE':
+                    max_calif = 2.5
+                else:
+                    max_calif = 2.5
+                    
+                if not (0 <= calificacion <= max_calif):
+                    return Response(
+                        {'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Actualizar la calificación
+                entrega.calificacion = calificacion
+            
+            # Actualizar la entrega con el archivo de retroalimentación si se proporciona
+            if retroalimentacion_archivo:
+                # Si ya existe un archivo, eliminarlo primero
+                if entrega.retroalimentacion_archivo:
+                    entrega.retroalimentacion_archivo.delete(save=False)
+                entrega.retroalimentacion_archivo = retroalimentacion_archivo
+            
+            # Actualizar observaciones si se proporcionan
+            if observaciones:
+                entrega.observaciones = observaciones
+                
+            # Actualizar la fecha de retroalimentación
+            entrega.fecha_retroalimentacion = timezone.now()
+            
+            # Guardar los cambios
+            entrega.save()
+            
+            # Serializar la respuesta
+            serializer = self.get_serializer(entrega)
             return Response(
-                {'error': 'Docente no encontrado o no tiene permisos para calificar'}, 
-                status=status.HTTP_404_NOT_FOUND
+                {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data}, 
+                status=status.HTTP_200_OK
             )
-
-        calificacion = request.data.get('calificacion')
-        observaciones = request.data.get('observaciones', '')
-        if calificacion is None:
-            return Response({'error': 'Debe proporcionar una calificación.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            calificacion = float(calificacion)
-        except ValueError:
-            return Response({'error': 'La calificación debe ser un número.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validar rango según tipo de tarea
-        tipo = tarea.tipo_tarea
-        if tipo in ['ACD', 'AA']:
-            max_calif = 2.0
-        elif tipo == 'APE':
-            max_calif = 2.5
-        else:
-            max_calif = 2.5
-        if not (0 <= calificacion <= max_calif):
-            return Response({'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # No permitir duplicados, solo actualizar si ya existe
-        entrega.calificacion = calificacion
-        if observaciones:
-            entrega.observaciones = observaciones
-        entrega.save()
-        return Response({'mensaje': 'Calificación registrada correctamente', 'calificacion': calificacion}, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Error al procesar la solicitud: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
