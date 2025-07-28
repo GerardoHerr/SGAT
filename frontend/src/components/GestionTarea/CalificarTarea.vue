@@ -453,27 +453,37 @@ export default {
 
 <style scoped>
 .calificar-tarea {
-  width: 95%;
-  max-width: 1200px;
-  margin: 20px auto;
-  background: rgba(50, 50, 50, 0.9); /* Color principal con opacidad */
-  color: #DDD0C8; /* Color de texto principal */
+  /* #3A3A3A */
+  background-color: #3A3A3A;
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  color: #DDD0C8;
   border-radius: 12px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-  padding: 2.5rem;
+  padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  border: 1px solid #7A6F66; /* Color de acento secundario */
+  border: 1px solid #7A6F66;
   backdrop-filter: blur(8px);
   min-height: 80vh;
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Asegurar que los elementos internos no causen desbordamiento */
+.calificar-tarea > * {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 h2 {
-  color: #C4B8AD; /* Color de énfasis */
+  color: #4E6C50;
   margin: 0 0 2rem 0;
   font-size: 2em;
   text-align: center;
-  border-bottom: 2px solid #9A8F84; /* Color de acento principal */
+  border-bottom: 2px solid #CABDAF;
   padding-bottom: 1rem;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -491,7 +501,7 @@ h2:after {
   transform: translateX(-50%);
   width: 100px;
   height: 3px;
-  background: #C4B8AD; /* Color de énfasis */
+  background: #C4B8AD;
 }
 
 .loading {
@@ -503,13 +513,13 @@ h2:after {
 
 .no-entregas {
   text-align: center;
-  color: #C4B8AD; /* Color de énfasis */
+  color: #4E6C50;
   font-weight: 500;
   padding: 20px;
-  background-color: rgba(122, 111, 102, 0.2); /* Color de acento secundario con opacidad */
+  background-color: #F3EFEA;
   border-radius: 8px;
   margin: 20px 0;
-  border: 1px solid #7A6F66; /* Color de acento secundario */
+  border: 1px dashed #CABDAF;
 }
 
 ul {
@@ -522,19 +532,15 @@ ul {
 }
 
 .entrega-item {
-  background: rgba(50, 50, 50, 0.8); /* Color principal con opacidad */
-  border: 1px solid #7A6F66; /* Color de acento secundario */
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 0;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(5px);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  background: #2E2E2E;
+  border: 1px solid #C4B8AD;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .entrega-header {
@@ -544,46 +550,46 @@ ul {
   margin-bottom: 12px;
   flex-wrap: wrap;
   gap: 10px;
-  color: #DDD0C8; /* Color de texto principal */
+  color: #DDD0C8;
 }
 
 .entrega-header strong {
-  color: #C4B8AD; /* Color de énfasis */
+  color: #C4B8AD;
   font-size: 1.1em;
   margin-right: 10px;
 }
 
 .fecha-entrega {
-  color: #9A8F84; /* Color de acento principal */
+  color: #9A8F84;
   font-size: 0.9em;
-  background: rgba(122, 111, 102, 0.2); /* Color de acento secundario con opacidad */
+  background: rgba(122, 111, 102, 0.2);
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 0.85em;
-  border: 1px solid rgba(154, 143, 132, 0.3); /* Color de acento principal con opacidad */
+  border: 1px solid rgba(154, 143, 132, 0.3);
 }
 
 .entrega-item:hover {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   transform: translateY(-3px);
-  border-color: #9A8F84; /* Color de acento principal */
-  background: rgba(50, 50, 50, 0.8); /* Color principal con mayor opacidad */
+  border-color: #9A8F84;
+  background: rgba(50, 50, 50, 0.8);
 }
 
 .calificacion-info {
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px solid #7A6F66; /* Color de acento secundario */
-  color: #DDD0C8; /* Color de texto principal */
+  border-top: 1px solid #7A6F66;
+  color: #DDD0C8;
 }
 
 .calificacion-header {
   display: flex;
-  color: #C4B8AD; /* Color de énfasis */
+  color: #C4B8AD;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-  color: #C4B8AD; /* Color de énfasis */
+  color: #C4B8AD;
 }
 
 .calificacion-display {
@@ -594,10 +600,10 @@ ul {
   display: block;
   margin: 12px 0;
   padding: 12px;
-  background-color: rgba(122, 111, 102, 0.15); /* Color de acento secundario con opacidad */
-  border-left: 3px solid #9A8F84; /* Color de acento principal */
+  background-color: rgba(122, 111, 102, 0.15);
+  border-left: 3px solid #9A8F84;
   border-radius: 0 4px 4px 0;
-  color: #DDD0C8; /* Color de texto principal */
+  color: #DDD0C8;
   line-height: 1.6;
 }
 
@@ -628,7 +634,7 @@ ul {
 }
 
 .success-message {
-  color: #4caf50;
+  color: #2e7d32;
   background-color: rgba(76, 175, 80, 0.1);
   border: 1px solid rgba(76, 175, 80, 0.3);
   padding: 10px 15px;
@@ -647,9 +653,10 @@ ul {
 
 .calificacion-form {
   animation: fadeIn 0.3s ease-out;
-  background: rgba(50, 50, 50, 0.9); /* Color principal con opacidad */
-  border: 1px solid #7A6F66; /* Color de acento secundario */
+  background: #45403C;
+  border: 1px solid #CABDAF;
   border-radius: 10px;
+  padding: 15px;
   padding: 1.5rem;
   margin-top: 1.5rem;
   backdrop-filter: blur(8px);

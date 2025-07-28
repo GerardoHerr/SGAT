@@ -22,10 +22,18 @@ const isLoginPage = computed(() => route.name === 'login')
   box-sizing: border-box;
 }
 
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: #f8fafc;
-  color: #334155;
+  background-color: #7A6F66;
+  color: #7A6F66;
   line-height: 1.6;
 }
 

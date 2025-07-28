@@ -309,8 +309,11 @@ const isDocente = computed(() => userRole.value === 'Docente')
 const isEstudiante = computed(() => userRole.value === 'Estudiante')
 
 // Métodos
+const emit = defineEmits(['toggle'])
+
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
+  emit('toggle', isCollapsed.value)
 }
 
 const logout = () => {
@@ -330,13 +333,14 @@ const logout = () => {
   color: #DDD0C8; /* Color de texto principal */
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .sidebar-collapsed {
-  width: 70px;
+  width: 105px;
 }
 
 /* Header del Sidebar */
