@@ -1,135 +1,75 @@
 <template>
   <div class="asignar-tarea">
-    <div class="container">
-      <div class="card">
-        <h2>Asignar Nueva Tarea</h2>
-        
-        <form @submit.prevent="crearTarea" class="form">
-          <div class="form-group">
-            <label for="titulo">Título de la Tarea</label>
-            <input
-              id="titulo"
-              v-model="tarea.titulo"
-              type="text"
-              class="form-input"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="descripcion">Descripción</label>
-            <textarea
-              id="descripcion"
-              v-model="tarea.descripcion"
-              class="form-textarea"
-              rows="4"
-              required
-            ></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
+    <div class="asignar-tarea-container">
+      <div class="asignar-tarea-card">
+        <h2 class="asignar-tarea-title"><i class="fas fa-tasks"></i> Asignar Nueva Tarea</h2>
+        <form @submit.prevent="crearTarea" class="asignar-tarea-form">
+          <div class="asignar-tarea-row">
+            <div class="asignar-tarea-group">
+              <label for="titulo">Título de la Tarea</label>
+              <input id="titulo" v-model="tarea.titulo" type="text" required />
+            </div>
+            <div class="asignar-tarea-group">
               <label for="tipo_tarea">Tipo de Tarea</label>
-              <select
-                id="tipo_tarea"
-                v-model="tarea.tipo_tarea"
-                class="form-select"
-                required
-              >
+              <select id="tipo_tarea" v-model="tarea.tipo_tarea" required>
                 <option value="">Seleccionar tipo</option>
-                <option value="ACD">ACD - Actividades de Construcción del Conocimiento</option>
-                <option value="AA">AA - Actividades de Aplicación</option>
-                <option value="APE">APE - Actividades Prácticas de Experimentación</option>
+                <option value="ACD">ACD - Construcción del Conocimiento</option>
+                <option value="AA">AA - Aplicación</option>
+                <option value="APE">APE - Prácticas de Experimentación</option>
               </select>
             </div>
-
-            <div class="form-group">
+          </div>
+          <div class="asignar-tarea-row">
+            <div class="asignar-tarea-group" style="flex:2">
+              <label for="descripcion">Descripción</label>
+              <textarea id="descripcion" v-model="tarea.descripcion" rows="4" required></textarea>
+            </div>
+            <div class="asignar-tarea-group">
               <label for="fecha_entrega">Fecha de Entrega</label>
-              <input
-                id="fecha_entrega"
-                v-model="tarea.fecha_entrega"
-                type="datetime-local"
-                class="form-input"
-                required
-              />
+              <input id="fecha_entrega" v-model="tarea.fecha_entrega" type="datetime-local" required />
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="curso">Curso</label>
-            <select
-              id="curso"
-              v-model="tarea.curso"
-              class="form-select"
-              required
-              @change="cargarEstudiantesYGrupos"
-              :disabled="!!cursoSoloQuery"
-            >
-              <option value="">Seleccionar curso</option>
-              <option
-                v-for="curso in cursos"
-                :key="curso.id"
-                :value="curso.id"
-                :disabled="cursoSoloQuery && String(curso.id) !== String(cursoSoloQuery)"
-              >
-                {{ curso.asignatura_nombre }} - {{ curso.periodo }}
-              </option>
-            </select>
+          <div class="asignar-tarea-row">
+            <div class="asignar-tarea-group">
+              <label for="curso">Curso</label>
+              <select id="curso" v-model="tarea.curso" required @change="cargarEstudiantesYGrupos" :disabled="!!cursoSoloQuery">
+                <option value="">Seleccionar curso</option>
+                <option v-for="curso in cursos" :key="curso.id" :value="curso.id" :disabled="cursoSoloQuery && String(curso.id) !== String(cursoSoloQuery)">
+                  {{ curso.asignatura_nombre }} - {{ curso.periodo }}
+                </option>
+              </select>
+            </div>
+            <div class="asignar-tarea-group">
+              <label for="archivo_explicacion">Archivo PDF de explicación (opcional)</label>
+              <input id="archivo_explicacion" type="file" accept="application/pdf" @change="onArchivoExplicacionChange" />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="archivo_explicacion">Archivo PDF de explicación (opcional)</label>
-            <input
-              id="archivo_explicacion"
-              type="file"
-              accept="application/pdf"
-              @change="onArchivoExplicacionChange"
-              class="form-input"
-            />
+          <div class="asignar-tarea-row">
+            <div class="asignar-tarea-group">
+              <label class="asignar-tarea-checkbox">
+                <input type="checkbox" v-model="tarea.es_grupal" @change="limpiarAsignaciones" /> Tarea Grupal
+              </label>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label>
-              <input
-                type="checkbox"
-                v-model="tarea.es_grupal"
-                @change="limpiarAsignaciones"
-              />
-              Tarea Grupal
-            </label>
-          </div>
-
-          <!-- El select de estudiantes está oculto, la selección es automática -->
-          <input v-if="false" id="estudiantes-select" />
-
-          <div v-if="tarea.es_grupal && grupos.length > 0" class="form-group">
+          <div v-if="tarea.es_grupal && grupos.length > 0" class="asignar-tarea-group">
             <label>Asignar a Grupos</label>
-            <div class="checkbox-group">
-              <label
-                v-for="grupo in grupos"
-                :key="grupo.id"
-                class="checkbox-item"
-              >
-                <input
-                  type="checkbox"
-                  :value="grupo.id"
-                  v-model="gruposSeleccionados"
-                />
+            <div class="asignar-tarea-checkbox-group">
+              <label v-for="grupo in grupos" :key="grupo.id" class="asignar-tarea-checkbox-item">
+                <input type="checkbox" :value="grupo.id" v-model="gruposSeleccionados" />
                 {{ grupo.nombre }} ({{ grupo.cantidad_estudiantes }} estudiantes)
               </label>
             </div>
           </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" :disabled="loading">
-              {{ loading ? 'Creando...' : 'Crear Tarea' }}
+          <div class="asignar-tarea-actions">
+            <button type="submit" :disabled="loading" class="asignar-tarea-btn-primary">
+              <i class="fas fa-plus-circle"></i> {{ loading ? 'Creando...' : 'Crear Tarea' }}
             </button>
-            <router-link to="/docente/entregas" class="btn-secondary">
-              Cancelar
+            <router-link to="/docente/entregas" class="asignar-tarea-btn-secondary">
+              <i class="fas fa-times"></i> Cancelar
             </router-link>
           </div>
         </form>
-
-        <div v-if="mensaje" class="mensaje" :class="{ 'error': esError }">
+        <div v-if="mensaje" class="asignar-tarea-mensaje" :class="{ 'error': esError }">
           {{ mensaje }}
         </div>
       </div>
@@ -400,181 +340,184 @@ export default {
 
 .asignar-tarea {
   min-height: 100vh;
-  background: #323232;
-  padding: 20px 0;
+  background: #23272f;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 0;
+}
+.asignar-tarea-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.asignar-tarea-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(52,152,219,0.10);
+  padding: 38px 32px 28px 32px;
+  margin-bottom: 32px;
+}
+.asignar-tarea-title {
+  text-align: center;
+  color: $color-primary-dark;
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 32px;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
+  gap: 12px;
+  justify-content: center;
 }
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.card {
-  background: #DDD0C8;
-  border-radius: 15px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-}
-
-h2 {
-  text-align: center;
-  color: #323232;
-  margin-bottom: 30px;
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.form {
+.asignar-tarea-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.asignar-tarea-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 0;
+  flex-wrap: wrap;
 }
-
-.form-group {
+.asignar-tarea-group {
+  flex: 1 1 220px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  margin-bottom: 0;
 }
-
-.form-group label {
-  color: #323232;
+.asignar-tarea-group label {
+  color: $text-primary;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
-
-.form-input,
-.form-select,
-.form-textarea {
+.asignar-tarea-group input,
+.asignar-tarea-group select,
+.asignar-tarea-group textarea {
   padding: 12px 16px;
-  border: 2px solid rgba(50, 50, 50, 0.2);
+  border: 2px solid $border-color;
   border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-  background: white;
+  font-size: 1em;
+  background: #f9f9f9;
+  transition: border-color 0.2s;
 }
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.asignar-tarea-group input:focus,
+.asignar-tarea-group select:focus,
+.asignar-tarea-group textarea:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: $color-primary;
+  box-shadow: 0 0 0 2px rgba(52,152,219,0.08);
 }
-
-.form-textarea {
+.asignar-tarea-group textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 90px;
 }
-
-.checkbox-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 10px;
-  border: 1px solid rgba(50, 50, 50, 0.2);
-  border-radius: 8px;
-  background: white;
-}
-
-.checkbox-item {
+.asignar-tarea-checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  font-weight: 500;
+  color: $text-primary;
 }
-
-.checkbox-item:hover {
-  background-color: rgba(52, 152, 219, 0.1);
+.asignar-tarea-checkbox input[type="checkbox"] {
+  accent-color: $color-primary;
+  width: 18px;
+  height: 18px;
 }
-
-.form-actions {
+.asignar-tarea-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+.asignar-tarea-checkbox-item {
   display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
 }
-
-.btn-primary,
-.btn-secondary {
-  padding: 12px 30px;
+.asignar-tarea-checkbox-item:hover {
+  background: $color-primary-bg;
+}
+.asignar-tarea-actions {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 18px;
+}
+.asignar-tarea-btn-primary,
+.asignar-tarea-btn-secondary {
+  padding: 12px 32px;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1em;
   font-weight: 600;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
 }
-
-.btn-primary {
-  background: #3498db;
-  color: white;
+.asignar-tarea-btn-primary {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
 }
-
-.btn-primary:hover:not(:disabled) {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
+.asignar-tarea-btn-primary:disabled {
+  background: #b2dfdb;
+  color: #eee;
   cursor: not-allowed;
+  box-shadow: none;
 }
-
-.btn-secondary {
+.asignar-tarea-btn-primary:hover:not(:disabled),
+.asignar-tarea-btn-primary:focus:not(:disabled) {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
+  transform: translateY(-2px) scale(1.03);
+}
+.asignar-tarea-btn-secondary {
   background: #6c757d;
-  color: white;
+  color: #fff;
 }
-
-.btn-secondary:hover {
+.asignar-tarea-btn-secondary:hover {
   background: #5a6268;
   transform: translateY(-2px);
 }
-
-.mensaje {
-  margin-top: 20px;
+.asignar-tarea-mensaje {
+  margin-top: 24px;
   padding: 15px;
   border-radius: 8px;
   text-align: center;
   font-weight: 500;
+  font-size: 1.08em;
 }
-
-.mensaje:not(.error) {
+.asignar-tarea-mensaje:not(.error) {
   background-color: #27ae60;
-  color: white;
+  color: #fff;
 }
-
-.mensaje.error {
+.asignar-tarea-mensaje.error {
   background-color: #e74c3c;
-  color: white;
+  color: #fff;
 }
-
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .asignar-tarea-card {
+    padding: 18px 4px;
   }
-  
-  .checkbox-group {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-actions {
+  .asignar-tarea-row {
     flex-direction: column;
+    gap: 12px;
   }
 }
 </style>
