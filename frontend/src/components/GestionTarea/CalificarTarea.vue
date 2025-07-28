@@ -1,6 +1,11 @@
 <template>
   <div class="calificar-tarea">
-    <h2>Entregas de la Tarea</h2>
+    <div class="header-actions">
+      <router-link to="/docente/cursos" class="back-button">
+        <i class="fas fa-arrow-left"></i> Volver a Cursos
+      </router-link>
+      <h2>Entregas de la Tarea</h2>
+    </div>
     <div v-if="loading">Cargando entregas...</div>
     <div v-else>
       <div v-if="entregas.length === 0" class="no-entregas">No hay entregas registradas para esta tarea.</div>
@@ -456,13 +461,42 @@ export default {
 .calificar-tarea {
   background-color: #ffffff;
   width: 100%;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   color: #333333;
-  padding: 2.5rem;
+  padding: 2rem 1.5rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   min-height: 80vh;
   box-sizing: border-box;
+  
+  .header-actions {
+    margin-bottom: 2rem;
+    position: relative;
+    
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f5f5f5;
+      color: #2e7d32;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+      border: 1px solid #e0e0e0;
+      
+      &:hover {
+        background: #e8f0fe;
+        border-color: #4a6cf7;
+      }
+      
+      i {
+        font-size: 0.9em;
+      }
+    }
+  }
 }
 
 .calificar-tarea > * {
@@ -471,24 +505,15 @@ export default {
 }
 
 h2 {
-  color: #2e7d32;
-  margin: 0 0 2rem 0;
+  color: #1a365d;
+  margin: 0.5rem 0 2rem 0;
   font-size: 1.8em;
   text-align: center;
   padding-bottom: 1rem;
   font-weight: 600;
   position: relative;
-}
-
-h2:after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 3px;
-  background: #4caf50;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
 }
 
 .loading {  
@@ -677,94 +702,149 @@ ul {
   min-height: 100px;
   resize: vertical;
   line-height: 1.5;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.1);
+  }
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 24px;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 1.5rem;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 0.95em;
+  }
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #424242;
-  font-size: 0.95em;
-}
-
-
-
-.btn-guardar, .btn-editar, .btn-cancelar {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-  color: #fff;
-  border: none;
-  padding: 10px 28px;
-  border-radius: 6px;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-  outline: none;
+// Botones base
+%btn-base {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-.btn-guardar:disabled,
-.btn-editar:disabled,
-.btn-cancelar:disabled {
-  background: #b2dfdb;
-  color: #eee;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-.btn-guardar:hover:not(:disabled),
-.btn-guardar:focus:not(:disabled),
-.btn-editar:hover:not(:disabled),
-.btn-editar:focus:not(:disabled),
-.btn-cancelar:hover:not(:disabled),
-.btn-cancelar:focus:not(:disabled) {
-  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
-  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
-  transform: translateY(-2px) scale(1.03);
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  text-align: center;
+  border: 1px solid transparent;
+  
+  i {
+    font-size: 0.9em;
+  }
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-/* Ajuste de padding para editar/cancelar si se requiere diferente tamaño */
-.btn-editar {
-  padding: 8px 20px;
-  font-size: 0.98em;
+.btn-guardar {
+  @extend %btn-base;
+  background-color: #4a6cf7;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    background-color: #3a5bd9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active:not(:disabled) {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    background-color: #a5b4fc;
+  }
 }
+
 .btn-cancelar {
-  /* Si quieres un color diferente para cancelar, descomenta la siguiente línea: */
-  /* background: linear-gradient(90deg, #f09819 0%, #ff5858 100%); */
+  @extend %btn-base;
+  background-color: #f5f5f5;
+  color: #4a5568;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  &:hover:not(:disabled) {
+    background-color: #edf2f7;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e2e8f0;
+    color: #a0aec0;
+  }
 }
 
+.btn-editar {
+  @extend %btn-base;
+  background-color: #4a6cf7;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  
+  &:hover:not(:disabled) {
+    background-color: #3a5bd9;
+    transform: translateY(-1px);
+  }
+}
 
-
+// Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .calificacion-form {
   animation: fadeIn 0.3s ease-out;
   background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.5rem;
   margin-top: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-left: 4px solid #4caf50;
+  border-left: 4px solid #4a6cf7;
 }
 
+// Estilos responsivos
 @media (max-width: 768px) {
   .calificar-tarea {
     padding: 1rem;
@@ -772,7 +852,7 @@ ul {
   
   .entrega-header {
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
   }
   
   .fecha-entrega {
@@ -781,12 +861,14 @@ ul {
   
   .form-actions {
     flex-direction: column;
-    gap: 8px;
+    gap: 0.75rem;
   }
   
   .btn-guardar,
-  .btn-cancelar {
+  .btn-cancelar,
+  .btn-editar {
     width: 100%;
+    margin-right: 0;
   }
   
   .input-calif {
