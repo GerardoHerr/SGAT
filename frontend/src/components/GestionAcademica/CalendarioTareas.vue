@@ -31,10 +31,7 @@
                       <i class="fas fa-star text-warning"></i>
                       {{ tarea.calificacion ?? 'Sin calificación' }}
                     </div>
-                    <a v-if="tarea.archivo" :href="tarea.archivo" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none">
-                      <i class="fas fa-file-pdf text-danger me-1"></i>
-                      Ver PDF
-                    </a>
+                    
                   </div>
                 </div>
                 

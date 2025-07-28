@@ -26,12 +26,7 @@
     <nav class="sidebar-nav">
       <ul class="nav-list">
         <!-- Dashboard - Para todos los roles -->
-        <li class="nav-item">
-          <RouterLink to="/" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Dashboard">
-            <span class="nav-icon">📊</span>
-            <span v-show="!isCollapsed" class="nav-text">Dashboard</span>
-          </RouterLink>
-        </li>
+        
 
         <!-- ADMINISTRADOR - Módulo Morado 🟣 -->
         <template v-if="isAdmin">
@@ -102,27 +97,9 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/docente/listar-tareas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Mis Tareas">
-                  <span class="nav-icon">📋</span>
-                  <span v-show="!isCollapsed" class="nav-text">Mis Tareas</span>
-                </RouterLink>
-              </li>
-              <li>
                 <RouterLink to="/docente/gestion-grupos" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Gestión de Grupos">
                   <span class="nav-icon">👥</span>
                   <span v-show="!isCollapsed" class="nav-text">Gestión de Grupos</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/docente/calificar" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Calificación de Tareas">
-                  <span class="nav-icon">✅</span>
-                  <span v-show="!isCollapsed" class="nav-text">Calificación de Tareas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/docente/retroalimentacion" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Retroalimentación">
-                  <span class="nav-icon">📝</span>
-                  <span v-show="!isCollapsed" class="nav-text">Retroalimentación</span>
                 </RouterLink>
               </li>
               <li>
@@ -132,15 +109,9 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/docente/entregas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Visualizar Entregas">
+                <RouterLink to="/docente/visualizar-entregas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Visualizar Entregas">
                   <span class="nav-icon">📂</span>
                   <span v-show="!isCollapsed" class="nav-text">Visualizar Entregas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/docente/entrega-unica" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Entrega Única">
-                  <span class="nav-icon">📄</span>
-                  <span v-show="!isCollapsed" class="nav-text">Entrega Única</span>
                 </RouterLink>
               </li>
               <li>
@@ -149,35 +120,10 @@
                   <span v-show="!isCollapsed" class="nav-text">Registrar Estudiantes</span>
                 </RouterLink>
               </li>
-              <li>
-                <RouterLink to="/docente/notificaciones-revision" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Notificación de Revisión">
-                  <span class="nav-icon">🔔</span>
-                  <span v-show="!isCollapsed" class="nav-text">Notificación de Revisión</span>
-                </RouterLink>
-              </li>
             </ul>
           </li>
           
-          <li class="nav-item">
-            <div class="nav-section">
-              <span v-show="!isCollapsed" class="section-title">Configuraciones</span>
-            </div>
-            <ul class="nav-submenu">
-              <!-- Prioridad Media -->
-              <li>
-                <RouterLink to="/docente/tareas-atrasadas" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Permitir Tareas Atrasadas">
-                  <span class="nav-icon">⏰</span>
-                  <span v-show="!isCollapsed" class="nav-text">Permitir Tareas Atrasadas</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/docente/retroalimentacion-cambios" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Cambios en Retroalimentación">
-                  <span class="nav-icon">🔄</span>
-                  <span v-show="!isCollapsed" class="nav-text">Cambios en Retroalimentación</span>
-                </RouterLink>
-              </li>
-            </ul>
-          </li>
+         
         </template>
 
         <!-- ESTUDIANTE - Módulo Verde 🟢 -->
@@ -195,7 +141,7 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/estudiante/solicitar-asignatura" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Solicitar Registro">
+                <RouterLink to="/estudiante/cursos-estudiante" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Solicitar Registro">
                   <span class="nav-icon">✍️</span>
                   <span v-show="!isCollapsed" class="nav-text">Solicitar Registro</span>
                 </RouterLink>

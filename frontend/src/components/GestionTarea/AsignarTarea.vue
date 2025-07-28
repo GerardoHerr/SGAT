@@ -249,12 +249,10 @@ export default {
         formData.append('docente', this.tarea.docente)
         formData.append('activa', true)
         
-        // VERIFICAR QUE EL ARCHIVO SE AGREGUE AL FORMDATA
+        // Solo agregar archivo_explicacion si el usuario seleccionó uno
         if (this.archivoExplicacion) {
           formData.append('archivo_explicacion', this.archivoExplicacion)
           console.log('[DEBUG] Archivo agregado al FormData:', this.archivoExplicacion.name)
-        } else {
-          console.log('[DEBUG] No hay archivo para agregar')
         }
 
         // Debug: Ver contenido del FormData

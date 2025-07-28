@@ -576,15 +576,57 @@ class CursoViewSet(viewsets.ModelViewSet):
     serializer_class = CursoSerializer
 
     def get_queryset(self):
-        """Filtrar cursos según el rol del usuario"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("[CURSOS] Iniciando get_queryset para cursos")
         queryset = Curso.objects.all()
         docente_email = self.request.query_params.get('docente_email', None)
+        logger.info(f"[CURSOS] Param docente_email: {docente_email}")
         if docente_email:
             try:
                 docente = Usuario.objects.get(email=docente_email, rol='DOC')
-                queryset = queryset.filter(docente_id=docente.email)
+                logger.info(f"[CURSOS] Docente encontrado: {docente.email}")
+                queryset = queryset.filter(docente=docente)
+                logger.info(f"[CURSOS] Cursos filtrados por docente: {list(queryset)}")
             except Usuario.DoesNotExist:
-                queryset = Curso.objects.none()
+                logger.warning(f"[CURSOS] Docente no encontrado: {docente_email}")
+                return Curso.objects.none()
+            except Exception as e:
+                logger.error(f"[CURSOS] Error inesperado buscando docente: {e}", exc_info=True)
+                return Curso.objects.none()
+
+        # Intentar obtener usuario autenticado por token
+        user = None
+        try:
+            token = self.request.headers.get('Authorization', None)
+            logger.info(f"[CURSOS] Token recibido: {token}")
+            if token:
+                import jwt
+                from django.conf import settings
+                token = token.split(" ")[-1]
+                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                email = decoded.get('email')
+                logger.info(f"[CURSOS] Email decodificado del token: {email}")
+                if email:
+                    user = Usuario.objects.get(email=email)
+                    logger.info(f"[CURSOS] Usuario autenticado: {user.email}, rol: {user.rol}")
+        except Exception as e:
+            logger.warning(f"[CURSOS] Error decodificando token o usuario: {e}", exc_info=True)
+            user = None
+
+        # Si el usuario autenticado es estudiante, filtrar solo cursos aceptados
+        if user and getattr(user, 'rol', None) == 'EST':
+            try:
+                from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
+                solicitudes_aceptadas = SolicitudAsignatura.objects.filter(estudiante=user, estado='aceptado')
+                asignaturas_aceptadas = [s.asignatura for s in solicitudes_aceptadas]
+                queryset = queryset.filter(asignatura__in=asignaturas_aceptadas)
+                logger.info(f"[CURSOS] Filtrando cursos para estudiante {user.email}, asignaturas aceptadas: {asignaturas_aceptadas}")
+            except Exception as e:
+                logger.error(f"[CURSOS] Error filtrando cursos para estudiante: {e}", exc_info=True)
+                return Curso.objects.none()
+
+        logger.info(f"[CURSOS] Cursos retornados finales: {list(queryset)}")
         return queryset
 
     @action(detail=False, methods=['get'])
@@ -859,11 +901,15 @@ class ReporteTareasCursoPDFView(APIView):
         elements.append(Spacer(1, 12))
 
         if tipo == 'entregas':
+            from datetime import datetime
+            import pytz
             # Por cada tarea, mostrar entregas
             for tarea in tareas:
                 elements.append(Paragraph(f"Tarea: {getattr(tarea, 'titulo', '')}", styles['Heading3']))
                 entregas = EntregaTarea.objects.filter(tarea=tarea)
-                data = [["Estudiante", "Email", "Calificación", "Fecha de entrega"]]
+                # Cambiar nombre de columna y agregar tiempo restante
+                data = [["Estudiante", "Email", "Calificación", "Fecha entregada", "Tiempo restante"]]
+                fecha_entrega_obj = getattr(tarea, 'fecha_entrega', None)
                 for entrega in entregas:
                     estudiante = getattr(entrega, 'estudiante', None)
                     estudiante_nombre = getattr(estudiante, 'nombre', '') if estudiante else ''
@@ -871,14 +917,31 @@ class ReporteTareasCursoPDFView(APIView):
                     calificacion = getattr(entrega, 'calificacion', '')
                     fecha_obj = getattr(entrega, 'fecha_entregada', None)
                     if fecha_obj:
-                        fecha_entrega = fecha_obj.strftime('%d/%m/%Y %H:%M')
+                        fecha_entregada = fecha_obj.strftime('%d/%m/%Y %H:%M')
                     else:
-                        fecha_entrega = ''
+                        fecha_entregada = ''
+                    # Calcular tiempo restante
+                    tiempo_restante = ''
+                    if fecha_entrega_obj:
+                        # Convertir a datetime si es necesario
+                        now = datetime.now(pytz.UTC) if hasattr(fecha_entrega_obj, 'tzinfo') else datetime.now()
+                        if hasattr(fecha_entrega_obj, 'tzinfo'):
+                            delta = fecha_entrega_obj - now
+                        else:
+                            delta = fecha_entrega_obj - datetime.now()
+                        if delta.total_seconds() > 0:
+                            dias = delta.days
+                            horas, resto = divmod(delta.seconds, 3600)
+                            minutos = resto // 60
+                            tiempo_restante = f"{dias}d {horas}h {minutos}m"
+                        else:
+                            tiempo_restante = "Finalizado"
                     data.append([
                         estudiante_nombre,
                         estudiante_email,
                         calificacion,
-                        fecha_entrega
+                        fecha_entregada,
+                        tiempo_restante
                     ])
                 table = Table(data, repeatRows=1)
                 table.setStyle(TableStyle([

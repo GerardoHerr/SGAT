@@ -19,6 +19,7 @@ import SubirTarea from '@/components/GestionTarea/SubirTarea.vue'
 import CalendarioTareas from '@/components/GestionAcademica/CalendarioTareas.vue'
 import CrearCurso from '@/components/GestionAcademica/CrearCurso.vue'
 import GeneracionReportes from '@/components/GestionAcademica/GeneracionReportes.vue'
+import VisualizarEntregas from '@/components/GestionTarea/VisualizarEntregas.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -151,6 +152,11 @@ const router = createRouter({
       path: '/docente/reportes',
       name: 'ReportesDocente',
       component: GeneracionReportes,
+    },
+    {
+      path: '/docente/visualizar-entregas',
+      name: 'VisualizarEntregas',
+      component: VisualizarEntregas,
     }
 
 

@@ -9,7 +9,7 @@
       <div class="card-tarea">
         <h2 class="titulo-tarea"><i class="fas fa-tasks"></i> {{ asignacion?.titulo || 'Sin título' }}</h2>
         <div class="bloques-tarea">
-          <div v-if="tareaEntrega?.archivo" class="bloque-info">
+          <div v-if="tareaEntrega?.archivo && tareaEntrega.archivo !== '' && tareaEntrega.archivo !== null" class="bloque-info">
             <i class="fas fa-file-pdf"></i>
             <div>
               <strong>Tu entrega (PDF):</strong>
