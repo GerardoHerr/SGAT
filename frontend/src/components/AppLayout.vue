@@ -56,7 +56,7 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   min-height: 100%;
-  background-color: #7A6F66;
+  background-color: #ffffff;
   position: relative;
   overflow: hidden;
 }
@@ -66,7 +66,7 @@ onMounted(() => {
   overflow-y: auto;
   overflow-x: hidden;
   transition: all 0.3s ease;
-  background-color: #7A6F66;
+  background-color: #ffffff;
   position: relative;
   flex: 1;
   margin-left: 280px;

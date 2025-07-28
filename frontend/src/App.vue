@@ -32,8 +32,8 @@ const isLoginPage = computed(() => route.name === 'login')
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: #7A6F66;
-  color: #7A6F66;
+  background-color: #ffffff;
+  color: #ffffff;
   line-height: 1.6;
 }
 
