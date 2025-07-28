@@ -1,5 +1,8 @@
 <template>
   <div class="subir-tarea">
+    <button @click="$router.push('/estudiante/calendario-tareas')" class="back-button">
+      <i class="fas fa-arrow-left"></i> Volver a Calendario
+    </button>
     <div v-if="loading" class="cargando-info"><i class="fas fa-spinner fa-spin"></i> Cargando información de la tarea...</div>
     <div v-else-if="!tareaEntrega">
       <div class="no-tarea"><i class="fas fa-exclamation-circle"></i> No se encontró la información de la entrega.</div>
@@ -224,6 +227,30 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f5f5f5;
+      color: #2e7d32;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+      border: 1px solid #e0e0e0;
+      
+      &:hover {
+        background: #e8f0fe;
+        border-color: #4a6cf7;
+      }
+      
+      i {
+        font-size: 0.9em;
+      }
+  }
+
 @import '@/assets/styles/variables';
 @import '@/assets/styles/base';
 
