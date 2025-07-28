@@ -164,164 +164,150 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
 .registrar-asignatura {
-  width: 100vw;
-  min-height: 100vw;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  margin: 0;
-  padding: 0;
-  position: static;
-  overflow: visible;
+  width: 100%;
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .main-content {
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 2rem 0;
-}
-
-.form-card {
-  background: #fff;
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-.form-card h2 {
-  text-align: center;
-  margin-bottom: 3rem;
-  color: #2c3e50;
-  font-size: 2.2rem;
-  font-weight: 600;
-}
-
-.form-group {
+  background: $bg-white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  padding: 2rem;
   margin-bottom: 2rem;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 1.2rem;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
+.form-card {
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+h2 {
+  color: $text-primary;
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: $color-primary;
+  }
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
+.form-group {
+  margin-bottom: 1.5rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: $text-primary;
+    font-weight: 500;
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    font-size: 1rem;
+    transition: $transition-base;
+    
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    }
+    
+    &[disabled] {
+      background-color: $bg-lighter;
+      cursor: not-allowed;
+    }
+  }
+  
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
 }
 
 .register-btn {
+  @extend .btn;
+  @extend .btn-primary;
   width: 100%;
-  padding: 1.3rem;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
   margin-top: 1rem;
-}
-
-.register-btn:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
-}
-
-.register-btn:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
 }
 
 .mensaje {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border-radius: 10px;
-  text-align: center;
-  font-weight: 500;
-  font-size: 1.1rem;
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &-success {
+    background-color: $color-primary-bg;
+    color: $color-primary-dark;
+    border-left: 4px solid $color-primary;
+  }
+  
+  &-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #f44336;
+  }
 }
 
-.mensaje.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 2px solid #c3e6cb;
-}
-
-.mensaje.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 2px solid #f5c6cb;
-}
-
-/* Responsive para pantallas pequeñas */
-@media (max-width: 768px) {
+/* Responsive */
+@media (max-width: $breakpoint-md) {
+  .registrar-asignatura {
+    padding: 1rem;
+  }
+  
   .main-content {
-    width: 95%;
-  }
-  
-  .form-card {
-    padding: 2rem;
-  }
-  
-  .form-card h2 {
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-}
-
-/* Responsive para pantallas muy pequeñas */
-@media (max-width: 480px) {
-  .form-card {
     padding: 1.5rem;
   }
   
-  .form-card h2 {
+  h2 {
     font-size: 1.5rem;
   }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .form-card {
+    padding: 0;
+  }
   
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    padding: 1rem;
-    font-size: 1rem;
+  .form-group {
+    input, select, textarea {
+      padding: 0.6rem 0.8rem;
+    }
   }
   
   .register-btn {
-    padding: 1.1rem;
-    font-size: 1.1rem;
+    padding: 0.7rem 1rem;
   }
 }
 </style>
