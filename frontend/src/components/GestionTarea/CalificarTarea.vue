@@ -480,7 +480,7 @@ h2:after {
   background: #4caf50;
 }
 
-.loading {
+.loading {  
   text-align: center;
   color: #666;
   padding: 20px;

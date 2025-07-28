@@ -1,0 +1,33 @@
+// Colores principales
+$color-primary: #4caf50;
+$color-primary-dark: #388e3c;
+$color-primary-light: #81c784;
+$color-primary-bg: #e8f5e9;
+
+// Colores de texto
+$text-primary: #333333;
+$text-secondary: #616161;
+$text-light: #ffffff;
+
+// Colores de fondo
+$bg-white: #ffffff;
+$bg-light: #d5ded9;
+$bg-lighter: #f5f5f5;
+
+// Bordes
+$border-color: #e0e0e0;
+$border-radius: 8px;
+
+// Sombras
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 5px 20px rgba(0, 0, 0, 0.15);
+
+// Transiciones
+$transition-base: all 0.3s ease;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;

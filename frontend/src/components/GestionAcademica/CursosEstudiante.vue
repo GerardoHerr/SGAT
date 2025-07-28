@@ -1,56 +1,83 @@
 <template>
-  <div class="container mt-5">
-    <h2>Solicitudes de Asignatura</h2>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Mis Cursos</h2>
+      <button class="btn btn-primary" @click="mostrarFormulario = true">
+        <i class="fas fa-plus-circle me-2"></i>Nueva Solicitud
+      </button>
+    </div>
 
-    <!-- Botón para abrir el modal -->
-    <button class="btn-principal" @click="mostrarFormulario = true">
-      Nueva Solicitud
-    </button>
-
-    <!-- Modal personalizado -->
-    <div v-if="mostrarFormulario" class="modal-overlay">
-      <div class="modal-contenido animate-entrada">
-        <h3>Solicitar Asignatura</h3>
-        <div v-if="asignaturas.length">
-          <div
-            class="asignatura-item"
-            v-for="asignatura in asignaturas"
-            :key="asignatura.id"
-          >
-            <span>{{ asignatura.nombre }}</span>
-            <button class="btn-enviar" @click="enviarSolicitud(asignatura.id)">
-              Solicitar
+    <!-- Modal para solicitar asignaturas -->
+    <div v-if="mostrarFormulario" class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-book me-2"></i>Solicitar Asignatura
+            </h5>
+            <button type="button" class="btn-close" @click="cerrarModal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="asignaturas.length" class="list-group">
+              <div v-for="asignatura in asignaturas" :key="asignatura.id" 
+                   class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1">{{ asignatura.nombre }}</h6>
+                  <small class="text-muted">Código: {{ asignatura.codigo || 'N/A' }}</small>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" 
+                        @click="enviarSolicitud(asignatura.id)"
+                        :disabled="solicitudesPendientes.some(s => s.asignatura === asignatura.id)">
+                  <i class="fas fa-paper-plane me-1"></i>
+                  {{ solicitudesPendientes.some(s => s.asignatura === asignatura.id) ? 'Solicitado' : 'Solicitar' }}
+                </button>
+              </div>
+            </div>
+            <div v-else class="text-center py-4">
+              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="mb-0">No hay asignaturas disponibles para solicitar.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" @click="cerrarModal">
+              <i class="fas fa-times me-1"></i>Cancelar
             </button>
           </div>
-        </div>
-        <div v-else>
-          <p>No hay asignaturas disponibles para solicitar.</p>
-        </div>
-
-        <div class="botones mt-3">
-          <button class="btn-cancelar" @click="cerrarModal">Cancelar</button>
         </div>
       </div>
     </div>
 
-    <!-- Lista de cursos del estudiante logeado -->
-    <div v-if="cursos.length" class="mt-4">
-      <h4>Mis Cursos</h4>
-      <ul class="list-group">
-        <li
-          v-for="curso in cursos"
-          :key="curso.id"
-          class="list-group-item d-flex justify-content-between align-items-center"
-        >
-          <span>
-            {{ curso.asignatura_nombre || curso.asignatura }}
-          </span>
-          <button class="btn-revisar" @click="revisarCurso(curso.id)">Revisar</button>
-        </li>
-      </ul>
+    <!-- Lista de cursos del estudiante -->
+    <div v-if="cursos.length" class="row g-4 mt-2">
+      <div v-for="curso in cursos" :key="curso.id" class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 class="card-title mb-1">{{ curso.asignatura_nombre || curso.asignatura }}</h5>
+                <span class="badge bg-primary bg-opacity-10 text-primary">
+                  {{ curso.periodo || 'Sin período' }}
+                </span>
+              </div>
+              <i class="fas fa-book text-muted fa-2x opacity-25"></i>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <span class="text-muted small">
+                <i class="fas fa-tasks me-1"></i>
+                {{ curso.tareas_pendientes || 0 }} tareas pendientes
+              </span>
+              <button class="btn btn-outline-primary btn-sm" @click="revisarCurso(curso.id)">
+                <i class="fas fa-eye me-1"></i>Ver curso
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div v-else class="mt-3">
-      <p>No tienes cursos asignados aún.</p>
+    <div v-else class="text-center py-5">
+      <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+      <p class="text-muted">No tienes cursos asignados aún.</p>
     </div>
   </div>
 </template>
@@ -65,12 +92,14 @@ export default {
   },
   data() {
     return {
-      mostrarFormulario: false,
-      asignaturas: [],
-      solicitudes: [],
       cursos: [],
-      cursoSeleccionado: null,
-      estudianteEmail: '',
+      asignaturas: [],
+      solicitudesPendientes: [],
+      mostrarFormulario: false,
+      loading: false,
+      error: null,
+      estudianteId: null,
+      currentUser: null
     };
   },
   methods: {
@@ -80,8 +109,7 @@ export default {
         const response = await axios.get('http://localhost:8000/api/solicitudAsignatura/', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        this.solicitudes = response.data;
-        this.$router.push({ name: 'MostarTareasEstudiante', params: { cursoId } });
+        this.solicitudesPendientes = response.data.filter(s => s.estado === 'pendiente');
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
       }
@@ -118,7 +146,7 @@ export default {
         const response = await axios.get('http://localhost:8000/api/asignaturas/');
            
         // Obtener IDs de asignaturas que ya están aceptadas
-        const aceptadasIds = this.solicitudes
+        const aceptadasIds = this.solicitudesPendientes
           .filter(s => {
             return s.estado === 'aceptado';
           })
@@ -170,72 +198,113 @@ export default {
       this.mostrarFormulario = false;
     }
   },
-  watch: {
-    async mostrarFormulario(val) {
-      if (val) {
-        await this.cargarDatosModal();
-      }
-    }
-  },
   mounted() {
-    this.cargarSolicitudes();
-    this.cargarCursos();
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser && currentUser.email) {
-      this.estudianteEmail = currentUser.email;
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!this.currentUser || this.currentUser.rol !== 'EST') {
+      this.$router.push('/login');
+      return;
+    }
+    
+    if (this.currentUser.id) {
+      this.estudianteId = this.currentUser.id;
+      this.cargarCursos();
+    } else {
+      this.error = 'No se pudo cargar la información del usuario';
     }
   }
 };
 </script>
 
-<style scoped>
-.btn-revisar {
-  background-color: #3a86ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.btn-revisar:hover {
-  background-color: #265ecf;
-}
-/* Tipografía general */
-* {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
+.modal {
+  z-index: 1050;
+  
+  .modal-content {
+    border: none;
+    border-radius: $border-radius;
+    box-shadow: $shadow-lg;
+  }
+  
+  .modal-header {
+    border-bottom: 1px solid $border-color;
+    padding: 1.25rem 1.5rem;
+    
+    .modal-title {
+      font-weight: 600;
+      color: $text-primary;
+    }
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+    
+    .list-group-item {
+      border-left: none;
+      border-right: none;
+      padding: 1rem 1.25rem;
+      
+      &:first-child {
+        border-top: none;
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      h6 {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+  
+  .modal-footer {
+    border-top: 1px solid $border-color;
+    padding: 1rem 1.5rem;
+  }
 }
 
-/* Botón principal */
-.btn-principal {
-  background-color: #3a86ff;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-.btn-principal:hover {
-  background-color: #265ecf;
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid $border-color;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-md !important;
+  }
+  
+  .card-title {
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 0.5rem;
+  }
+  
+  .badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+  }
+  
+  .btn-outline-primary {
+    &:hover {
+      background-color: $color-primary;
+      border-color: $color-primary;
+    }
+  }
 }
 
-/* Fondo del modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+/* Ajustes responsivos */
+@media (max-width: 767.98px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+  }
 }
-
-/* Contenedor del modal */
 .modal-contenido {
   background-color: #fff;
   padding: 25px 30px;

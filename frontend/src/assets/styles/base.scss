@@ -1,0 +1,240 @@
+@import 'variables';
+
+/* Estilos base para contenedores */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: $bg-white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  margin-bottom: 2rem;
+}
+
+/* Estilos para títulos */
+h1, h2, h3, h4, h5, h6 {
+  color: $text-primary;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.8rem;
+  text-align: center;
+  padding-bottom: 1rem;
+  position: relative;
+  margin-bottom: 2rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: $color-primary;
+  }
+}
+
+/* Estilos para tablas */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95em;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+  }
+
+  th {
+    background-color: $bg-light;
+    font-weight: 600;
+    color: $text-primary;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
+  }
+
+  tr:hover {
+    background-color: lighten($color-primary-bg, 5%);
+  }
+}
+
+/* Estilos para formularios */
+.form-group {
+  margin-bottom: 1.25rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: $text-primary;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    font-size: 1rem;
+    transition: $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    }
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+}
+
+/* Estilos para botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: $transition-base;
+  gap: 0.5rem;
+
+  &-primary {
+    background-color: $color-primary;
+    color: white;
+
+    &:hover {
+      background-color: $color-primary-dark;
+      transform: translateY(-1px);
+      box-shadow: $shadow-sm;
+    }
+  }
+
+  &-secondary {
+    background-color: $bg-light;
+    color: $text-primary;
+    border: 1px solid $border-color;
+
+    &:hover {
+      background-color: darken($bg-light, 5%);
+    }
+  }
+
+  &-danger {
+    background-color: #f44336;
+    color: white;
+
+    &:hover {
+      background-color: darken(#f44336, 10%);
+    }
+  }
+}
+
+/* Estilos para mensajes */
+.message {
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &-success {
+    background-color: $color-primary-bg;
+    color: $color-primary-dark;
+    border-left: 4px solid $color-primary;
+  }
+
+  &-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #f44336;
+  }
+
+  &-warning {
+    background-color: #fff8e1;
+    color: #f57f17;
+    border-left: 4px solid #ffc107;
+  }
+}
+
+/* Estilos para tarjetas */
+.card {
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &-title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: $text-primary;
+  }
+}
+
+/* Utilidades */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+/* Responsive */
+@media (max-width: $breakpoint-md) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
