@@ -88,6 +88,9 @@
             <div>
               <strong>Calificación:</strong>
               <span>{{ tareaEntrega?.calificacion !== undefined && tareaEntrega?.calificacion !== null ? tareaEntrega.calificacion : 'No disponible' }}</span>
+              <div v-if="tareaEntrega?.observaciones" style="margin-top:8px; color:#1a365d; background:#f5f5f5; border-left:3px solid #4a6cf7; padding:8px 12px; border-radius:4px;">
+                <strong>Observaciones del docente:</strong> {{ tareaEntrega.observaciones }}
+              </div>
             </div>
           </div>
         </div>

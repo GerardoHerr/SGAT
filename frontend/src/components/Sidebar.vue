@@ -54,24 +54,6 @@
                   <span v-show="!isCollapsed" class="nav-text">Asignar Docentes</span>
                 </RouterLink>
               </li>
-              <li>
-                <RouterLink to="/admin/registrar-periodo" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Periodos Lectivos">
-                  <span class="nav-icon">📅</span>
-                  <span v-show="!isCollapsed" class="nav-text">Periodos Lectivos</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/admin/reportes" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Reportes de Actividad">
-                  <span class="nav-icon">📊</span>
-                  <span v-show="!isCollapsed" class="nav-text">Reportes de Actividad</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/admin/roles" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Gestión de Roles">
-                  <span class="nav-icon">🎭</span>
-                  <span v-show="!isCollapsed" class="nav-text">Gestión de Roles</span>
-                </RouterLink>
-              </li>
             </ul>
           </li>
         </template>
