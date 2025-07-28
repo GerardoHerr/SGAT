@@ -1,38 +1,50 @@
 <template>
-  <div class="calendario-tareas">
-    <h2 class="titulo-calendario"><i class="fas fa-calendar-alt"></i> Calendario de Tareas</h2>
-    <div v-if="loading" class="loading-msg">
-      <i class="fas fa-spinner fa-spin"></i> Cargando tareas...
+  <div class="container">
+    <h2><i class="fas fa-calendar-alt me-2"></i>Calendario de Tareas</h2>
+    
+    <div v-if="loading" class="alert alert-info">
+      <i class="fas fa-spinner fa-spin me-2"></i>Cargando tareas...
     </div>
+    
     <div v-else>
-      <div v-if="Object.keys(tareasPorFecha).length === 0" class="no-tareas">
-        <i class="fas fa-info-circle"></i> No hay tareas registradas.
+      <div v-if="Object.keys(tareasPorFecha).length === 0" class="alert alert-light text-center">
+        <i class="fas fa-info-circle me-2"></i>No hay tareas registradas.
       </div>
+      
       <div v-else>
-        <div v-for="(tareas, fecha) in tareasPorFecha" :key="fecha" class="fecha-bloque">
-          <div class="fecha-header">
-            <i class="fas fa-calendar-day"></i>
-            <span>{{ formatFecha(fecha) }}</span>
+        <div v-for="(tareas, fecha) in tareasPorFecha" :key="fecha" class="card mb-4">
+          <div class="card-header bg-light">
+            <h3 class="h5 mb-0">
+              <i class="fas fa-calendar-day me-2"></i>
+              {{ formatFecha(fecha) }}
+            </h3>
           </div>
-          <ul>
-            <li v-for="tarea in tareas" :key="tarea.id" class="tarea-item">
-              <div class="tarea-info">
-                <span class="tarea-titulo">
-                  <i class="fas fa-tasks"></i>
-                  {{ tarea.tarea_titulo || tarea.titulo || 'Sin título' }}
-                </span>
-                <span class="tarea-calificacion" v-if="tarea.calificacion !== undefined">
-                  <i class="fas fa-star"></i>
-                  {{ tarea.calificacion ?? 'Sin calificación' }}
-                </span>
-                <span v-if="tarea.archivo" class="tarea-pdf">
-                  <i class="fas fa-file-pdf"></i>
-                  <a :href="tarea.archivo" target="_blank">Ver PDF</a>
-                </span>
+          
+          <ul class="list-group list-group-flush">
+            <li v-for="tarea in tareas" :key="tarea.id" class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-tasks me-2 text-primary"></i>
+                  <div>
+                    <div class="fw-bold">{{ tarea.tarea_titulo || tarea.titulo || 'Sin título' }}</div>
+                    <div v-if="tarea.calificacion !== undefined" class="text-muted small">
+                      <i class="fas fa-star text-warning"></i>
+                      {{ tarea.calificacion ?? 'Sin calificación' }}
+                    </div>
+                    <a v-if="tarea.archivo" :href="tarea.archivo" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none">
+                      <i class="fas fa-file-pdf text-danger me-1"></i>
+                      Ver PDF
+                    </a>
+                  </div>
+                </div>
+                
+                <button 
+                  @click="irASubirTarea(tarea.id)" 
+                  class="btn btn-sm btn-outline-primary"
+                >
+                  <i class="fas fa-eye me-1"></i> Revisar
+                </button>
               </div>
-              <button class="btn-revisar-tarea" @click="irASubirTarea(tarea.id)">
-                <i class="fas fa-eye"></i> Revisar
-              </button>
             </li>
           </ul>
         </div>
@@ -99,135 +111,51 @@ export default {
 }
 </script>
 
-<style scoped>
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
 
-.calendario-tareas {
-  max-width: 5400px; /* Aumenta el ancho máximo */
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 16px; /* Más redondeado */
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  padding: 40px 80px; /* Más espacio interno */
+.card {
+  .card-header {
+    i {
+      color: $color-primary;
+    }
+  }
 }
 
-.titulo-calendario {
-  color: #1e874b;
-  margin-bottom: 24px;
-  font-size: 2em;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.list-group-item {
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: rgba($color-primary, 0.05);
+  }
 }
 
-.loading-msg {
-  color: #1e874b;
-  font-size: 1.2em;
-  text-align: center;
-  margin: 30px 0;
+.btn-link {
+  text-decoration: none;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-.no-tareas {
-  color: #b94a48;
-  font-weight: 500;
-  text-align: center;
-  margin: 30px 0;
-  font-size: 1.1em;
-}
-
-.fecha-bloque {
-  margin-bottom: 40px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 32px;
-  background: #f8f8f8;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(30,135,75,0.08);
-}
-
-.fecha-header {
-  color: #1e874b;
-  font-size: 1.1em;
-  font-weight: bold;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.tarea-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  padding: 24px 40px;
-  box-shadow: 0 4px 16px rgba(30,135,75,0.06);
-  transition: box-shadow 0.2s;
-  font-size: 1.15em;
-}
-
-.tarea-item:hover {
-  box-shadow: 0 4px 16px rgba(30,135,75,0.08);
-}
-
-.tarea-info {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-}
-
-.tarea-titulo {
-  color: #1e874b;
-  font-weight: 600;
-  font-size: 1.05em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.tarea-calificacion {
-  color: #f39c12;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tarea-pdf {
-  color: #b94a48;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tarea-pdf a {
-  color: #b94a48;
-  text-decoration: underline;
-}
-
-.btn-revisar-tarea {
-  background-color: #1e874b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 16px;
-  cursor: pointer;
-  font-size: 1em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.2s;
-}
-
-.btn-revisar-tarea:hover {
-  background-color: #155d3b;
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .card {
+    .card-header {
+      padding: 0.75rem 1rem;
+    }
+    
+    .list-group-item {
+      padding: 1rem;
+    }
+  }
+  
+  .btn-outline-primary {
+    width: 100%;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
 }
 </style>

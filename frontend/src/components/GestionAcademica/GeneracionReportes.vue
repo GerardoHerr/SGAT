@@ -1,146 +1,223 @@
 <template>
-  <div class="reporte-container">
-    <h2><i class="fa fa-file-alt"></i> Generación de Reportes</h2>
-    <div class="reporte-form">
-      <div class="form-group">
-        <label for="curso"><i class="fa fa-chalkboard-teacher"></i> Curso</label>
-        <div class="input-icon-group">
-          <i class="fa fa-book"></i>
-          <select v-model="cursoSeleccionado" id="curso" @change="fetchTareas">
-            <option disabled value="">Seleccione un curso</option>
-            <option v-for="curso in cursos" :key="curso.id" :value="curso.id">
-              {{ curso.asignatura_nombre }} - {{ curso.periodo }}
-            </option>
-          </select>
+  <div class="container py-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h2 class="mb-4">
+          <i class="fas fa-file-alt text-primary me-2"></i>Generación de Reportes
+        </h2>
+        
+        <div v-if="cargandoCursos" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2 text-muted">Cargando cursos disponibles...</p>
+        </div>
+        
+        <div v-else>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="curso" class="form-label">
+                  <i class="fas fa-chalkboard-teacher me-1 text-muted"></i>Curso
+                </label>
+                <select 
+                  v-model="cursoSeleccionado" 
+                  id="curso" 
+                  class="form-select"
+                  :disabled="cargando"
+                  @change="fetchTareas"
+                >
+                  <option disabled value="">Seleccione un curso</option>
+                  <option v-for="curso in cursos" :key="curso.id" :value="curso.id">
+                    {{ curso.asignatura_nombre }} - {{ curso.periodo }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="tipo" class="form-label">
+                  <i class="fas fa-file-alt me-1 text-muted"></i>Tipo de reporte
+                </label>
+                <select 
+                  v-model="tipoReporte" 
+                  id="tipo" 
+                  class="form-select"
+                  :disabled="!cursoSeleccionado || cargando"
+                  @change="fetchTareas"
+                >
+                  <option disabled value="">Seleccione tipo</option>
+                  <option value="entregas">Entregas de tareas</option>
+                  <option value="tareas">Tareas del curso</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-end mt-4">
+            <button 
+              class="btn btn-primary" 
+              :disabled="!cursoSeleccionado || !tipoReporte || cargando" 
+              @click="generarReporte"
+            >
+              <template v-if="cargando">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Generando...
+              </template>
+              <template v-else>
+                <i class="fas fa-file-export me-2"></i>Generar Reporte
+              </template>
+            </button>
+          </div>
+          
+          <div v-if="error" class="alert alert-danger mt-3 mb-0" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+          </div>
+          
+          <div v-if="reporteUrl" class="mt-4 pt-3 border-top">
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+              <i class="fas fa-check-circle me-2"></i>
+              <div>
+                Reporte generado correctamente
+              </div>
+            </div>
+            <a :href="reporteUrl" class="btn btn-outline-primary" target="_blank" download>
+              <i class="fas fa-download me-2"></i>Descargar reporte
+            </a>
+          </div>
+          
+          <div v-if="reporteHtml" class="mt-4 border rounded p-3">
+            <h5 class="mb-3">Vista previa del reporte</h5>
+            <div class="reporte-preview" v-html="reporteHtml"></div>
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label for="tipo"><i class="fa fa-file-alt"></i> Tipo de reporte</label>
-        <div class="input-icon-group">
-          <i class="fa fa-list"></i>
-          <select v-model="tipoReporte" id="tipo" @change="fetchTareas">
-            <option disabled value="">Seleccione tipo</option>
-            <option value="entregas">Entregas de tareas</option>
-            <option value="tareas">Tareas del curso</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- No mostrar entregas en pantalla, solo cargarlas para el PDF -->
-      <!-- No mostrar tareas en pantalla, solo cargarlas para el PDF -->
-      
-      
-      <button class="btn-generar" :disabled="!cursoSeleccionado || !tipoReporte || cargando" @click="generarReporte">
-        <span v-if="cargando"><i class="fa fa-spinner fa-spin"></i> Generando...</span>
-        <span v-else><i class="fa fa-download"></i> Generar Reporte</span>
-      </button>
     </div>
-    <div v-if="error" class="error">{{ error }}</div>
-    <div v-if="reporteUrl" class="reporte-descarga">
-      <a :href="reporteUrl" target="_blank" download>
-        <i class="fa fa-file-pdf"></i> Descargar reporte
-      </a>
-    </div>
-    <div v-if="reporteHtml" class="reporte-preview" v-html="reporteHtml"></div>
   </div>
 </template>
 
 <script>
-
-
-import { ref, onMounted } from 'vue';
 import { getCursosDocente, generarReporteDocente, getTareasPorCurso, getEntregasPorCurso } from '@/services/reporteService';
 
 export default {
   name: 'GeneracionReportes',
-  setup() {
-
-    const cursos = ref([]);
-    const cursoSeleccionado = ref('');
-    const tipoReporte = ref('');
-    const tareas = ref([]);
-    const entregas = ref([]);
-    const cargando = ref(false);
-    const error = ref('');
-    const reporteUrl = ref('');
-    const reporteHtml = ref('');
-
-
-    onMounted(async () => {
-      try {
-        cursos.value = await getCursosDocente();
-        //console.log('Cursos obtenidos:', cursos.value);
-      } catch (e) {
-        error.value = 'No se pudieron cargar los cursos.';
-      }
-    });
-
-
-    async function fetchTareas() {
-      tareas.value = [];
-      entregas.value = [];
-      if (tipoReporte.value === 'entregas' && cursoSeleccionado.value) {
+  data() {
+    return {
+      cursos: [],
+      cursoSeleccionado: '',
+      tipoReporte: '',
+      tareas: [],
+      entregas: [],
+      cargando: false,
+      cargandoCursos: true,
+      error: null,
+      reporteUrl: null,
+      reporteHtml: '',
+      currentUser: null
+    };
+  },
+  methods: {
+    async fetchTareas() {
+      this.tareas = [];
+      this.entregas = [];
+      
+      if (this.tipoReporte === 'entregas' && this.cursoSeleccionado) {
         try {
           // Primero obtenemos las tareas del curso seleccionado
-          const tareasCurso = await getTareasPorCurso(cursoSeleccionado.value);
+          const tareasCurso = await getTareasPorCurso(this.cursoSeleccionado);
           const tareaIds = tareasCurso.map(t => t.id);
           // Luego traemos todas las entregas y filtramos solo las que correspondan a esas tareas
-          const allEntregas = await getEntregasPorCurso(cursoSeleccionado.value);
+          const allEntregas = await getEntregasPorCurso(this.cursoSeleccionado);
           console.log('Entregas obtenidas:', allEntregas);
-          entregas.value = allEntregas.filter(e => tareaIds.includes(e.tarea));
-          console.log('Entregas filtradas:', entregas.value);
+          this.entregas = allEntregas.filter(e => tareaIds.includes(e.tarea));
+          console.log('Entregas filtradas:', this.entregas);
         } catch (e) {
-          entregas.value = [];
+          console.error('Error al cargar entregas:', e);
+          this.entregas = [];
         }
-      } else if (tipoReporte.value === 'tareas' && cursoSeleccionado.value) {
+      } else if (this.tipoReporte === 'tareas' && this.cursoSeleccionado) {
         try {
-          tareas.value = await getTareasPorCurso(cursoSeleccionado.value);
-          // console.log('Tareas obtenidas:', tareas.value);
+          this.tareas = await getTareasPorCurso(this.cursoSeleccionado);
+          console.log('Tareas obtenidas:', this.tareas);
         } catch (e) {
-          tareas.value = [];
+          console.error('Error al cargar tareas:', e);
+          this.tareas = [];
         }
       }
-    }
-
-
-    async function generarReporte() {
-      cargando.value = true;
-      error.value = '';
-      reporteUrl.value = '';
-      reporteHtml.value = '';
+    },
+    
+    async generarReporte() {
+      this.cargando = true;
+      this.error = null;
+      this.reporteUrl = null;
+      this.reporteHtml = '';
+      
       try {
-        const res = await generarReporteDocente(cursoSeleccionado.value, tipoReporte.value);
+        const res = await generarReporteDocente(this.cursoSeleccionado, this.tipoReporte);
         if (res.url) {
-          reporteUrl.value = res.url;
+          this.reporteUrl = res.url;
         } else if (res.html) {
-          reporteHtml.value = res.html;
+          this.reporteHtml = res.html;
         } else {
-          error.value = 'No se pudo generar el reporte.';
+          this.error = 'No se pudo generar el reporte.';
         }
       } catch (e) {
-        error.value = 'Error al generar el reporte.';
+        console.error('Error al generar reporte:', e);
+        this.error = 'Error al generar el reporte. Por favor, intente nuevamente.';
       } finally {
-        cargando.value = false;
+        this.cargando = false;
+      }
+    },
+    
+    async cargarCursos() {
+      this.cargandoCursos = true;
+      this.error = null;
+      
+      try {
+        const token = localStorage.getItem('access_token');
+        const endpoint = this.currentUser.rol === 'DOC' 
+          ? 'http://localhost:8000/api/cursos/docente/'
+          : 'http://localhost:8000/api/cursos/estudiante/';
+        
+        const response = await fetch(endpoint, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar los cursos');
+        }
+        
+        this.cursos = await response.json();
+      } catch (error) {
+        console.error('Error al cargar cursos:', error);
+        this.error = 'No se pudieron cargar los cursos. Por favor, intente más tarde.';
+      } finally {
+        this.cargandoCursos = false;
       }
     }
-
-    return {
-      cursos,
-      cursoSeleccionado,
-      tipoReporte,
-      tareas,
-      cargando,
-      error,
-      reporteUrl,
-      reporteHtml,
-      generarReporte,
-      fetchTareas
-    };
+  },
+  
+  async mounted() {
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (!this.currentUser) {
+      this.$router.push('/login');
+      return;
+    }
+    
+    await this.cargarCursos();
   }
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/assets/styles/variables';
+@import '@/assets/styles/base';
+
 .reporte-container {
   max-width: 500px;
   margin: 40px auto;
