@@ -2,7 +2,7 @@
   <div class="usuarios-container">
     <!-- Header Bar -->
     <div class="header-bar">
-      <h1 class="page-title">Gestión de Usuarios</h1>
+      <h2 class="page-title">Gestión de Usuarios</h2>
       <button class="add-btn" @click="mostrarModal = true">
         Agregar Usuario
       </button>
@@ -1118,5 +1118,14 @@ export default {
   .page-title {
     font-size: 1.5rem;
   }
+}
+
+.page-title {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.8rem;
+  font-weight: 600;
 }
 </style>
