@@ -1,69 +1,72 @@
 <template>
   <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Mis Registros</h2>
-      <button class="btn btn-primary" @click="abrirModalSolicitud">
-        <i class="fas fa-plus-circle me-2"></i>Nueva Solicitud
+    <div class="header-bar">
+      <h2 class="page-title">Mis Registros</h2>
+      <button class="add-btn" @click="abrirModalSolicitud()">
+        Nueva Solicitud
       </button>
-
     </div>
 
     <!-- Modal para solicitar asignaturas -->
-    <div v-if="mostrarFormulario" class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fas fa-book me-2"></i>Solicitar Asignatura
-            </h5>
-            <button type="button" class="btn-close" @click="cerrarModal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <div v-if="asignaturas.length" class="list-group">
-              <div v-for="asignatura in asignaturas.filter(a => {
-                // Excluir si hay solicitud pendiente o aceptada para esta asignatura
-                const id = a.id;
-                const nombre = a.nombre?.trim().toLowerCase();
-                const codigoNombre = (a.codigo ? a.codigo + ' - ' : '') + a.nombre;
-                const codigoNombreNorm = codigoNombre.trim().toLowerCase();
-                return !((solicitudesPendientes && solicitudesPendientes.some(s => {
-                  if (typeof s.asignatura === 'number' || !isNaN(Number(s.asignatura))) return Number(s.asignatura) === id;
-                  if (typeof s.asignatura === 'string') {
-                    const sNorm = s.asignatura.trim().toLowerCase();
-                    return sNorm === nombre || sNorm === codigoNombreNorm;
-                  }
-                  return false;
-                })) || (solicitudesAceptadas && solicitudesAceptadas.some(s => {
-                  if (typeof s.asignatura === 'number' || !isNaN(Number(s.asignatura))) return Number(s.asignatura) === id;
-                  if (typeof s.asignatura === 'string') {
-                    const sNorm = s.asignatura.trim().toLowerCase();
-                    return sNorm === nombre || sNorm === codigoNombreNorm;
-                  }
-                  return false;
-                })));
-              })" :key="asignatura.id"
-                   class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 class="mb-1">{{ asignatura.nombre }}</h6>
-                  <small class="text-muted">Código: {{ asignatura.codigo || 'N/A' }}</small>
-                </div>
-                <button class="btn btn-sm btn-outline-primary" 
-                        @click="enviarSolicitud(asignatura.id)">
-                  <i class="fas fa-paper-plane me-1"></i>
-                  Solicitar
-                </button>
+    <div v-if="mostrarFormulario" class="modal-overlay" @click="cerrarModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>
+            <i class="fas fa-book me-2"></i>Solicitar Asignatura
+          </h2>
+          <button class="close-btn" @click="cerrarModal">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="asignaturas.length" class="asignaturas-list">
+            <div v-for="asignatura in asignaturas.filter(a => {
+              // Excluir si hay solicitud pendiente o aceptada para esta asignatura
+              const id = a.id;
+              const nombre = a.nombre?.trim().toLowerCase();
+              const codigoNombre = (a.codigo ? a.codigo + ' - ' : '') + a.nombre;
+              const codigoNombreNorm = codigoNombre.trim().toLowerCase();
+              return !((solicitudesPendientes && solicitudesPendientes.some(s => {
+                if (typeof s.asignatura === 'number' || !isNaN(Number(s.asignatura))) return Number(s.asignatura) === id;
+                if (typeof s.asignatura === 'string') {
+                  const sNorm = s.asignatura.trim().toLowerCase();
+                  return sNorm === nombre || sNorm === codigoNombreNorm;
+                }
+                return false;
+              })) || (solicitudesAceptadas && solicitudesAceptadas.some(s => {
+                if (typeof s.asignatura === 'number' || !isNaN(Number(s.asignatura))) return Number(s.asignatura) === id;
+                if (typeof s.asignatura === 'string') {
+                  const sNorm = s.asignatura.trim().toLowerCase();
+                  return sNorm === nombre || sNorm === codigoNombreNorm;
+                }
+                return false;
+              })));
+            })" :key="asignatura.id" class="asignatura-item">
+              <div class="asignatura-info">
+                <h6>{{ asignatura.nombre }}</h6>
+                <small>Código: {{ asignatura.codigo || 'N/A' }}</small>
               </div>
-            </div>
-            <div v-else class="text-center py-4">
-              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-              <p class="mb-0">No hay asignaturas disponibles para solicitar.</p>
+              <button class="btn-solicitar" @click="enviarSolicitud(asignatura.id)">
+                <i class="fas fa-paper-plane"></i>
+                Solicitar
+              </button>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" @click="cerrarModal">
-              <i class="fas fa-times me-1"></i>Cancelar
-            </button>
+          <div v-else class="empty-state">
+            <i class="fas fa-inbox fa-3x"></i>
+            <p>No hay asignaturas disponibles para solicitar.</p>
           </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancelar" @click="cerrarModal">
+            <i class="fas fa-times"></i>
+            Cancelar
+          </button>
         </div>
       </div>
     </div>
@@ -82,7 +85,7 @@
               </div>
               <i class="fas fa-book text-muted fa-2x opacity-25"></i>
             </div>
-            
+
             <div class="d-flex justify-content-between align-items-center mt-4">
               <span class="text-muted small">
                 <i class="fas fa-tasks me-1"></i>
@@ -347,54 +350,274 @@ export default {
 @import '@/assets/styles/variables';
 @import '@/assets/styles/base';
 
-.modal {
-  z-index: 1050;
-  
-  .modal-content {
-    border: none;
-    border-radius: $border-radius;
-    box-shadow: $shadow-lg;
-  }
-  
-  .modal-header {
-    border-bottom: 1px solid $border-color;
-    padding: 1.25rem 1.5rem;
+// Reemplazar todos los estilos del modal con estos:
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $border-color;
+
+  .page-title {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    color: $text-primary;
+    font-size: 1.8rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.5rem;
     
-    .modal-title {
-      font-weight: 600;
-      color: $text-primary;
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: $color-primary;
+      border-radius: 2px;
     }
-  }
-  
-  .modal-body {
-    padding: 1.5rem;
-    
-    .list-group-item {
-      border-left: none;
-      border-right: none;
-      padding: 1rem 1.25rem;
-      
-      &:first-child {
-        border-top: none;
-      }
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      h6 {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-      }
-    }
-  }
-  
-  .modal-footer {
-    border-top: 1px solid $border-color;
-    padding: 1rem 1.5rem;
   }
 }
 
+.add-btn {
+  @extend .btn;
+  @extend .btn-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  
+  &:hover {
+    background: darken($color-primary, 10%);
+    transform: translateY(-1px);
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid $border-color;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid $border-color;
+  background: $bg-lighter;
+  
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    i {
+      color: $color-primary;
+    }
+  }
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: $text-secondary;
+  border-radius: 6px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $bg-lighter;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color-primary;
+    border-radius: 3px;
+    
+    &:hover {
+      background: darken($color-primary, 10%);
+    }
+  }
+}
+
+.asignaturas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.asignatura-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: white;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: $color-primary;
+    transform: translateY(-1px);
+  }
+}
+
+.asignatura-info {
+  flex: 1;
+  
+  h6 {
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: $text-primary;
+    font-size: 1rem;
+  }
+  
+  small {
+    color: $text-secondary;
+    font-size: 0.85rem;
+  }
+}
+
+.btn-solicitar {
+  background: $color-primary;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  
+  &:hover {
+    background: darken($color-primary, 10%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba($color-primary, 0.3);
+  }
+  
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $text-secondary;
+  
+  i {
+    //color: $text-muted;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border-color;
+  background: $bg-lighter;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cancelar {
+  background: transparent;
+  color: $text-secondary;
+  border: 1px solid $border-color;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    //background: rgba($color-danger, 0.1);
+    //border-color: $color-danger;
+    //color: $color-danger;
+  }
+  
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+// Mantener los demás estilos del card existentes...
 .card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid $border-color;
@@ -423,22 +646,22 @@ export default {
   }
 }
 
-/* Ajustes responsivos */
+/* Responsive */
 @media (max-width: 767.98px) {
-  .card {
-    margin-bottom: 1rem;
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
   }
   
-  .modal-dialog {
-    margin: 0.5rem;
+  .asignatura-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
-}
-.modal-contenido {
-  background-color: #fff;
-  padding: 25px 30px;
-  border-radius: 15px;
-  width: 420px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  
+  .btn-solicitar {
+    align-self: flex-end;
+  }
 }
 
 /* Animación de entrada */
