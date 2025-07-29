@@ -69,7 +69,7 @@ onMounted(() => {
   background-color: #ffffff;
   position: relative;
   flex: 1;
-  margin-left: 280px;
+  margin-left: 70px;
   width: calc(100vw - 280px);
   display: flex;
   flex-direction: column;
@@ -83,16 +83,16 @@ onMounted(() => {
 .content-wrapper {
   flex: 1;
   padding: 4rem;
-  padding-right: 13rem;
+  padding-right: 13rem;/**/
   width: 100%;
   max-width: 100%; /* Ancho máximo del contenido */
-  margin: 0 auto; /* Centra el contenido */
+  margin: 0 auto; /*  Centra el contenido */
   box-sizing: border-box;
   overflow-x: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centra los elementos horizontalmente */
+  align-items: center; /* center Centra los elementos horizontalmente */
 }
 
 /* Asegurar que el contenido no se desborde en móviles */

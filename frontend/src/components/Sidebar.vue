@@ -56,7 +56,7 @@
               </li>
               <li>
                 <RouterLink to="/admin/crear-curso" class="nav-link" :class="{ 'nav-link-collapsed': isCollapsed }" title="Crear Curso">
-                  <span class="nav-icon">👥</span>
+                  <span class="nav-icon">➕</span>
                   <span v-show="!isCollapsed" class="nav-text">Crear Curso</span>
                 </RouterLink>
               </li>

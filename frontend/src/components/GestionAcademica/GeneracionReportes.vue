@@ -6,6 +6,7 @@
           <i class="fas fa-file-alt text-primary me-2"></i>Generación de Reportes
         </h2>
         
+        <h4>Por favor, seleccione el curso y tipo de reporte para continuar:</h4>
         <div v-if="cargandoCursos" class="text-center py-4">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
@@ -18,7 +19,7 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label for="curso" class="form-label">
-                  <i class="fas fa-chalkboard-teacher me-1 text-muted"></i>Curso
+                  <i class="fas fa-chalkboard-teacher me-1 text-muted"></i>Curso: 
                 </label>
                 <select 
                   v-model="cursoSeleccionado" 
@@ -38,7 +39,7 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label for="tipo" class="form-label">
-                  <i class="fas fa-file-alt me-1 text-muted"></i>Tipo de reporte
+                  <i class="fas fa-file-alt me-1 text-muted"></i>Tipo de reporte: 
                 </label>
                 <select 
                   v-model="tipoReporte" 
