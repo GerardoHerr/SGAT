@@ -103,25 +103,25 @@
         <form @submit.prevent="guardarUsuario" class="form-content">
           <div class="input-group">
             <div class="input-wrapper">
-              <input v-model="usuarioForm.nombre" placeholder="Nombre" :class="{ 'error': errors.nombre }" />
+              <input v-model="usuarioForm.nombre" placeholder="Nombre*" :class="{ 'error': errors.nombre }" />
               <span v-if="errors.nombre" class="error-msg">{{ errors.nombre }}</span>
             </div>
 
             <div class="input-wrapper">
-              <input v-model="usuarioForm.apellido" placeholder="Apellido" :class="{ 'error': errors.apellido }" />
+              <input v-model="usuarioForm.apellido" placeholder="Apellido*" :class="{ 'error': errors.apellido }" />
               <span v-if="errors.apellido" class="error-msg">{{ errors.apellido }}</span>
             </div>
           </div>
 
           <div class="input-wrapper">
-            <input v-model="usuarioForm.email" type="email" placeholder="usuario@unl.edu.ec"
+            <input v-model="usuarioForm.email" type="email" placeholder="usuario@unl.edu.ec*"
               :class="{ 'error': errors.email }" :disabled="editando" />
             <span v-if="errors.email" class="error-msg">{{ errors.email }}</span>
           </div>
 
           <div class="input-wrapper">
             <input v-model="usuarioForm.contrasenia" type="password"
-              :placeholder="editando ? 'Nueva contraseña (opcional)' : 'Contraseña'"
+              :placeholder="editando ? 'Nueva contraseña (opcional)' : 'Contraseña*'"
               :class="{ 'error': errors.contrasenia }"
               @input="validarContraseniaEnTiempoReal" />
             <!-- Barra de nivel de seguridad visual y texto -->
@@ -595,7 +595,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-left: 55%;
+  white-space: nowrap;
   svg {
     width: 1.2rem;
     height: 1.2rem;
@@ -1229,6 +1229,7 @@ export default {
     padding: 0.7rem 0.5rem;
     font-size: 1rem;
     justify-content: center;
+    
   }
 }
 

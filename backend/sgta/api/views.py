@@ -314,22 +314,31 @@ class GrupoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def crear_grupos_aleatorios(self, request):
-        # Permitir recibir min_estudiantes en vez de cantidad_grupos
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("[GRUPOS] Datos recibidos en request.data: %s", dict(request.data))
         serializer = CrearGrupoAleatorioSerializer(data=request.data)
-        if serializer.is_valid() or ('asignatura_id' in request.data and 'min_estudiantes' in request.data and 'nombre_base' in request.data):
+        is_valid = serializer.is_valid()
+        if not is_valid:
+            logger.info("[GRUPOS] Errores del serializer al validar: %s", serializer.errors)
+        if is_valid or ('asignatura_id' in request.data and 'min_estudiantes' in request.data and 'nombre_base' in request.data):
             asignatura_id = request.data.get('asignatura_id') or serializer.validated_data.get('asignatura_id')
             min_estudiantes = int(request.data.get('min_estudiantes', 2))
             nombre_base = request.data.get('nombre_base') or serializer.validated_data.get('nombre_base')
             try:
+                logger.info(f"[GRUPOS] asignatura_id: {asignatura_id}, min_estudiantes: {min_estudiantes}, nombre_base: {nombre_base}")
                 asignatura = Asignatura.objects.get(id=asignatura_id)
                 from ..core.domain.GestionAcademica.solicitudAsignatura import SolicitudAsignatura
                 from ..core.domain.GestionAcademica.curso import Curso
                 curso_objeto = Curso.objects.filter(asignatura=asignatura).first()
                 if not curso_objeto:
+                    logger.warning("[GRUPOS] No existe un curso para esta asignatura")
                     return Response({'error': 'No existe un curso para esta asignatura'}, status=status.HTTP_400_BAD_REQUEST)
-                solicitudes = SolicitudAsignatura.objects.filter(asignatura=asignatura, estado='aceptado')
+                solicitudes = SolicitudAsignatura.objects.filter(asignatura=asignatura, estado='aceptada')
                 estudiantes = Usuario.objects.filter(email__in=solicitudes.values_list('estudiante__email', flat=True), rol='EST')
+                logger.info(f"[GRUPOS] Total estudiantes encontrados: {estudiantes.count()}")
                 if estudiantes.count() == 0:
+                    logger.warning("[GRUPOS] No hay estudiantes inscritos en esta asignatura")
                     return Response(
                         {'error': 'No hay estudiantes inscritos en esta asignatura'}, 
                         status=status.HTTP_400_BAD_REQUEST
@@ -343,6 +352,7 @@ class GrupoViewSet(viewsets.ModelViewSet):
                     cantidad_grupos = total_estudiantes
                 estudiantes_por_grupo = total_estudiantes // cantidad_grupos
                 estudiantes_sobrantes = total_estudiantes % cantidad_grupos
+                logger.info(f"[GRUPOS] cantidad_grupos: {cantidad_grupos}, estudiantes_por_grupo: {estudiantes_por_grupo}, estudiantes_sobrantes: {estudiantes_sobrantes}")
                 grupos_creados = []
                 with transaction.atomic():
                     inicio = 0
@@ -360,15 +370,21 @@ class GrupoViewSet(viewsets.ModelViewSet):
                         grupos_creados.append(grupo)
                         inicio += tamaño_grupo
                 grupos_serializer = GrupoSerializer(grupos_creados, many=True)
+                logger.info(f"[GRUPOS] Se crearon {cantidad_grupos} grupos correctamente")
                 return Response({
                     'mensaje': f'Se crearon {cantidad_grupos} grupos correctamente',
                     'grupos': grupos_serializer.data
                 }, status=status.HTTP_201_CREATED)
             except Asignatura.DoesNotExist:
+                logger.error("[GRUPOS] La asignatura no existe")
                 return Response(
                     {'error': 'La asignatura no existe'}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
+            except Exception as e:
+                logger.error(f"[GRUPOS] Error inesperado: {str(e)}", exc_info=True)
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error("[GRUPOS] Errores de validación final: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
@@ -751,6 +767,7 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
     def calificar(self, request, pk=None):
         """
         Permite calificar una entrega de tarea y adjuntar retroalimentación. SIN autenticación.
+        Si la tarea es grupal y la entrega tiene grupo, aplica la calificación, observaciones y retroalimentación a todos los integrantes del grupo.
         """
         from django.utils import timezone
         try:
@@ -786,23 +803,52 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                         {'error': f'La calificación debe estar entre 0 y {max_calif} para tareas tipo {tipo}.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                entrega.calificacion = calificacion
 
-            if retroalimentacion_archivo:
-                if entrega.retroalimentacion_archivo:
-                    entrega.retroalimentacion_archivo.delete(save=False)
-                entrega.retroalimentacion_archivo = retroalimentacion_archivo
-
-            if observaciones:
-                entrega.observaciones = observaciones
-
-            entrega.fecha_retroalimentacion = timezone.now()
-            entrega.save()
-            serializer = self.get_serializer(entrega)
-            return Response(
-                {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data},
-                status=status.HTTP_200_OK
-            )
+            # Si la tarea es grupal y la entrega tiene grupo, califica a todos los integrantes
+            if hasattr(tarea, 'es_grupal') and tarea.es_grupal and getattr(entrega, 'grupo', None):
+                grupo = entrega.grupo
+                integrantes = grupo.estudiantes.all()
+                for integrante in integrantes:
+                    entrega_grupal, _ = self.queryset.model.objects.get_or_create(
+                        tarea=tarea,
+                        estudiante=integrante,
+                        grupo=grupo
+                    )
+                    if calificacion is not None:
+                        entrega_grupal.calificacion = calificacion
+                    if retroalimentacion_archivo:
+                        # Borra archivo anterior si existe
+                        if entrega_grupal.retroalimentacion_archivo:
+                            entrega_grupal.retroalimentacion_archivo.delete(save=False)
+                        # Asigna el mismo archivo a todos (se guarda una copia por cada entrega)
+                        entrega_grupal.retroalimentacion_archivo = retroalimentacion_archivo
+                    if observaciones:
+                        entrega_grupal.observaciones = observaciones
+                    entrega_grupal.fecha_retroalimentacion = timezone.now()
+                    entrega_grupal.save()
+                # Devuelve la entrega del estudiante que hizo la petición
+                serializer = self.get_serializer(entrega)
+                return Response(
+                    {'mensaje': 'Calificación grupal registrada correctamente', 'data': serializer.data},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                # No es grupal, solo califica la entrega individual
+                if calificacion is not None:
+                    entrega.calificacion = calificacion
+                if retroalimentacion_archivo:
+                    if entrega.retroalimentacion_archivo:
+                        entrega.retroalimentacion_archivo.delete(save=False)
+                    entrega.retroalimentacion_archivo = retroalimentacion_archivo
+                if observaciones:
+                    entrega.observaciones = observaciones
+                entrega.fecha_retroalimentacion = timezone.now()
+                entrega.save()
+                serializer = self.get_serializer(entrega)
+                return Response(
+                    {'mensaje': 'Calificación registrada correctamente', 'data': serializer.data},
+                    status=status.HTTP_200_OK
+                )
         except Exception as e:
             return Response(
                 {'error': f'Error al procesar la solicitud: {str(e)}'},
@@ -914,7 +960,7 @@ class ReporteTareasCursoPDFView(APIView):
                 elements.append(Paragraph(f"Tarea: {getattr(tarea, 'titulo', '')}", styles['Heading3']))
                 entregas = EntregaTarea.objects.filter(tarea=tarea)
                 # Cambiar nombre de columna y agregar tiempo restante
-                data = [["Estudiante", "Email", "Calificación", "Fecha entregada", "Tiempo restante"]]
+                data = [["Estudiante", "Email", "Calificación", "Fecha entregada"]]
                 fecha_entrega_obj = getattr(tarea, 'fecha_entrega', None)
                 for entrega in entregas:
                     estudiante = getattr(entrega, 'estudiante', None)
@@ -922,14 +968,17 @@ class ReporteTareasCursoPDFView(APIView):
                     estudiante_email = getattr(estudiante, 'email', '') if estudiante else ''
                     calificacion = getattr(entrega, 'calificacion', '')
                     fecha_obj = getattr(entrega, 'fecha_entregada', None)
-                    if fecha_obj:
-                        fecha_entregada = fecha_obj.strftime('%d/%m/%Y %H:%M')
-                    else:
+                    # Si no hay calificación, dejar la fecha entregada en blanco
+                    if calificacion in [None, '', 0, 0.0]:
                         fecha_entregada = ''
-                    # Calcular tiempo restante
+                    else:
+                        if fecha_obj:
+                            fecha_entregada = fecha_obj.strftime('%d/%m/%Y %H:%M')
+                        else:
+                            fecha_entregada = ''
+                    # Calcular tiempo restante (no se usa en tabla)
                     tiempo_restante = ''
                     if fecha_entrega_obj:
-                        # Convertir a datetime si es necesario
                         now = datetime.now(pytz.UTC) if hasattr(fecha_entrega_obj, 'tzinfo') else datetime.now()
                         if hasattr(fecha_entrega_obj, 'tzinfo'):
                             delta = fecha_entrega_obj - now
@@ -946,8 +995,7 @@ class ReporteTareasCursoPDFView(APIView):
                         estudiante_nombre,
                         estudiante_email,
                         calificacion,
-                        fecha_entregada,
-                        tiempo_restante
+                        fecha_entregada
                     ])
                 table = Table(data, repeatRows=1)
                 table.setStyle(TableStyle([

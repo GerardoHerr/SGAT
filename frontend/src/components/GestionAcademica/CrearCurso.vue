@@ -298,22 +298,37 @@ export default {
         };
 
         const response = await api.post('cursos/', cursoData);
-        
-        // Agregar el nuevo curso a la lista local con nombres resueltos
-        const asignatura = this.asignaturas.find(a => a.codigo === this.curso.asignatura);
+
+        // Resolver nombres de asignatura y docente para el nuevo curso
+        let asignaturaNombre = 'N/A';
+        let docenteNombre = 'Sin asignar';
+        const asignatura = this.asignaturas.find(a => a.id === response.data.asignatura);
+        if (asignatura) {
+          asignaturaNombre = asignatura.nombre;
+        }
+        if (response.data.docente) {
+          try {
+            const docenteResponse = await api.get(`usuarios/by-email/?email=${encodeURIComponent(response.data.docente)}`);
+            if (docenteResponse.data) {
+              docenteNombre = `${docenteResponse.data.nombre || ''} ${docenteResponse.data.apellido || ''}`.trim() || response.data.docente;  
+            }
+          } catch (error) {
+            docenteNombre = response.data.docente;
+          }
+        }
         const nuevoCurso = {
           ...response.data,
-          asignatura_nombre: asignatura ? asignatura.nombre : this.curso.asignatura,
-          docente_nombre: this.docenteNombre
+          asignatura_nombre: asignaturaNombre,
+          docente_nombre: docenteNombre
         };
-        this.cursos.push(nuevoCurso);
-        
+        this.cursos = [nuevoCurso, ...this.cursos];
+
         this.mostrarModalGuardado();
         this.cerrarModal();
       } catch (error) {
         console.error('Error al crear curso:', error);
         let mensaje = 'Error al crear el curso';
-        
+
         if (error.response) {
           if (error.response.status === 400) {
             mensaje = error.response.data.detail || 'Datos inválidos';
@@ -324,7 +339,7 @@ export default {
             mensaje = 'No tienes permiso para realizar esta acción';
           }
         }
-        
+
         this.mensaje = mensaje;
         this.tipoMensaje = 'error';
       } finally {

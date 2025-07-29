@@ -234,6 +234,7 @@ export default {
     this.estudiantesDisponibles = todosEstudiantes.filter(
       estudiante => !estudiantesEnGrupos.has(estudiante.id)
     )
+    console.log('Estudiantes disponibles:', this.estudiantesDisponibles.length)
   } catch (error) {
     console.error('Error al cargar estudiantes disponibles:', error)
   }
@@ -244,9 +245,19 @@ export default {
         this.mostrarMensaje('Seleccione un curso y una cantidad válida de estudiantes por grupo', true)
         return
       }
+      // Validar que la cantidad de estudiantes disponibles sea par
+      if (this.estudiantesDisponibles.length % 2 !== 0) {
+        this.mostrarMensaje('No se pueden crear grupos si hay un número impar de estudiantes disponibles. Por favor, asegúrese de que la cantidad sea par.', true)
+        return
+      }
       // Validar que haya suficientes estudiantes para crear grupos
       if (this.estudiantesDisponibles.length < this.formGrupos.min_estudiantes) {
         this.mostrarMensaje('No hay suficientes estudiantes para crear grupos', true)
+        return
+      }
+      // Validar que se pueda formar al menos 2 grupos completos
+      if (Math.floor(this.estudiantesDisponibles.length / this.formGrupos.min_estudiantes) < 2) {
+        this.mostrarMensaje('No hay suficientes estudiantes para formar al menos 2 grupos completos con el mínimo seleccionado.', true)
         return
       }
       // Validar que el nombre base no sea solo números

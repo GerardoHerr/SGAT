@@ -41,21 +41,26 @@
         <!-- Botón de Asignar -->
         <div class="form-actions mt-4">
           <button 
-            v-if="asignaturaSeleccionada && docenteSeleccionado" 
+            v-if="asignaturaSeleccionada && docenteSeleccionado"
             @click="asignarDocente"
             class="btn btn-primary"
-            :disabled="loading"
+            :disabled="loading || !asignaturaActiva"
           >
             <i class="fas fa-user-plus me-2"></i>
             <span v-if="loading">Asignando...</span>
             <span v-else>Asignar Docente</span>
           </button>
+          <div v-if="asignaturaSeleccionada && !asignaturaActiva" class="alert alert-warning mt-2">
+            No se puede asignar un docente a una asignatura inactiva.
+          </div>
+          <!-- Mensaje de error debajo del botón -->
+          <div v-if="mensaje && tipoMensaje === 'error'" class="alert alert-danger mt-2">
+            <i class="fas fa-exclamation-circle"></i> {{ mensaje }}
+          </div>
         </div>
-
-        <!-- Mensaje de resultado -->
-        <div v-if="mensaje" :class="['message', `message-${tipoMensaje}`, 'mt-4']">
-          <i :class="tipoMensaje === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
-          {{ mensaje }}
+        <!-- Mensaje de éxito (se mantiene arriba de la tabla) -->
+        <div v-if="mensaje && tipoMensaje === 'success'" class="alert alert-success mt-4">
+          <i class="fas fa-check-circle"></i> {{ mensaje }}
         </div>
       </div>
     </div>
@@ -110,7 +115,8 @@ export default {
       docenteActual: null,
       loading: false,
       mensaje: '',
-      tipoMensaje: ''
+      tipoMensaje: '',
+      asignaturaActiva: true
     }
   },
   mounted() {
@@ -143,13 +149,19 @@ export default {
     cargarDocenteActual() {
       if (this.asignaturaSeleccionada) {
         const asignatura = this.asignaturas.find(a => a.id == this.asignaturaSeleccionada);
-        if (asignatura && asignatura.docente_responsable_nombre) {
-          this.docenteActual = {
-            nombre: asignatura.docente_responsable_nombre,
-            apellido: asignatura.docente_responsable_apellido
-          };
+        if (asignatura) {
+          this.asignaturaActiva = !!asignatura.activa;
+          if (asignatura.docente_responsable_nombre) {
+            this.docenteActual = {
+              nombre: asignatura.docente_responsable_nombre,
+              apellido: asignatura.docente_responsable_apellido
+            };
+          } else {
+            this.docenteActual = null;
+          }
         } else {
           this.docenteActual = null;
+          this.asignaturaActiva = true;
         }
       }
     },

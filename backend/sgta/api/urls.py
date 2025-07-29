@@ -12,6 +12,7 @@ from sgta.api.views import CursoViewSet
 from sgta.api.views import ReporteTareasCursoPDFView
 
 
+
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
 router.register(r'periodos', PeriodoLectivoViewSet)  
@@ -19,9 +20,9 @@ router.register(r'asignaturas', AsignaturaViewSet)
 router.register(r'cursos', CursoViewSet)
 router.register(r'inscripciones', InscripcionViewSet)
 router.register(r'asignaciones', AsignacionViewSet)
+router.register(r'tareas', AsignacionViewSet, basename='tarea')
 router.register(r'grupos', GrupoViewSet)
 router.register(r'solicitudAsignatura', SolicitarAsignaturaViewSet)
-
 router.register(r'entregas', EntregaTareaViewSet, basename='entregatarea')
 
 urlpatterns = [

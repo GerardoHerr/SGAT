@@ -515,19 +515,25 @@ export default {
         const response = await api.post(`entregas/${entrega.id}/calificar/`, formData, config);
         if (response.data && response.data.data) {
           const d = response.data.data;
-          entrega.calificacion = d.calificacion;
-          entrega.calificacionInput = d.calificacion;
-          entrega.observaciones = d.observaciones;
-          entrega.observacionesInput = d.observaciones;
-          entrega.retroalimentacion_archivo_url = d.retroalimentacion_archivo || null;
-          entrega.fecha_retroalimentacion = d.fecha_retroalimentacion || null;
+          // Buscar el objeto entrega en el array original y actualizar sus propiedades
+          const entregaOriginal = this.entregas.find(e => e.id === entrega.id);
+          if (entregaOriginal) {
+            entregaOriginal.calificacion = d.calificacion;
+            entregaOriginal.calificacionInput = d.calificacion;
+            entregaOriginal.observaciones = d.observaciones;
+            entregaOriginal.observacionesInput = d.observaciones;
+            entregaOriginal.retroalimentacion_archivo_url = d.retroalimentacion_archivo || null;
+            entregaOriginal.fecha_retroalimentacion = d.fecha_retroalimentacion || null;
+            entregaOriginal.archivoRetroalimentacion = null;
+            entregaOriginal.editando = false;
+            entregaOriginal.exito = true;
+            entregaOriginal.guardando = false;
+            entregaOriginal.error = '';
+            setTimeout(() => {
+              entregaOriginal.exito = false;
+            }, 3000);
+          }
         }
-        entrega.archivoRetroalimentacion = null;
-        entrega.editando = false;
-        entrega.exito = true;
-        setTimeout(() => {
-          entrega.exito = false;
-        }, 3000);
       } catch (error) {
         console.error('Error al guardar calificación:', error);
         let errorMessage = 'Error al guardar la calificación';

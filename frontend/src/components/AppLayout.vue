@@ -83,7 +83,7 @@ onMounted(() => {
 .content-wrapper {
   flex: 1;
   padding: 4rem;
-  padding-right: 13rem;/**/
+  padding-right: 17rem;/**/
   width: 100%;
   max-width: 100%; /* Ancho máximo del contenido */
   margin: 0 auto; /*  Centra el contenido */
