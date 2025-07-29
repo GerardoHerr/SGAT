@@ -76,7 +76,7 @@
           <div class="bloque-info">
             <i class="fas fa-file-pdf"></i>
             <div>
-              <strong>PDF:</strong>
+              <strong>PDF con la actividad:</strong>
               <span v-if="asignacion?.archivo_explicacion">
                 <a :href="asignacion.archivo_explicacion" target="_blank">Ver PDF</a>
               </span>
@@ -90,6 +90,10 @@
               <span>{{ tareaEntrega?.calificacion !== undefined && tareaEntrega?.calificacion !== null ? tareaEntrega.calificacion : 'No disponible' }}</span>
               <div v-if="tareaEntrega?.observaciones" style="margin-top:8px; color:#1a365d; background:#f5f5f5; border-left:3px solid #4a6cf7; padding:8px 12px; border-radius:4px;">
                 <strong>Observaciones del docente:</strong> {{ tareaEntrega.observaciones }}
+              </div>
+              <div v-if="tareaEntrega?.retroalimentacion_archivo" style="margin-top:8px;">
+                <strong>PDF de retroalimentación:</strong>
+                <a :href="tareaEntrega.retroalimentacion_archivo" target="_blank">Ver PDF de retroalimentación</a>
               </div>
             </div>
           </div>
@@ -206,8 +210,7 @@ export default {
       const archivo = input.files[0];
       const formData = new FormData();
       formData.append('archivo', archivo);
-      // Puedes agregar más campos si tu backend lo requiere
-      // formData.append('fecha_entregada', new Date().toISOString());
+      formData.append('fecha_entregada', new Date().toISOString());
       try {
         await axios.patch(`http://localhost:8000/api/entregas/${this.tareaEntrega.id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }

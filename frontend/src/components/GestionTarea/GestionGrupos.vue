@@ -244,6 +244,16 @@ export default {
         this.mostrarMensaje('Seleccione un curso y una cantidad válida de estudiantes por grupo', true)
         return
       }
+      // Validar que haya suficientes estudiantes para crear grupos
+      if (this.estudiantesDisponibles.length < this.formGrupos.min_estudiantes) {
+        this.mostrarMensaje('No hay suficientes estudiantes para crear grupos', true)
+        return
+      }
+      // Validar que el nombre base no sea solo números
+      if (/^\d+$/.test(this.formGrupos.nombre_base.trim())) {
+        this.mostrarMensaje('El nombre base no puede ser solo números', true)
+        return
+      }
       this.loading = true
       try {
         const curso = this.cursos.find(c => c.id === this.cursoSeleccionado)

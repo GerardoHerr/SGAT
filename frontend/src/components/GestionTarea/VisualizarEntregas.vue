@@ -31,7 +31,7 @@
             <thead>
               <tr>
                 <th>Estudiante</th>
-                <th>Fecha Entrega</th>
+                <th>Fecha Entregada</th>
                 <th>Archivo</th>
                 <th>Calificación</th>
                 <th>Observaciones</th>
@@ -40,7 +40,7 @@
             <tbody>
               <tr v-for="entrega in entregas" :key="entrega.id">
                 <td>{{ entrega.estudiante_nombre }}</td>
-                <td>{{ entrega.fecha_entrega ? entrega.fecha_entrega.replace('T', ' ').slice(0, 16) : '-' }}</td>
+                <td>{{ entrega.fecha_entregada ? entrega.fecha_entregada.replace('T', ' ').slice(0, 16) : '-' }}</td>
                 <td>
                   <a v-if="entrega.archivo" :href="entrega.archivo" target="_blank" class="entregas-link">Ver archivo</a>
                   <span v-else>-</span>
@@ -56,7 +56,7 @@
             <ul>
               <li><b>Estudiante:</b> {{ entregaSeleccionada.estudiante_nombre }} ({{ entregaSeleccionada.estudiante_email }})</li>
               <li><b>Tarea:</b> {{ entregaSeleccionada.tarea_titulo }}</li>
-              <li><b>Fecha de Entrega:</b> {{ entregaSeleccionada.fecha_entrega }}</li>
+              <li><b>Fecha Entregada:</b> {{ entregaSeleccionada.fecha_entregada ? entregaSeleccionada.fecha_entregada.replace('T', ' ').slice(0, 16) : '-' }}</li>
               <li><b>Calificación:</b> {{ entregaSeleccionada.calificacion || '-' }}</li>
               <li><b>Observaciones:</b> {{ entregaSeleccionada.observaciones || '-' }}</li>
               <li v-if="entregaSeleccionada.archivo"><b>Archivo:</b> <a :href="entregaSeleccionada.archivo" target="_blank">Ver archivo</a></li>

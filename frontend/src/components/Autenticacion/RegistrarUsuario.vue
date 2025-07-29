@@ -114,7 +114,7 @@
           </div>
 
           <div class="input-wrapper">
-            <input v-model="usuarioForm.email" type="email" placeholder="Correo electrónico"
+            <input v-model="usuarioForm.email" type="email" placeholder="usuario@unl.edu.ec"
               :class="{ 'error': errors.email }" :disabled="editando" />
             <span v-if="errors.email" class="error-msg">{{ errors.email }}</span>
           </div>
@@ -122,7 +122,17 @@
           <div class="input-wrapper">
             <input v-model="usuarioForm.contrasenia" type="password"
               :placeholder="editando ? 'Nueva contraseña (opcional)' : 'Contraseña'"
-              :class="{ 'error': errors.contrasenia }" />
+              :class="{ 'error': errors.contrasenia }"
+              @input="validarContraseniaEnTiempoReal" />
+            <!-- Barra de nivel de seguridad visual y texto -->
+            <div v-if="usuarioForm.contrasenia">
+              <div class="password-strength-bar">
+                <div :class="['strength', strengthClass]" :style="{ width: strengthPercent + '%' }"></div>
+              </div>
+              <div class="password-strength-text" :class="strengthClass">
+                {{ strengthText }}
+              </div>
+            </div>
             <span v-if="errors.contrasenia" class="error-msg">{{ errors.contrasenia }}</span>
           </div>
 
@@ -214,9 +224,7 @@ export default {
   computed: {
     usuariosFiltrados() {
       if (!this.busqueda.trim()) return this.usuarios
-      
       const texto = this.busqueda.toLowerCase().trim()
-      
       return this.usuarios.filter(usuario => {
         switch (this.filtroTipo) {
           case 'nombre':
@@ -231,6 +239,45 @@ export default {
                    usuario.email.toLowerCase().includes(texto)
         }
       })
+    },
+    strengthScore() {
+      const c = this.usuarioForm.contrasenia || ''
+      let score = 0
+      if (c.length >= 6) score++
+      if (/[A-Z]/.test(c)) score++
+      if (/[a-z]/.test(c)) score++
+      if (/[0-9]/.test(c)) score++
+      if (/[^A-Za-z0-9]/.test(c)) score++
+      return score
+    },
+    strengthPercent() {
+      // 0-5 pasos
+      return (this.strengthScore / 5) * 100
+    },
+    strengthClass() {
+      if (this.strengthScore <= 1) return 'weak'
+      if (this.strengthScore === 2) return 'medium'
+      if (this.strengthScore >= 3) return 'strong'
+      return ''
+    },
+    strengthText() {
+      if (!this.usuarioForm.contrasenia) return ''
+      if (this.strengthClass === 'weak') return 'Débil'
+      if (this.strengthClass === 'medium') return 'Media'
+      if (this.strengthClass === 'strong') return 'Fuerte'
+      return ''
+    }
+  },
+   watch: {
+    'usuarioForm.email'(nuevo) {
+      // Solo mostrar error si hay algo escrito y no es válido
+      if (nuevo && !this.validarEmail(nuevo)) {
+        this.errors.email = 'El correo debe ser institucional (@unl.edu.ec)';
+      } else if (!nuevo) {
+        this.errors.email = '';
+      } else {
+        this.errors.email = '';
+      }
     }
   },
   async mounted() {
@@ -307,12 +354,18 @@ export default {
     validar() {
       this.errors = {}
 
+      // Validación nombre
       if (!this.usuarioForm.nombre.trim()) {
         this.errors.nombre = 'El nombre es obligatorio'
+      } else if (/[0-9]/.test(this.usuarioForm.nombre)) {
+        this.errors.nombre = 'El nombre no debe contener números'
       }
 
+      // Validación apellido
       if (!this.usuarioForm.apellido.trim()) {
         this.errors.apellido = 'El apellido es obligatorio'
+      } else if (/[0-9]/.test(this.usuarioForm.apellido)) {
+        this.errors.apellido = 'El apellido no debe contener números'
       }
 
       if (!this.usuarioForm.email.trim()) {
@@ -342,7 +395,8 @@ export default {
     },
 
     validarEmail(email) {
-      const re = /\S+@\S+\.\S+/
+      // Solo permite correos que terminen en @unl.edu.ec
+      const re = /^[a-zA-Z0-9._%+-]+@unl\.edu\.ec$/
       return re.test(email)
     },
 
@@ -388,6 +442,7 @@ export default {
         }
         
         this.cerrarModal()
+        await this.cargarUsuarios()
       } catch (error) {
         console.error('Error al guardar usuario:', error)
         this.mostrarMensaje(
@@ -451,6 +506,44 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/* Texto de nivel de seguridad de contraseña */
+.password-strength-text {
+  font-size: 0.95em;
+  margin-top: 0.2em;
+  font-weight: 600;
+  color: #888;
+}
+.password-strength-text.weak {
+  color: #f44336;
+}
+.password-strength-text.medium {
+  color: #ff9800;
+}
+.password-strength-text.strong {
+  color: #4caf50;
+}
+/* Barra de nivel de seguridad de contraseña */
+.password-strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  margin: 0.3em 0 0.5em 0;
+  overflow: hidden;
+}
+.password-strength-bar .strength {
+  height: 100%;
+  transition: width 0.3s;
+}
+.password-strength-bar .strength.weak {
+  background: #f44336;
+}
+.password-strength-bar .strength.medium {
+  background: #ff9800;
+}
+.password-strength-bar .strength.strong {
+  background: #4caf50;
+}
 @import '@/assets/styles/variables';
 @import '@/assets/styles/base';
 .usuarios-container {
@@ -468,13 +561,17 @@ export default {
   overflow: hidden;
 }
 
+
+
 .header-bar {
   display: flex;
-  justify-content: space-between;
+  justify-content: left;
   align-items: center;
+  gap: 2rem;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid $border-color;
+}
 
   .page-title {
     margin: 0;
@@ -482,7 +579,6 @@ export default {
     font-size: 1.8rem;
     font-weight: 600;
   }
-}
 
 .add-btn {
   @extend .btn;
@@ -492,7 +588,14 @@ export default {
   gap: 0.5rem;
   font-weight: 500;
   padding: 0.6rem 1.2rem;
-  
+  width: auto;
+  min-width: 140px;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 55%;
   svg {
     width: 1.2rem;
     height: 1.2rem;
@@ -758,17 +861,17 @@ export default {
     color: $color-primary;
     border: 1px solid rgba($color-primary, 0.2);
   }
-  
+
   &.docente {
     background: rgba($color-primary-dark, 0.1);
     color: $color-primary-dark;
     border: 1px solid rgba($color-primary-dark, 0.2);
   }
-  
-  &.administrador {
-    background: rgba($color-primary-light, 0.2);
-    color: darken($color-primary-light, 20%);
-    border: 1px solid rgba($color-primary-light, 0.3);
+
+  &.admin {
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+    border: 1px solid rgba($color-primary, 0.2);
   }
 }
 
@@ -1096,27 +1199,36 @@ export default {
     padding: 1rem;
     margin: 0.5rem;
   }
-  
   .input-group {
     grid-template-columns: 1fr;
   }
-  
   .search-wrapper {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
   .usuarios-table {
     font-size: 0.8rem;
   }
-  
   .usuarios-table th,
   .usuarios-table td {
     padding: 0.75rem 0.5rem;
   }
-  
+  .header-bar {
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
   .page-title {
     font-size: 1.5rem;
+  }
+  .add-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0.7rem 0.5rem;
+    font-size: 1rem;
+    justify-content: center;
   }
 }
 </style>

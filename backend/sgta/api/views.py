@@ -715,6 +715,28 @@ class CursoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Curso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 class EntregaTareaViewSet(viewsets.ModelViewSet):
+    @action(detail=True, methods=['delete'], url_path='eliminar-retroalimentacion')
+    def eliminar_retroalimentacion(self, request, pk=None):
+        """Elimina el archivo de retroalimentación de una entrega."""
+        try:
+            entrega = self.get_object()
+            if entrega.retroalimentacion_archivo:
+                try:
+                    entrega.retroalimentacion_archivo.delete(save=False)
+                except Exception:
+                    pass  # Si el archivo ya no existe físicamente, ignorar el error
+                entrega.retroalimentacion_archivo = None
+                entrega.fecha_retroalimentacion = None
+                entrega.save()
+                return Response({'mensaje': 'Archivo de retroalimentación eliminado correctamente.'}, status=status.HTTP_200_OK)
+            else:
+                # Aunque no haya archivo físico, asegurarse de limpiar el campo en la BD
+                entrega.retroalimentacion_archivo = None
+                entrega.fecha_retroalimentacion = None
+                entrega.save()
+                return Response({'mensaje': 'No había archivo físico, pero el campo fue limpiado.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Error al eliminar archivo de retroalimentación: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     queryset = EntregaTarea.objects.all()
     serializer_class = EntregaTareaSerializer
     permission_classes = [AllowAny]
@@ -789,6 +811,7 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
     
     def partial_update(self, request, *args, **kwargs):
         import logging
+        from django.utils import timezone
         logger = logging.getLogger(__name__)
         instance = self.get_object()
         archivo = request.data.get('archivo', None)
@@ -809,6 +832,7 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 logger.error(f"[ENTREGA] Error al borrar archivo en entrega {instance.id}: {e}", exc_info=True)
                 return Response({'error': f'Error al borrar archivo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         # Si la tarea es grupal
         tarea = instance.tarea  # Asignacion
         if hasattr(tarea, 'es_grupal') and tarea.es_grupal:
@@ -824,15 +848,19 @@ class EntregaTareaViewSet(viewsets.ModelViewSet):
                     # Actualiza archivo y fecha para todos
                     if 'archivo' in request.FILES:
                         entrega.archivo = request.FILES['archivo']
-                    from django.utils import timezone
-                    entrega.fecha_entregada = timezone.now()
+                        entrega.fecha_entregada = timezone.now()
                     entrega.save()
                 return Response({'mensaje': 'Entrega subida para todo el grupo'}, status=status.HTTP_200_OK)
             else:
                 # Si no hay grupo, solo actualiza la entrega individual
+                if 'archivo' in request.FILES:
+                    instance.fecha_entregada = timezone.now()
                 return super().partial_update(request, *args, **kwargs)
         else:
             # Si no es grupal, solo actualiza la entrega individual
+            if 'archivo' in request.FILES:
+                instance.fecha_entregada = timezone.now()
+                instance.save()
             return super().partial_update(request, *args, **kwargs)
     queryset = EntregaTarea.objects.all()
     serializer_class = EntregaTareaSerializer
